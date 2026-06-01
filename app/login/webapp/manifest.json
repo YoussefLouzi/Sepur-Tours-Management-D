@@ -4,16 +4,26 @@
     "id": "sepur.login",
     "type": "application",
     "title": "Connexion SEPUR",
-    "applicationVersion": { "version": "1.0.0" }
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
   },
   "sap.ui": {
     "technology": "UI5",
-    "deviceTypes": { "desktop": true, "tablet": true, "phone": true }
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
   },
   "sap.ui5": {
     "dependencies": {
       "minUI5Version": "1.120.0",
-      "libs": { "sap.m": {}, "sap.ui.core": {} }
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ui.layout": {}
+      }
     },
     "rootView": {
       "viewName": "sepur.login.view.Login",
