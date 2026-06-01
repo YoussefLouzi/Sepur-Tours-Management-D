@@ -21,14 +21,14 @@
       "minUI5Version": "1.120.0",
       "libs": {
         "sap.m": {},
-        "sap.ui.core": {},
-        "sap.ui.layout": {}
+        "sap.ui.core": {}
       }
     },
     "rootView": {
       "viewName": "sepur.login.view.Login",
       "type": "XML",
-      "id": "loginView"
+      "id": "loginView",
+      "async": true
     },
     "models": {
       "": {
@@ -36,7 +36,8 @@
         "settings": {
           "serviceUrl": "/odata/v4/route-management/",
           "synchronizationMode": "None",
-          "operationMode": "Server"
+          "operationMode": "Server",
+          "autoExpandSelect": true
         }
       }
     }
