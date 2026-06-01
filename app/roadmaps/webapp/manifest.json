@@ -1,0 +1,73 @@
+{
+  "_version": "1.85.0",
+  "sap.app": {
+    "id": "ns.roadmaps",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "0.0.1" },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/route-management/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": { "desktop": true, "tablet": true, "phone": true }
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": { "sap.m": {}, "sap.ui.core": {}, "sap.fe.templates": {} }
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "ns.roadmaps.i18n.i18n" }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        { "pattern": ":?query:", "name": "RoadmapsList", "target": "RoadmapsList" },
+        { "pattern": "Roadmaps({key}):?query:", "name": "RoadmapsObjectPage", "target": "RoadmapsObjectPage" }
+      ],
+      "targets": {
+        "RoadmapsList": {
+          "type": "Component",
+          "id": "RoadmapsList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/Roadmaps",
+              "navigation": {
+                "Roadmaps": { "detail": { "route": "RoadmapsObjectPage" } }
+              }
+            }
+          }
+        },
+        "RoadmapsObjectPage": {
+          "type": "Component",
+          "id": "RoadmapsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": { "contextPath": "/Roadmaps" }
+          }
+        }
+      }
+    }
+  },
+  "sap.fiori": { "archeType": "transactional" }
+}

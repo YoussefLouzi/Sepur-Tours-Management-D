@@ -1,0 +1,62 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    controllerName="sepur.planner.controller.Dashboard"
+    displayBlock="true">
+    <Page id="page" title="Dashboard Planificateur" showNavButton="false">
+        <subHeader>
+            <Toolbar>
+                <Title text="{view>/user/fullName}" level="H4"/>
+                <ToolbarSpacer/>
+                <Button text="Déconnexion" press=".onLogout"/>
+            </Toolbar>
+        </subHeader>
+        <content>
+            <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                <GenericTile header="Total tournées" subheader="{view>/stats/totalTours}" class="sapUiTinyMargin"/>
+                <GenericTile header="Brouillons" subheader="{view>/stats/draftTours}" class="sapUiTinyMargin"/>
+                <GenericTile header="En attente" subheader="{view>/stats/pendingTours}" class="sapUiTinyMargin"/>
+                <GenericTile header="Acceptées" subheader="{view>/stats/acceptedTours}" class="sapUiTinyMargin"/>
+                <GenericTile header="Rejetées" subheader="{view>/stats/rejectedTours}" class="sapUiTinyMargin"/>
+                <GenericTile header="Roadmaps" subheader="{view>/stats/totalRoadmaps}" class="sapUiTinyMargin"/>
+            </l:Grid>
+            <Toolbar class="sapUiSmallMargin">
+                <Button text="Créer une tournée" type="Emphasized" icon="sap-icon://add" press=".onCreateTour"/>
+                <Button text="Voir les tournées" icon="sap-icon://list" press=".onOpenTours"/>
+                <Button text="Voir les roadmaps" icon="sap-icon://map-2" press=".onOpenRoadmaps"/>
+            </Toolbar>
+            <Table id="tblTours" items="{tours>/}" growing="true" class="sapUiSmallMargin"
+                   noDataText="Aucune tournée">
+                <headerToolbar>
+                    <Toolbar><Title text="Dernières tournées"/></Toolbar>
+                </headerToolbar>
+                <columns>
+                    <Column><Text text="Code"/></Column>
+                    <Column><Text text="Date"/></Column>
+                    <Column><Text text="Zone"/></Column>
+                    <Column><Text text="Statut"/></Column>
+                    <Column><Text text="Motif refus"/></Column>
+                    <Column width="8rem"><Text text="Actions"/></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{tourCode}"/>
+                            <Text text="{tourDate}"/>
+                            <Text text="{zone}"/>
+                            <ObjectStatus text="{status}" state="{= ${status} === 'ACCEPTED' ? 'Success' : ${status} === 'REJECTED' ? 'Error' : ${status} === 'PENDING' ? 'Warning' : 'None' }"/>
+                            <Text text="{rejectionReason}"/>
+                            <HBox>
+                                <Button text="Soumettre" type="Transparent" press=".onSubmitTour"
+                                    visible="{= ${status} === 'DRAFT' || ${status} === 'REJECTED' }"/>
+                                <Button text="Roadmap" type="Transparent" press=".onCreateRoadmap"
+                                    visible="{= ${status} === 'ACCEPTED' }"/>
+                            </HBox>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+</mvc:View>

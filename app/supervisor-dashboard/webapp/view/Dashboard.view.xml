@@ -1,0 +1,95 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    controllerName="sepur.supervisor.controller.Dashboard"
+    displayBlock="true">
+    <Page title="Dashboard Superviseur">
+        <subHeader>
+            <Toolbar>
+                <Title text="{view>/user/fullName}" level="H4"/>
+                <ToolbarSpacer/>
+                <Button text="Tournées Fiori" press=".onOpenTours"/>
+                <Button text="Roadmaps Fiori" press=".onOpenRoadmaps"/>
+                <Button text="Déconnexion" press=".onLogout"/>
+            </Toolbar>
+        </subHeader>
+        <content>
+            <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                <GenericTile header="Total tournées" subheader="{view>/stats/totalTours}"/>
+                <GenericTile header="En attente" subheader="{view>/stats/pendingValidation}"/>
+                <GenericTile header="Acceptées" subheader="{view>/stats/acceptedTours}"/>
+                <GenericTile header="Rejetées" subheader="{view>/stats/rejectedTours}"/>
+                <GenericTile header="Roadmaps actives" subheader="{view>/stats/activeRoadmaps}"/>
+                <GenericTile header="Total roadmaps" subheader="{view>/stats/totalRoadmaps}"/>
+            </l:Grid>
+
+            <Panel headerText="Tournées en attente de validation" expandable="true" expanded="true" class="sapUiSmallMargin">
+                <Table id="tblPending" items="{pending>/}" growing="true">
+                    <columns>
+                        <Column><Text text="Code"/></Column>
+                        <Column><Text text="Date"/></Column>
+                        <Column><Text text="Zone"/></Column>
+                        <Column><Text text="Type"/></Column>
+                        <Column width="12rem"><Text text="Actions"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{tourCode}"/>
+                                <Text text="{tourDate}"/>
+                                <Text text="{zone}"/>
+                                <Text text="{collectionType}"/>
+                                <HBox>
+                                    <Button text="Accepter" type="Accept" press=".onAccept"/>
+                                    <Button text="Rejeter" type="Reject" press=".onReject"/>
+                                </HBox>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </Panel>
+
+            <Panel headerText="Roadmaps" expandable="true" class="sapUiSmallMargin">
+                <Table items="{roadmaps>/}" growing="true">
+                    <columns>
+                        <Column><Text text="Code"/></Column>
+                        <Column><Text text="Statut"/></Column>
+                        <Column><Text text="Début"/></Column>
+                        <Column><Text text="Tournée"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{roadmapCode}"/>
+                                <ObjectStatus text="{status}"/>
+                                <Text text="{startDate}"/>
+                                <Text text="{tourCode}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </Panel>
+
+            <Panel headerText="Historique des décisions" expandable="true" class="sapUiSmallMargin">
+                <Table items="{history>/}" growing="true">
+                    <columns>
+                        <Column><Text text="Décision"/></Column>
+                        <Column><Text text="Motif"/></Column>
+                        <Column><Text text="Date"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectStatus text="{decision}"
+                                    state="{= ${decision} === 'ACCEPTED' ? 'Success' : 'Error' }"/>
+                                <Text text="{reason}"/>
+                                <Text text="{decisionDate}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </Panel>
+        </content>
+    </Page>
+</mvc:View>

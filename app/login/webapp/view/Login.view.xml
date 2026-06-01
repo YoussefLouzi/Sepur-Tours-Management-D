@@ -1,0 +1,24 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:form="sap.ui.layout.form"
+    controllerName="sepur.login.controller.Login"
+    displayBlock="true">
+    <Page title="SEPUR — Connexion" showHeader="true" class="sapUiContentPadding">
+        <content>
+            <VBox alignItems="Center" justifyContent="Center" width="100%" class="sapUiMediumMarginTop">
+                <Title text="Gestion des tournées de collecte" level="H2" class="sapUiSmallMarginBottom"/>
+                <Panel headerText="Identifiants" width="28rem">
+                    <form:SimpleForm editable="true" layout="ResponsiveGridLayout" columnsL="1" columnsM="1">
+                        <Label text="Nom d'utilisateur" required="true"/>
+                        <Input id="inpUsername" value="{/username}" placeholder="planificateur"/>
+                        <Label text="Mot de passe" required="true"/>
+                        <Input id="inpPassword" type="Password" value="{/password}" placeholder="••••••••"/>
+                    </form:SimpleForm>
+                    <Button text="Se connecter" type="Emphasized" press=".onLogin" class="sapUiSmallMarginTop" width="100%"/>
+                    <MessageStrip id="msgError" text="" type="Error" visible="false" class="sapUiSmallMarginTop"/>
+                </Panel>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

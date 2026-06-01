@@ -1,0 +1,51 @@
+{
+  "name": "Sepur_tours_management",
+  "version": "1.0.0",
+  "description": "Digitalisation des tournées de collecte et gestion des roadmaps — SAP CAP/Fiori",
+  "dependencies": {
+    "@sap/cds": "^9"
+  },
+  "devDependencies": {
+    "@cap-js/hana": "^2",
+    "@cap-js/sqlite": "^2.4",
+    "@sap/cds-dk": "^9",
+    "cds-plugin-ui5": "^0.13.0",
+    "rimraf": "^5.0.5",
+    "mbt": "^1.2.49"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch",
+    "watch-login": "cds watch --open login/webapp/index.html?sap-ui-xx-viewCache=false",
+    "watch-tours": "cds watch --open tours/webapp/index.html?sap-ui-xx-viewCache=false",
+    "watch-roadmaps": "cds watch --open roadmaps/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy Sepur_tours_management --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+  },
+  "private": true,
+  "workspaces": [
+    "app/*"
+  ],
+  "sapux": [
+    "app/login",
+    "app/planner-dashboard",
+    "app/supervisor-dashboard",
+    "app/tours",
+    "app/roadmaps"
+  ],
+  "cds": {
+    "requires": {
+      "[development]": {
+        "db": {
+          "kind": "sqlite"
+        }
+      },
+      "[production]": {
+        "db": {
+          "kind": "hana"
+        }
+      }
+    }
+  }
+}
