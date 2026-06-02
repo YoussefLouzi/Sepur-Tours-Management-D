@@ -5,51 +5,61 @@
     displayBlock="true">
 
     <App>
-        <Page title="SEPUR — Connexion" showHeader="true">
+        <Page showHeader="false" class="loginPage">
             <content>
-                <VBox
-                    width="100%"
-                    height="100%"
-                    alignItems="Center"
-                    justifyContent="Center"
-                    class="sapUiLargeMarginTop">
+                <VBox class="loginShell" alignItems="Center" justifyContent="Center">
 
-                    <Panel
-                        headerText="Connexion à l'application"
-                        width="30rem"
-                        class="sapUiResponsiveMargin">
+                    <VBox class="loginCard">
 
-                        <VBox class="sapUiSmallMargin">
+                        <VBox alignItems="Center" class="loginHeader">
+                            <HBox class="sapLogoBox" alignItems="Center" justifyContent="Center">
+                                <Text text="SAP" class="sapLogoText" />
+                            </HBox>
 
                             <Title
-                                text="Gestion des tournées de collecte"
-                                level="H3"
-                                class="sapUiSmallMarginBottom" />
+                                text="SEPUR Tours Management"
+                                level="H2"
+                                textAlign="Center"
+                                class="loginTitle" />
 
-                            <Label text="Nom d'utilisateur" required="true" />
+                            <Text
+                                text="Gestion digitale des tournées et roadmaps"
+                                textAlign="Center"
+                                class="loginSubtitle" />
+                        </VBox>
+
+                        <VBox class="loginForm">
+
+                            <Label text="Compte utilisateur" class="loginLabel" />
                             <Input
                                 id="inpUsername"
                                 value="{/username}"
-                                placeholder="planificateur"
-                                width="100%" />
+                                placeholder="planificateur ou superviseur"
+                                width="100%"
+                                class="loginInput" />
 
-                            <Label
-                                text="Mot de passe"
-                                required="true"
-                                class="sapUiSmallMarginTop" />
+                            <Label text="Mot de passe" class="loginLabel sapUiSmallMarginTop" />
                             <Input
                                 id="inpPassword"
                                 type="Password"
                                 value="{/password}"
                                 placeholder="Mot de passe"
-                                width="100%" />
+                                width="100%"
+                                class="loginInput"
+                                submit=".onLogin" />
+
+                            <HBox justifyContent="End" class="forgotBox">
+                                <Link
+                                    text="Mot de passe oublié ?"
+                                    press=".onForgotPassword" />
+                            </HBox>
 
                             <Button
                                 text="Se connecter"
                                 type="Emphasized"
                                 press=".onLogin"
                                 width="100%"
-                                class="sapUiMediumMarginTop" />
+                                class="loginButton" />
 
                             <MessageStrip
                                 id="msgError"
@@ -60,7 +70,13 @@
                                 class="sapUiSmallMarginTop" />
 
                         </VBox>
-                    </Panel>
+
+                        <VBox alignItems="Center" class="loginFooter">
+                            <Text text="© SEPUR — SAP BTP CAP Fiori" class="footerText" />
+                        </VBox>
+
+                    </VBox>
+
                 </VBox>
             </content>
         </Page>

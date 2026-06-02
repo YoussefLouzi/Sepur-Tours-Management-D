@@ -1,0 +1,107 @@
+.loginPage {
+    background: linear-gradient(135deg, #f3f7fb 0%, #e8eef5 45%, #f8fafc 100%);
+}
+
+.loginShell {
+    min-height: 100vh;
+    width: 100%;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.loginCard {
+    width: 28rem;
+    max-width: 92vw;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 1.25rem;
+    box-shadow: 0 1.25rem 3rem rgba(15, 23, 42, 0.14);
+    overflow: hidden;
+    border: 1px solid rgba(220, 230, 240, 0.9);
+}
+
+.loginHeader {
+    padding: 2.25rem 2rem 1rem 2rem;
+}
+
+.sapLogoBox {
+    width: 5.2rem;
+    height: 3rem;
+    background: linear-gradient(135deg, #0a6ed1, #008fd3);
+    border-radius: 0.35rem;
+    margin-bottom: 1.2rem;
+    transform: skew(-12deg);
+    box-shadow: 0 0.6rem 1.3rem rgba(10, 110, 209, 0.25);
+}
+
+.sapLogoText {
+    color: #ffffff;
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.08rem;
+    transform: skew(12deg);
+}
+
+.loginTitle {
+    color: #172b4d;
+    font-weight: 700;
+    margin-top: 0.3rem;
+}
+
+.loginSubtitle {
+    color: #5b6b82;
+    font-size: 0.9rem;
+    margin-top: 0.35rem;
+}
+
+.loginForm {
+    padding: 1.2rem 2rem 2rem 2rem;
+}
+
+.loginLabel {
+    color: #44546a;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.loginInput input {
+    height: 2.8rem;
+    border-radius: 0.55rem;
+}
+
+.forgotBox {
+    margin-top: 0.8rem;
+    margin-bottom: 1.2rem;
+}
+
+.loginButton {
+    height: 2.9rem;
+    border-radius: 0.65rem;
+    font-weight: 700;
+}
+
+.loginFooter {
+    padding: 0.9rem 2rem 1.2rem 2rem;
+    background: #f8fafc;
+    border-top: 1px solid #edf2f7;
+}
+
+.footerText {
+    color: #7b8794;
+    font-size: 0.78rem;
+}
+
+@media (max-width: 600px) {
+    .loginShell {
+        padding: 1rem;
+    }
+
+    .loginCard {
+        width: 100%;
+    }
+
+    .loginHeader,
+    .loginForm {
+        padding-left: 1.3rem;
+        padding-right: 1.3rem;
+    }
+}

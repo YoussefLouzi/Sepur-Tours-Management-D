@@ -1,0 +1,134 @@
+.plannerPage {
+    background: #f4f7fb;
+}
+
+.dashboardShell {
+    min-height: 100vh;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.topBar {
+    background: #ffffff;
+    padding: 1.5rem 1.8rem;
+    border-radius: 1rem;
+    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+.pageTitle {
+    color: #172b4d;
+    font-weight: 800;
+}
+
+.pageSubtitle {
+    color: #637083;
+    margin-top: 0.35rem;
+    font-size: 0.95rem;
+}
+
+.statsGrid {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.statCard {
+    width: 15.2rem;
+    min-height: 8rem;
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.2rem;
+    box-sizing: border-box;
+    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
+    border-left: 0.35rem solid #0a6ed1;
+}
+
+.warningCard {
+    border-left-color: #e9730c;
+}
+
+.successCard {
+    border-left-color: #107e3e;
+}
+
+.errorCard {
+    border-left-color: #bb0000;
+}
+
+.statLabel {
+    color: #5b6b82;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.statNumber {
+    margin-top: 0.6rem;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.statHint {
+    color: #7b8794;
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+}
+
+.contentGrid {
+    gap: 1.2rem;
+}
+
+.mainPanel {
+    flex: 1;
+    min-width: 42rem;
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.4rem;
+    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
+}
+
+.sidePanel {
+    width: 22rem;
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.4rem;
+    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
+}
+
+.panelHeader {
+    margin-bottom: 1rem;
+}
+
+.panelSubtitle {
+    color: #7b8794;
+    margin-top: 0.25rem;
+}
+
+.quickButton {
+    margin-bottom: 0.75rem;
+    height: 2.8rem;
+    border-radius: 0.55rem;
+}
+
+@media (max-width: 900px) {
+    .dashboardShell {
+        padding: 1rem;
+    }
+
+    .topBar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .mainPanel {
+        min-width: 100%;
+    }
+
+    .sidePanel {
+        width: 100%;
+    }
+
+    .statCard {
+        width: 100%;
+    }
+}

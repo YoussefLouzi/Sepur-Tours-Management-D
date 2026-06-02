@@ -1,55 +1,114 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
+    "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
     "sap/m/MessageBox"
-], function (Controller, MessageToast, MessageBox) {
+], function (Controller, JSONModel, MessageToast, MessageBox) {
     "use strict";
 
     return Controller.extend("sepur.planner.controller.Dashboard", {
         onInit: function () {
-            this._loadStats();
-            this._loadTours();
+            const sUser = localStorage.getItem("sepur.user");
+
+            if (!sUser) {
+                window.location.href = "/login/webapp/index.html";
+                return;
+            }
+
+            const oUser = JSON.parse(sUser);
+
+            if (oUser.role !== "PLANIFICATEUR") {
+                MessageBox.error("Accès refusé. Ce dashboard est réservé au Planificateur.");
+                window.location.href = "/login/webapp/index.html";
+                return;
+            }
+
+            const oModel = new JSONModel({
+                user: oUser,
+                stats: {
+                    totalTours: 0,
+                    draftTours: 0,
+                    pendingTours: 0,
+                    acceptedTours: 0,
+                    rejectedTours: 0,
+                    totalRoadmaps: 0
+                },
+                tours: []
+            });
+
+            this.getView().setModel(oModel);
+            this.loadDashboardData();
         },
 
-        _getUser: function () {
-            return this.getOwnerComponent().getModel("view").getProperty("/user");
-        },
+        loadDashboardData: async function () {
+            const oModel = this.getView().getModel();
+            const oUser = oModel.getProperty("/user");
 
-        _loadStats: async function () {
-            const user = this._getUser();
             try {
-                const oModel = this.getView().getModel();
-                const oCtx = oModel.bindContext(`/getPlannerStats(userID=${user.ID})`);
-                await oCtx.execute();
-                const stats = oCtx.getBoundContext().getObject();
-                this.getOwnerComponent().getModel("view").setProperty("/stats", stats);
+                await Promise.all([
+                    this.loadStats(oUser.ID),
+                    this.loadTours()
+                ]);
             } catch (e) {
+                MessageToast.show("Impossible de charger les données du dashboard.");
+            }
+        },
+
+        loadStats: async function (sUserID) {
+            const oModel = this.getView().getModel();
+
+            try {
+                const oODataModel = this.getOwnerComponent().getModel();
+                const oContext = oODataModel.bindContext("/getPlannerStats(...)");
+
+                oContext.setParameter("userID", sUserID || null);
+
+                await oContext.execute();
+
+                const oResult = oContext.getBoundContext().getObject();
+
+                oModel.setProperty("/stats", {
+                    totalTours: oResult.totalTours || 0,
+                    draftTours: oResult.draftTours || 0,
+                    pendingTours: oResult.pendingTours || 0,
+                    acceptedTours: oResult.acceptedTours || 0,
+                    rejectedTours: oResult.rejectedTours || 0,
+                    totalRoadmaps: oResult.totalRoadmaps || 0
+                });
+
+            } catch (e) {
+                console.error("Erreur stats planificateur", e);
                 MessageToast.show("Impossible de charger les statistiques.");
             }
         },
 
-        _loadTours: async function () {
+        loadTours: async function () {
+            const oModel = this.getView().getModel();
+
             try {
-                const oModel = this.getView().getModel();
-                const oList = oModel.bindList("/Tours", undefined, undefined, undefined, {
-                    $orderby: "tourDate desc",
-                    $top: 20
-                });
-                const aContexts = await oList.requestContexts(0, 20);
-                const oJson = new sap.ui.model.json.JSONModel(aContexts.map((c) => c.getObject()));
-                this.getView().setModel(oJson, "tours");
+                const response = await fetch("/odata/v4/route-management/Tours?$top=5&$orderby=createdAt desc");
+
+                if (!response.ok) {
+                    throw new Error("Erreur lors du chargement des tournées.");
+                }
+
+                const data = await response.json();
+                oModel.setProperty("/tours", data.value || []);
+
             } catch (e) {
+                console.error("Erreur chargement tournées", e);
+                oModel.setProperty("/tours", []);
                 MessageToast.show("Impossible de charger les tournées.");
             }
         },
 
-        onLogout: function () {
-            localStorage.removeItem("sepur.user");
-            window.location.href = "/login/webapp/index.html";
+        onRefresh: function () {
+            this.loadDashboardData();
+            MessageToast.show("Données actualisées.");
         },
 
         onCreateTour: function () {
-            window.location.href = "/tours/webapp/index.html#/Tours?$action=create";
+            window.location.href = "/tours/webapp/index.html";
         },
 
         onOpenTours: function () {
@@ -60,32 +119,27 @@ sap.ui.define([
             window.location.href = "/roadmaps/webapp/index.html";
         },
 
-        onSubmitTour: async function (oEvent) {
-            const tour = oEvent.getSource().getBindingContext("tours").getObject();
-            try {
-                const oModel = this.getView().getModel();
-                const oAction = oModel.bindContext("/submitTour(...)");
-                oAction.setParameter("tourID", tour.ID);
-                await oAction.execute();
-                MessageToast.show("Tournée soumise au superviseur.");
-                this._loadStats();
-                this._loadTours();
-            } catch (e) {
-                MessageBox.error(e.message || "Échec de la soumission.");
-            }
+        onTourPress: function () {
+            window.location.href = "/tours/webapp/index.html";
         },
 
-        onCreateRoadmap: async function (oEvent) {
-            const tour = oEvent.getSource().getBindingContext("tours").getObject();
-            try {
-                const oModel = this.getView().getModel();
-                const oAction = oModel.bindContext("/createRoadmapFromTour(...)");
-                oAction.setParameter("tourID", tour.ID);
-                await oAction.execute();
-                MessageToast.show("Roadmap créée avec succès.");
-                this._loadStats();
-            } catch (e) {
-                MessageBox.error(e.message || "Impossible de créer la roadmap.");
+        onLogout: function () {
+            localStorage.removeItem("sepur.user");
+            window.location.href = "/login/webapp/index.html";
+        },
+
+        formatStatusState: function (sStatus) {
+            switch (sStatus) {
+                case "ACCEPTED":
+                    return "Success";
+                case "PENDING":
+                    return "Warning";
+                case "REJECTED":
+                    return "Error";
+                case "DRAFT":
+                    return "Information";
+                default:
+                    return "None";
             }
         }
     });
