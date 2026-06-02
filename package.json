@@ -34,18 +34,16 @@
     "app/tours",
     "app/roadmaps"
   ],
-  "cds": {
-    "requires": {
-      "[development]": {
-        "db": {
-          "kind": "sqlite"
-        }
+"cds": {
+  "requires": {
+    "[development]": {
+      "db": {
+        "kind": "sqlite"
       },
-      "[production]": {
-        "db": {
-          "kind": "hana"
-        }
+      "auth": {
+        "kind": "dummy"
       }
     }
   }
+}
 }
