@@ -11,22 +11,26 @@
 
                     <VBox class="loginCard">
 
-                        <VBox alignItems="Center" class="loginHeader">
-                            <HBox class="sapLogoBox" alignItems="Center" justifyContent="Center">
-                                <Text text="SAP" class="sapLogoText" />
-                            </HBox>
+                       <VBox alignItems="Center" class="loginHeader">
 
-                            <Title
-                                text="SEPUR Tours Management"
-                                level="H2"
-                                textAlign="Center"
-                                class="loginTitle" />
+    <Image
+        src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/1280px-SAP_2011_logo.svg.png"
+        alt="SAP Logo"
+        decorative="false"
+        class="sapLogoImage" />
 
-                            <Text
-                                text="Gestion digitale des tournées et roadmaps"
-                                textAlign="Center"
-                                class="loginSubtitle" />
-                        </VBox>
+    <Title
+        text="SEPUR Tours Management"
+        level="H2"
+        textAlign="Center"
+        class="loginTitle" />
+
+    <Text
+        text="Gestion digitale des tournées et roadmaps"
+        textAlign="Center"
+        class="loginSubtitle" />
+
+</VBox>
 
                         <VBox class="loginForm">
 

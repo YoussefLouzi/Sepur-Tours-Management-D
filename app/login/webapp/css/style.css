@@ -89,7 +89,12 @@
     color: #7b8794;
     font-size: 0.78rem;
 }
-
+.sapLogoImage {
+    width: 6.5rem;
+    height: auto;
+    margin-bottom: 1.2rem;
+    filter: drop-shadow(0 0.4rem 0.8rem rgba(10, 110, 209, 0.18));
+}
 @media (max-width: 600px) {
     .loginShell {
         padding: 1rem;
@@ -104,4 +109,10 @@
         padding-left: 1.3rem;
         padding-right: 1.3rem;
     }
+    .sapLogoImage {
+    width: 6.5rem;
+    height: auto;
+    margin-bottom: 1.2rem;
+    filter: drop-shadow(0 0.4rem 0.8rem rgba(10, 110, 209, 0.18));
+}
 }
