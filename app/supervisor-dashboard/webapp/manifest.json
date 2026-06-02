@@ -4,17 +4,39 @@
     "id": "sepur.supervisor",
     "type": "application",
     "title": "Dashboard Superviseur",
-    "applicationVersion": { "version": "1.0.0" }
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
   },
   "sap.ui5": {
     "dependencies": {
       "minUI5Version": "1.120.0",
-      "libs": { "sap.m": {}, "sap.ui.core": {}, "sap.ui.layout": {} }
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.viz": {}
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
     },
     "rootView": {
       "viewName": "sepur.supervisor.view.Dashboard",
       "type": "XML",
-      "id": "dashboard"
+      "id": "dashboard",
+      "async": true
     },
     "models": {
       "": {
@@ -22,10 +44,13 @@
         "settings": {
           "serviceUrl": "/odata/v4/route-management/",
           "synchronizationMode": "None",
-          "operationMode": "Server"
+          "operationMode": "Server",
+          "autoExpandSelect": true
         }
       },
-      "view": { "type": "sap.ui.model.json.JSONModel" }
+      "view": {
+        "type": "sap.ui.model.json.JSONModel"
+      }
     }
   }
 }

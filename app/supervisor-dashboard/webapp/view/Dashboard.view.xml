@@ -1,95 +1,217 @@
 <mvc:View
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
-    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:viz.data="sap.viz.ui5.data"
+    xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
     controllerName="sepur.supervisor.controller.Dashboard"
     displayBlock="true">
-    <Page title="Dashboard Superviseur">
-        <subHeader>
-            <Toolbar>
-                <Title text="{view>/user/fullName}" level="H4"/>
-                <ToolbarSpacer/>
-                <Button text="Tournées Fiori" press=".onOpenTours"/>
-                <Button text="Roadmaps Fiori" press=".onOpenRoadmaps"/>
-                <Button text="Déconnexion" press=".onLogout"/>
-            </Toolbar>
-        </subHeader>
-        <content>
-            <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
-                <GenericTile header="Total tournées" subheader="{view>/stats/totalTours}"/>
-                <GenericTile header="En attente" subheader="{view>/stats/pendingValidation}"/>
-                <GenericTile header="Acceptées" subheader="{view>/stats/acceptedTours}"/>
-                <GenericTile header="Rejetées" subheader="{view>/stats/rejectedTours}"/>
-                <GenericTile header="Roadmaps actives" subheader="{view>/stats/activeRoadmaps}"/>
-                <GenericTile header="Total roadmaps" subheader="{view>/stats/totalRoadmaps}"/>
-            </l:Grid>
 
-            <Panel headerText="Tournées en attente de validation" expandable="true" expanded="true" class="sapUiSmallMargin">
-                <Table id="tblPending" items="{pending>/}" growing="true">
-                    <columns>
-                        <Column><Text text="Code"/></Column>
-                        <Column><Text text="Date"/></Column>
-                        <Column><Text text="Zone"/></Column>
-                        <Column><Text text="Type"/></Column>
-                        <Column width="12rem"><Text text="Actions"/></Column>
-                    </columns>
-                    <items>
-                        <ColumnListItem>
-                            <cells>
-                                <Text text="{tourCode}"/>
-                                <Text text="{tourDate}"/>
-                                <Text text="{zone}"/>
-                                <Text text="{collectionType}"/>
-                                <HBox>
-                                    <Button text="Accepter" type="Accept" press=".onAccept"/>
-                                    <Button text="Rejeter" type="Reject" press=".onReject"/>
-                                </HBox>
-                            </cells>
-                        </ColumnListItem>
-                    </items>
-                </Table>
-            </Panel>
+    <App>
+        <Page showHeader="false" class="supervisorPage">
+            <content>
 
-            <Panel headerText="Roadmaps" expandable="true" class="sapUiSmallMargin">
-                <Table items="{roadmaps>/}" growing="true">
-                    <columns>
-                        <Column><Text text="Code"/></Column>
-                        <Column><Text text="Statut"/></Column>
-                        <Column><Text text="Début"/></Column>
-                        <Column><Text text="Tournée"/></Column>
-                    </columns>
-                    <items>
-                        <ColumnListItem>
-                            <cells>
-                                <Text text="{roadmapCode}"/>
-                                <ObjectStatus text="{status}"/>
-                                <Text text="{startDate}"/>
-                                <Text text="{tourCode}"/>
-                            </cells>
-                        </ColumnListItem>
-                    </items>
-                </Table>
-            </Panel>
+                <HBox class="pageLayout">
 
-            <Panel headerText="Historique des décisions" expandable="true" class="sapUiSmallMargin">
-                <Table items="{history>/}" growing="true">
-                    <columns>
-                        <Column><Text text="Décision"/></Column>
-                        <Column><Text text="Motif"/></Column>
-                        <Column><Text text="Date"/></Column>
-                    </columns>
-                    <items>
-                        <ColumnListItem>
-                            <cells>
-                                <ObjectStatus text="{decision}"
-                                    state="{= ${decision} === 'ACCEPTED' ? 'Success' : 'Error' }"/>
-                                <Text text="{reason}"/>
-                                <Text text="{decisionDate}"/>
-                            </cells>
-                        </ColumnListItem>
-                    </items>
-                </Table>
-            </Panel>
-        </content>
-    </Page>
+                    <VBox class="sideNav">
+
+                        <VBox class="brandArea">
+                            <Image
+                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/1280px-SAP_2011_logo.svg.png"
+                                class="sapLogo"
+                                decorative="false"
+                                alt="SAP Logo" />
+
+                            <Text text="SEPUR" class="brandTitle" />
+                            <Text text="Supervision" class="brandSubtitle" />
+                        </VBox>
+
+                        <VBox class="menuArea">
+                            <Button
+                                text="Dashboard"
+                                icon="sap-icon://business-objects-experience"
+                                class="menuButton activeMenu"
+                                press=".onDashboard" />
+
+                            <Button
+                                text="Tournées"
+                                icon="sap-icon://map"
+                                class="menuButton"
+                                press=".onOpenTours" />
+
+                            <Button
+                                text="Roadmaps"
+                                icon="sap-icon://journey-arrive"
+                                class="menuButton"
+                                press=".onOpenRoadmaps" />
+
+                            <Button
+                                text="Sales Orders"
+                                icon="sap-icon://sales-order"
+                                class="menuButton"
+                                press=".onSelectSalesOrders" />
+
+                            <Button
+                                text="Historique"
+                                icon="sap-icon://history"
+                                class="menuButton"
+                                press=".onSelectHistory" />
+                        </VBox>
+
+                        <VBox class="bottomArea">
+                            <Button
+                                text="Déconnexion"
+                                icon="sap-icon://log"
+                                class="menuButton logoutButton"
+                                press=".onLogout" />
+                        </VBox>
+
+                    </VBox>
+
+                    <VBox class="mainArea">
+
+                        <HBox class="topBar" justifyContent="SpaceBetween" alignItems="Center">
+                            <HBox alignItems="Center">
+                                <Title text="Espace Superviseur" level="H2" class="topTitle" />
+                                <core:Icon src="sap-icon://slim-arrow-down" class="topArrow" />
+                            </HBox>
+
+                            <HBox alignItems="Center">
+                                <Button
+                                    id="btnNotifications"
+                                    icon="sap-icon://bell"
+                                    text="{view>/notifications/count}"
+                                    tooltip="Notifications"
+                                    press=".onOpenNotifications"
+                                    class="notificationButton sapUiSmallMarginEnd" />
+
+                                <Button
+                                    icon="sap-icon://refresh"
+                                    tooltip="Actualiser"
+                                    press=".onRefresh"
+                                    class="sapUiSmallMarginEnd" />
+
+                                <Avatar
+                                    initials="{view>/userInitials}"
+                                    displaySize="XS"
+                                    backgroundColor="Accent6" />
+                            </HBox>
+                        </HBox>
+
+                        <VBox class="contentWrapper">
+
+                            <HBox class="moduleTabs" justifyContent="Center" alignItems="Center">
+
+                                <VBox class="moduleItem activeModuleItem" alignItems="Center">
+                                    <Button
+                                        icon="sap-icon://map"
+                                        type="Transparent"
+                                        press=".onSelectTours"
+                                        class="moduleIconButton" />
+                                    <Link
+                                        text="Tournées"
+                                        press=".onSelectTours"
+                                        class="moduleLink" />
+                                </VBox>
+
+                                <VBox class="moduleItem" alignItems="Center">
+                                    <Button
+                                        icon="sap-icon://journey-arrive"
+                                        type="Transparent"
+                                        press=".onSelectRoadmaps"
+                                        class="moduleIconButton" />
+                                    <Link
+                                        text="Roadmaps"
+                                        press=".onSelectRoadmaps"
+                                        class="moduleLink" />
+                                </VBox>
+
+                                <VBox class="moduleItem" alignItems="Center">
+                                    <Button
+                                        icon="sap-icon://sales-order"
+                                        type="Transparent"
+                                        press=".onSelectSalesOrders"
+                                        class="moduleIconButton" />
+                                    <Link
+                                        text="Sales Orders"
+                                        press=".onSelectSalesOrders"
+                                        class="moduleLink" />
+                                </VBox>
+
+                                <VBox class="moduleItem" alignItems="Center">
+                                    <Button
+                                        icon="sap-icon://history"
+                                        type="Transparent"
+                                        press=".onSelectHistory"
+                                        class="moduleIconButton" />
+                                    <Link
+                                        text="Historique"
+                                        press=".onSelectHistory"
+                                        class="moduleLink" />
+                                </VBox>
+
+                            </HBox>
+
+                            <VBox class="chartContainer">
+
+                                <VBox class="chartHeader" alignItems="Center">
+                                    <Title
+                                        text="{view>/chartTitle}"
+                                        level="H3"
+                                        textAlign="Center"
+                                        class="chartTitle" />
+
+                                    <Text
+                                        text="{view>/chartSubtitle}"
+                                        textAlign="Center"
+                                        class="chartSubtitle" />
+                                </VBox>
+
+                                <viz:VizFrame
+                                    id="mainColumnChart"
+                                    width="100%"
+                                    height="20rem"
+                                    vizType="column"
+                                    uiConfig="{applicationSet:'fiori'}"
+                                    class="mainChart">
+
+                                    <viz:dataset>
+                                        <viz.data:FlattenedDataset data="{view>/chartData}">
+                                            <viz.data:dimensions>
+                                                <viz.data:DimensionDefinition
+                                                    name="Catégorie"
+                                                    value="{view>label}" />
+                                            </viz.data:dimensions>
+                                            <viz.data:measures>
+                                                <viz.data:MeasureDefinition
+                                                    name="Total"
+                                                    value="{view>value}" />
+                                            </viz.data:measures>
+                                        </viz.data:FlattenedDataset>
+                                    </viz:dataset>
+
+                                    <viz:feeds>
+                                        <viz.feeds:FeedItem
+                                            uid="valueAxis"
+                                            type="Measure"
+                                            values="Total" />
+                                        <viz.feeds:FeedItem
+                                            uid="categoryAxis"
+                                            type="Dimension"
+                                            values="Catégorie" />
+                                    </viz:feeds>
+                                </viz:VizFrame>
+
+                            </VBox>
+
+                        </VBox>
+
+                    </VBox>
+
+                </HBox>
+
+            </content>
+        </Page>
+    </App>
 </mvc:View>

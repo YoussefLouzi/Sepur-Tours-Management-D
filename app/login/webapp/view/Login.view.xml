@@ -11,51 +11,70 @@
 
                     <VBox class="loginCard">
 
-                       <VBox alignItems="Center" class="loginHeader">
+                        <VBox class="loginHeader" alignItems="Center">
+                            <Image
+                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/1280px-SAP_2011_logo.svg.png"
+                                class="sapLogoImage"
+                                decorative="false"
+                                alt="SAP Logo" />
 
-    <Image
-        src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/1280px-SAP_2011_logo.svg.png"
-        alt="SAP Logo"
-        decorative="false"
-        class="sapLogoImage" />
+                            <Title
+                                text="SEPUR Tours Management"
+                                level="H2"
+                                textAlign="Center"
+                                class="loginTitle" />
 
-    <Title
-        text="SEPUR Tours Management"
-        level="H2"
-        textAlign="Center"
-        class="loginTitle" />
-
-    <Text
-        text="Gestion digitale des tournées et roadmaps"
-        textAlign="Center"
-        class="loginSubtitle" />
-
-</VBox>
+                            <Text
+                                text="Gestion digitale des tournées et roadmaps"
+                                textAlign="Center"
+                                class="loginSubtitle" />
+                        </VBox>
 
                         <VBox class="loginForm">
 
-                            <Label text="Compte utilisateur" class="loginLabel" />
+                            <Label
+                                text="E-mail ou nom d'utilisateur"
+                                required="true"
+                                class="loginLabel" />
+
                             <Input
                                 id="inpUsername"
                                 value="{/username}"
                                 placeholder="planificateur ou superviseur"
                                 width="100%"
-                                class="loginInput" />
+                                class="loginInput sapStyleInput" />
 
-                            <Label text="Mot de passe" class="loginLabel sapUiSmallMarginTop" />
+                            <Label
+                                text="Mot de passe"
+                                required="true"
+                                class="loginLabel passwordLabel" />
+
                             <Input
                                 id="inpPassword"
                                 type="Password"
                                 value="{/password}"
                                 placeholder="Mot de passe"
                                 width="100%"
-                                class="loginInput"
-                                submit=".onLogin" />
+                                submit=".onLogin"
+                                showValueHelp="true"
+                                valueHelpIconSrc="sap-icon://show"
+                                valueHelpRequest=".onTogglePasswordVisibility"
+                                class="loginInput sapStyleInput passwordInput" />
 
-                            <HBox justifyContent="End" class="forgotBox">
+                            <HBox
+                                justifyContent="SpaceBetween"
+                                alignItems="Center"
+                                class="loginOptions">
+
+                                <CheckBox
+                                    text="Rester connecté"
+                                    selected="false"
+                                    class="rememberCheck" />
+
                                 <Link
                                     text="Mot de passe oublié ?"
-                                    press=".onForgotPassword" />
+                                    press=".onForgotPassword"
+                                    class="forgotLink" />
                             </HBox>
 
                             <Button
@@ -75,8 +94,10 @@
 
                         </VBox>
 
-                        <VBox alignItems="Center" class="loginFooter">
-                            <Text text="© SEPUR — SAP BTP CAP Fiori" class="footerText" />
+                        <VBox class="loginFooter" alignItems="Center">
+                            <Text
+                                text="© SEPUR — Powered by SAP BTP"
+                                class="footerText" />
                         </VBox>
 
                     </VBox>

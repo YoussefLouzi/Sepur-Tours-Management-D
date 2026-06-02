@@ -1,0 +1,278 @@
+.supervisorPage {
+    background: #f5f7fa;
+}
+
+.pageLayout {
+    width: 100%;
+    min-height: 100vh;
+    background: #f5f7fa;
+}
+
+.sideNav {
+    width: 13.5rem;
+    min-height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #dde5ee;
+    box-shadow: 0.25rem 0 1.2rem rgba(15, 23, 42, 0.04);
+    padding: 0.9rem 0.7rem;
+    box-sizing: border-box;
+}
+
+.brandArea {
+    padding: 0.3rem 0.6rem 1rem 0.6rem;
+    border-bottom: 1px solid #edf2f7;
+    margin-bottom: 1rem;
+}
+
+.sapLogo {
+    width: 4rem;
+    height: auto;
+    margin-bottom: 0.7rem;
+    display: block;
+}
+
+.brandTitle {
+    color: #0b1f3a;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.brandSubtitle {
+    color: #6b7c8f;
+    font-size: 0.72rem;
+}
+
+.menuArea {
+    gap: 0.25rem;
+}
+
+.bottomArea {
+    margin-top: auto;
+    border-top: 1px solid #edf2f7;
+    padding-top: 0.8rem;
+}
+
+.menuButton {
+    width: 100%;
+    justify-content: flex-start;
+    margin-bottom: 0.25rem;
+}
+
+.menuButton .sapMBtnInner {
+    justify-content: flex-start;
+    border: none;
+    border-radius: 0.45rem;
+    background: transparent;
+    color: #223548;
+    font-weight: 600;
+}
+
+.menuButton:hover .sapMBtnInner {
+    background: #f2f6fb;
+}
+
+.activeMenu .sapMBtnInner {
+    background: #eaf3ff !important;
+    color: #0a6ed1 !important;
+    border: 1px solid #0a6ed1 !important;
+}
+
+.logoutButton .sapMBtnInner {
+    color: #bb0000 !important;
+}
+
+.mainArea {
+    flex: 1;
+    min-height: 100vh;
+    padding: 0;
+    overflow: auto;
+    background: #f5f7fa;
+}
+
+.topBar {
+    height: 4rem;
+    background: #ffffff;
+    border-bottom: 1px solid #dfe7ef;
+    padding: 0 1.6rem;
+    box-shadow: 0 0.2rem 0.8rem rgba(15, 23, 42, 0.04);
+}
+
+.topTitle {
+    color: #0b1f3a;
+    font-weight: 800;
+    font-size: 1.08rem;
+}
+
+.topArrow {
+    color: #0a6ed1;
+    margin-left: 0.4rem;
+    font-size: 0.75rem;
+}
+
+.contentWrapper {
+    margin: 1rem auto;
+    width: calc(100% - 6rem);
+    max-width: 74rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.06);
+    border-radius: 0.3rem;
+    padding: 0.8rem 1.2rem 1rem 1.2rem;
+}
+
+.moduleTabs {
+    min-height: 3.8rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 1.2rem;
+    margin-bottom: 1rem;
+    padding-top: 0.15rem;
+}
+
+.moduleButton {
+    min-width: 6rem;
+    height: 3.6rem;
+    border-bottom: 0.18rem solid transparent;
+}
+
+.moduleButton .sapMBtnInner {
+    height: 3.45rem;
+    border: none;
+    background: transparent;
+    color: #1f2d3d;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.moduleButton .sapMBtnIcon {
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 2px solid #0a6ed1;
+    border-radius: 50%;
+    color: #0a6ed1;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0 0.18rem 0;
+}
+
+.moduleButton:hover .sapMBtnInner {
+    background: #f7fbff;
+}
+
+.activeModuleButton {
+    border-bottom-color: #0a6ed1 !important;
+}
+
+.activeModuleButton .sapMBtnInner {
+    color: #0a6ed1 !important;
+}
+
+.chartContainer {
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    padding: 0.8rem 1rem 0.8rem 1rem;
+    min-height: 24rem;
+}
+
+.chartHeader {
+    margin-bottom: 0.1rem;
+}
+
+.chartTitle {
+    color: #0b1f3a;
+    font-weight: 800;
+    margin-bottom: 0.1rem;
+    font-size: 1rem;
+}
+
+.chartSubtitle {
+    color: #607083;
+    margin-bottom: 0.2rem;
+    font-size: 0.78rem;
+}
+
+.mainChart {
+    margin: 0 auto;
+    max-width: 54rem;
+}
+
+/* Réduction des marges internes du graphique SAP Viz */
+.mainChart .v-m-title {
+    font-size: 0.9rem !important;
+}
+
+.mainChart .v-info {
+    font-size: 0.75rem !important;
+}
+
+@media (min-width: 1500px) {
+    .contentWrapper {
+        max-width: 82rem;
+    }
+
+    .mainChart {
+        max-width: 62rem;
+    }
+}
+
+@media (max-width: 1100px) {
+    .sideNav {
+        display: none;
+    }
+
+    .contentWrapper {
+        margin: 1rem;
+        width: auto;
+        max-width: none;
+    }
+
+    .moduleTabs {
+        overflow-x: auto;
+        justify-content: flex-start !important;
+    }
+}
+.notificationButton .sapMBtnInner {
+    border-radius: 0.6rem;
+    font-weight: 800;
+}
+
+.notificationButton .sapMBtnIcon {
+    color: #0a6ed1 !important;
+}
+
+.notificationPopoverContent {
+    padding: 0.75rem;
+    gap: 0.6rem;
+}
+
+.notificationItem {
+    border-radius: 0.55rem;
+}
+.notificationButton .sapMBtnInner {
+    border-radius: 0.6rem;
+    font-weight: 800;
+}
+
+.notificationButton .sapMBtnIcon {
+    color: #0a6ed1 !important;
+}
+
+.notificationPopoverContent {
+    padding: 0.75rem;
+    gap: 0.6rem;
+}
+
+.notificationItem {
+    border-radius: 0.55rem;
+}
+
+.notificationSyncText {
+    color: #607083;
+    font-size: 0.78rem;
+    margin-bottom: 0.5rem;
+}

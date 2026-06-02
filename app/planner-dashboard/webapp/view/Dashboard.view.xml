@@ -6,163 +6,192 @@
 
     <App>
         <Page showHeader="false" class="plannerPage">
-
             <content>
-                <VBox class="dashboardShell">
 
-                    <HBox class="topBar" alignItems="Center" justifyContent="SpaceBetween">
-                        <VBox>
-                            <Title text="Dashboard Planificateur" level="H1" class="pageTitle" />
-                            <Text text="{/user/fullName}" class="pageSubtitle" />
-                        </VBox>
+                <HBox class="layoutRoot">
 
-                        <HBox alignItems="Center">
-                            <Button
-                                text="Créer une tournée"
-                                type="Emphasized"
-                                icon="sap-icon://add"
-                                press=".onCreateTour"
-                                class="sapUiSmallMarginEnd" />
+                    <VBox class="sideNav">
 
-                            <Button
-                                text="Déconnexion"
-                                icon="sap-icon://log"
-                                press=".onLogout" />
+                        <HBox class="brandBox" alignItems="Center">
+                            <Image
+                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/1280px-SAP_2011_logo.svg.png"
+                                class="brandLogo"
+                                decorative="false" />
+                            <Text text="SEPUR" class="brandText" />
                         </HBox>
-                    </HBox>
 
-                    <HBox class="statsGrid" wrap="Wrap">
-                        <VBox class="statCard">
-                            <Text text="Total tournées" class="statLabel" />
-                            <ObjectNumber number="{/stats/totalTours}" class="statNumber" />
-                            <Text text="Toutes les tournées créées" class="statHint" />
+                        <VBox class="menuBox">
+                            <Button text="Dashboard" icon="sap-icon://business-objects-experience" class="menuButton activeMenu" press=".onRefresh" />
+                            <Button text="Tournées" icon="sap-icon://map" class="menuButton" press=".onOpenTours" />
+                            <Button text="Roadmaps" icon="sap-icon://journey-arrive" class="menuButton" press=".onOpenRoadmaps" />
+                            <Button text="Clients" icon="sap-icon://customer" class="menuButton" />
+                            <Button text="Véhicules" icon="sap-icon://shipping-status" class="menuButton" />
+                            <Button text="Chauffeurs" icon="sap-icon://employee" class="menuButton" />
+                            <Button text="Paramètres" icon="sap-icon://action-settings" class="menuButton" />
                         </VBox>
 
-                        <VBox class="statCard">
-                            <Text text="Brouillons" class="statLabel" />
-                            <ObjectNumber number="{/stats/draftTours}" class="statNumber" />
-                            <Text text="Tournées en préparation" class="statHint" />
+                        <VBox class="logoutBox">
+                            <Button text="Réduire" icon="sap-icon://slim-arrow-left" class="menuButton" />
+                            <Button text="Déconnexion" icon="sap-icon://log" class="menuButton dangerMenu" press=".onLogout" />
                         </VBox>
 
-                        <VBox class="statCard warningCard">
-                            <Text text="En attente" class="statLabel" />
-                            <ObjectNumber number="{/stats/pendingTours}" class="statNumber" />
-                            <Text text="À valider par le superviseur" class="statHint" />
-                        </VBox>
+                    </VBox>
 
-                        <VBox class="statCard successCard">
-                            <Text text="Acceptées" class="statLabel" />
-                            <ObjectNumber number="{/stats/acceptedTours}" class="statNumber" />
-                            <Text text="Tournées validées" class="statHint" />
-                        </VBox>
+                    <VBox class="mainArea">
 
-                        <VBox class="statCard errorCard">
-                            <Text text="Rejetées" class="statLabel" />
-                            <ObjectNumber number="{/stats/rejectedTours}" class="statNumber" />
-                            <Text text="Correction nécessaire" class="statHint" />
-                        </VBox>
+                        <HBox class="topBar" justifyContent="SpaceBetween" alignItems="Center">
+                            <VBox>
+                                <Title text="Espace de Paramétrage" level="H2" class="topTitle" />
+                                <Text text="Dashboard Planificateur" class="topSubTitle" />
+                            </VBox>
 
-                        <VBox class="statCard">
-                            <Text text="Roadmaps" class="statLabel" />
-                            <ObjectNumber number="{/stats/totalRoadmaps}" class="statNumber" />
-                            <Text text="Feuilles de route générées" class="statHint" />
-                        </VBox>
-                    </HBox>
-
-                    <HBox class="contentGrid" wrap="Wrap">
-
-                        <VBox class="mainPanel">
-                            <HBox alignItems="Center" justifyContent="SpaceBetween" class="panelHeader">
-                                <VBox>
-                                    <Title text="Dernières tournées" level="H3" />
-                                    <Text text="Suivi rapide des tournées récentes" class="panelSubtitle" />
-                                </VBox>
-
+                            <HBox alignItems="Center">
                                 <Button
-                                    text="Voir toutes"
-                                    icon="sap-icon://list"
-                                    press=".onOpenTours" />
+                                    text="Créer une tournée"
+                                    icon="sap-icon://add"
+                                    type="Emphasized"
+                                    press=".onCreateTour"
+                                    class="sapUiSmallMarginEnd" />
+
+                                <Avatar
+                                    initials="{/userInitials}"
+                                    displaySize="XS"
+                                    backgroundColor="Accent6" />
                             </HBox>
+                        </HBox>
 
-                            <Table
-                                id="toursTable"
-                                items="{/tours}"
-                                growing="true"
-                                growingThreshold="5"
-                                noDataText="Aucune tournée disponible.">
+                        <HBox class="moduleTabs" alignItems="Center">
+                            <VBox class="moduleItem activeModule">
+                                <Text text="🏠" class="moduleIcon" />
+                                <Text text="Dashboard" class="moduleText" />
+                            </VBox>
+                            <VBox class="moduleItem">
+                                <Text text="🚚" class="moduleIcon" />
+                                <Text text="Tournées" class="moduleText" />
+                            </VBox>
+                            <VBox class="moduleItem">
+                                <Text text="🧭" class="moduleIcon" />
+                                <Text text="Roadmaps" class="moduleText" />
+                            </VBox>
+                            <VBox class="moduleItem">
+                                <Text text="👤" class="moduleIcon" />
+                                <Text text="Clients" class="moduleText" />
+                            </VBox>
+                            <VBox class="moduleItem">
+                                <Text text="⚙️" class="moduleIcon" />
+                                <Text text="Paramètres" class="moduleText" />
+                            </VBox>
+                        </HBox>
 
-                                <columns>
-                                    <Column>
-                                        <Text text="Code" />
-                                    </Column>
-                                    <Column>
-                                        <Text text="Date" />
-                                    </Column>
-                                    <Column>
-                                        <Text text="Zone" />
-                                    </Column>
-                                    <Column>
-                                        <Text text="Statut" />
-                                    </Column>
-                                </columns>
+                        <HBox class="statsRow" wrap="Wrap">
 
-                                <items>
-                                    <ColumnListItem type="Navigation" press=".onTourPress">
-                                        <cells>
-                                            <ObjectIdentifier title="{tourCode}" />
-                                            <Text text="{tourDate}" />
-                                            <Text text="{zone}" />
-                                            <ObjectStatus
-                                                text="{status}"
-                                                state="{path:'status', formatter:'.formatStatusState'}" />
-                                        </cells>
-                                    </ColumnListItem>
-                                </items>
-                            </Table>
-                        </VBox>
+                            <VBox class="statCard">
+                                <Text text="Total tournées" class="statLabel" />
+                                <ObjectNumber number="{/stats/totalTours}" class="statNumber" />
+                            </VBox>
 
-                        <VBox class="sidePanel">
-                            <Title text="Actions rapides" level="H3" class="sapUiSmallMarginBottom" />
+                            <VBox class="statCard">
+                                <Text text="Brouillons" class="statLabel" />
+                                <ObjectNumber number="{/stats/draftTours}" class="statNumber" />
+                            </VBox>
 
-                            <Button
-                                text="Créer une tournée"
-                                icon="sap-icon://add-document"
-                                type="Emphasized"
-                                width="100%"
-                                press=".onCreateTour"
-                                class="quickButton" />
+                            <VBox class="statCard orange">
+                                <Text text="En attente" class="statLabel" />
+                                <ObjectNumber number="{/stats/pendingTours}" class="statNumber" />
+                            </VBox>
 
-                            <Button
-                                text="Consulter les tournées"
-                                icon="sap-icon://map"
-                                width="100%"
-                                press=".onOpenTours"
-                                class="quickButton" />
+                            <VBox class="statCard green">
+                                <Text text="Acceptées" class="statLabel" />
+                                <ObjectNumber number="{/stats/acceptedTours}" class="statNumber" />
+                            </VBox>
 
-                            <Button
-                                text="Consulter les roadmaps"
-                                icon="sap-icon://journey-arrive"
-                                width="100%"
-                                press=".onOpenRoadmaps"
-                                class="quickButton" />
+                            <VBox class="statCard red">
+                                <Text text="Rejetées" class="statLabel" />
+                                <ObjectNumber number="{/stats/rejectedTours}" class="statNumber" />
+                            </VBox>
 
-                            <Button
-                                text="Actualiser les données"
-                                icon="sap-icon://refresh"
-                                width="100%"
-                                press=".onRefresh"
-                                class="quickButton" />
+                            <VBox class="statCard blue">
+                                <Text text="Roadmaps" class="statLabel" />
+                                <ObjectNumber number="{/stats/totalRoadmaps}" class="statNumber" />
+                            </VBox>
 
-                            <MessageStrip
-                                text="Les roadmaps sont générées à partir des tournées acceptées par le superviseur."
-                                type="Information"
-                                showIcon="true"
-                                class="sapUiMediumMarginTop" />
-                        </VBox>
+                        </HBox>
 
-                    </HBox>
+                        <HBox class="contentRow" wrap="Wrap">
 
-                </VBox>
+                            <VBox class="chartCard">
+                                <Title text="Répartition des tournées par statut" level="H4" class="cardTitle" />
+
+                                <VBox class="barChart">
+
+                                    <HBox class="barItem" alignItems="Center">
+                                        <Text text="Brouillons" class="barLabel" />
+                                        <ProgressIndicator percentValue="{/chart/draftPercent}" displayValue="{/stats/draftTours}" class="barProgress" />
+                                    </HBox>
+
+                                    <HBox class="barItem" alignItems="Center">
+                                        <Text text="En attente" class="barLabel" />
+                                        <ProgressIndicator percentValue="{/chart/pendingPercent}" displayValue="{/stats/pendingTours}" state="Warning" class="barProgress" />
+                                    </HBox>
+
+                                    <HBox class="barItem" alignItems="Center">
+                                        <Text text="Acceptées" class="barLabel" />
+                                        <ProgressIndicator percentValue="{/chart/acceptedPercent}" displayValue="{/stats/acceptedTours}" state="Success" class="barProgress" />
+                                    </HBox>
+
+                                    <HBox class="barItem" alignItems="Center">
+                                        <Text text="Rejetées" class="barLabel" />
+                                        <ProgressIndicator percentValue="{/chart/rejectedPercent}" displayValue="{/stats/rejectedTours}" state="Error" class="barProgress" />
+                                    </HBox>
+
+                                </VBox>
+                            </VBox>
+
+                            <VBox class="tableCard">
+                                <HBox justifyContent="SpaceBetween" alignItems="Center" class="cardHeader">
+                                    <VBox>
+                                        <Title text="Dernières tournées" level="H4" class="cardTitle" />
+                                        <Text text="Dernière mise à jour : aujourd’hui" class="mutedText" />
+                                    </VBox>
+
+                                    <Button icon="sap-icon://refresh" press=".onRefresh" />
+                                </HBox>
+
+                                <Table
+                                    items="{/tours}"
+                                    growing="true"
+                                    growingThreshold="5"
+                                    noDataText="Aucune tournée disponible.">
+
+                                    <columns>
+                                        <Column><Text text="Code" /></Column>
+                                        <Column><Text text="Date" /></Column>
+                                        <Column><Text text="Zone" /></Column>
+                                        <Column><Text text="Statut" /></Column>
+                                        <Column><Text text="Action" /></Column>
+                                    </columns>
+
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <ObjectIdentifier title="{tourCode}" />
+                                                <Text text="{tourDate}" />
+                                                <Text text="{zone}" />
+                                                <ObjectStatus text="{status}" state="{path:'status', formatter:'.formatStatusState'}" />
+                                                <Button icon="sap-icon://navigation-right-arrow" type="Transparent" press=".onOpenTours" />
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+
+                                </Table>
+                            </VBox>
+
+                        </HBox>
+
+                    </VBox>
+
+                </HBox>
+
             </content>
         </Page>
     </App>

@@ -2,130 +2,223 @@
     background: #f4f7fb;
 }
 
-.dashboardShell {
+.layoutRoot {
     min-height: 100vh;
-    padding: 2rem;
+    width: 100%;
+}
+
+.sideNav {
+    width: 14rem;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    padding: 1rem 0.8rem;
     box-sizing: border-box;
+    box-shadow: 0.25rem 0 1.2rem rgba(15, 23, 42, 0.04);
+}
+
+.brandBox {
+    padding: 0.5rem 0.6rem 1.2rem 0.6rem;
+    gap: 0.6rem;
+}
+
+.brandLogo {
+    width: 3rem;
+    height: auto;
+}
+
+.brandText {
+    font-weight: 800;
+    color: #0f172a;
+    font-size: 0.95rem;
+}
+
+.menuBox {
+    gap: 0.25rem;
+}
+
+.logoutBox {
+    margin-top: auto;
+}
+
+.menuButton {
+    justify-content: flex-start;
+    width: 100%;
+    border-radius: 0.55rem;
+    margin-bottom: 0.25rem;
+}
+
+.activeMenu {
+    background: #e8f2ff !important;
+    border: 1px solid #0a6ed1 !important;
+}
+
+.dangerMenu {
+    color: #bb0000;
+}
+
+.mainArea {
+    flex: 1;
+    padding: 1.3rem 1.6rem;
+    box-sizing: border-box;
+    overflow: auto;
 }
 
 .topBar {
     background: #ffffff;
-    padding: 1.5rem 1.8rem;
-    border-radius: 1rem;
-    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
-    margin-bottom: 1.5rem;
-}
-
-.pageTitle {
-    color: #172b4d;
-    font-weight: 800;
-}
-
-.pageSubtitle {
-    color: #637083;
-    margin-top: 0.35rem;
-    font-size: 0.95rem;
-}
-
-.statsGrid {
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.statCard {
-    width: 15.2rem;
-    min-height: 8rem;
-    background: #ffffff;
-    border-radius: 1rem;
-    padding: 1.2rem;
-    box-sizing: border-box;
-    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
-    border-left: 0.35rem solid #0a6ed1;
-}
-
-.warningCard {
-    border-left-color: #e9730c;
-}
-
-.successCard {
-    border-left-color: #107e3e;
-}
-
-.errorCard {
-    border-left-color: #bb0000;
-}
-
-.statLabel {
-    color: #5b6b82;
-    font-weight: 700;
-    font-size: 0.85rem;
-}
-
-.statNumber {
-    margin-top: 0.6rem;
-    font-size: 2rem;
-    font-weight: 800;
-}
-
-.statHint {
-    color: #7b8794;
-    margin-top: 0.35rem;
-    font-size: 0.78rem;
-}
-
-.contentGrid {
-    gap: 1.2rem;
-}
-
-.mainPanel {
-    flex: 1;
-    min-width: 42rem;
-    background: #ffffff;
-    border-radius: 1rem;
-    padding: 1.4rem;
-    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
-}
-
-.sidePanel {
-    width: 22rem;
-    background: #ffffff;
-    border-radius: 1rem;
-    padding: 1.4rem;
-    box-shadow: 0 0.6rem 1.8rem rgba(15, 23, 42, 0.08);
-}
-
-.panelHeader {
+    border-radius: 0.9rem;
+    padding: 1rem 1.3rem;
+    box-shadow: 0 0.5rem 1.4rem rgba(15, 23, 42, 0.06);
     margin-bottom: 1rem;
 }
 
-.panelSubtitle {
-    color: #7b8794;
-    margin-top: 0.25rem;
+.topTitle {
+    color: #111827;
+    font-weight: 800;
 }
 
-.quickButton {
-    margin-bottom: 0.75rem;
-    height: 2.8rem;
-    border-radius: 0.55rem;
+.topSubTitle {
+    color: #6b7280;
 }
 
-@media (max-width: 900px) {
-    .dashboardShell {
+.moduleTabs {
+    background: #ffffff;
+    border-radius: 0.9rem;
+    padding: 0.8rem 1rem;
+    gap: 1rem;
+    box-shadow: 0 0.5rem 1.4rem rgba(15, 23, 42, 0.06);
+    margin-bottom: 1rem;
+}
+
+.moduleItem {
+    width: 6.5rem;
+    align-items: center;
+    padding: 0.4rem;
+    border-bottom: 0.18rem solid transparent;
+}
+
+.activeModule {
+    border-bottom-color: #0a6ed1;
+}
+
+.moduleIcon {
+    font-size: 1.5rem;
+}
+
+.moduleText {
+    font-size: 0.78rem;
+    color: #374151;
+    margin-top: 0.2rem;
+}
+
+.statsRow {
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.statCard {
+    width: 12.5rem;
+    background: #ffffff;
+    border-radius: 0.9rem;
+    padding: 1rem;
+    box-shadow: 0 0.5rem 1.4rem rgba(15, 23, 42, 0.06);
+    border-left: 0.35rem solid #0a6ed1;
+}
+
+.statCard.orange {
+    border-left-color: #e9730c;
+}
+
+.statCard.green {
+    border-left-color: #107e3e;
+}
+
+.statCard.red {
+    border-left-color: #bb0000;
+}
+
+.statCard.blue {
+    border-left-color: #008fd3;
+}
+
+.statLabel {
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.statNumber {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-top: 0.4rem;
+}
+
+.contentRow {
+    gap: 1rem;
+}
+
+.chartCard,
+.tableCard {
+    background: #ffffff;
+    border-radius: 0.9rem;
+    padding: 1.2rem;
+    box-shadow: 0 0.5rem 1.4rem rgba(15, 23, 42, 0.06);
+}
+
+.chartCard {
+    width: 32rem;
+}
+
+.tableCard {
+    flex: 1;
+    min-width: 40rem;
+}
+
+.cardHeader {
+    margin-bottom: 1rem;
+}
+
+.cardTitle {
+    font-weight: 800;
+    color: #111827;
+}
+
+.mutedText {
+    color: #6b7280;
+    font-size: 0.82rem;
+}
+
+.barChart {
+    margin-top: 1rem;
+    gap: 1rem;
+}
+
+.barItem {
+    gap: 1rem;
+}
+
+.barLabel {
+    width: 7rem;
+    color: #374151;
+    font-weight: 600;
+}
+
+.barProgress {
+    flex: 1;
+}
+
+@media (max-width: 1000px) {
+    .sideNav {
+        display: none;
+    }
+
+    .mainArea {
         padding: 1rem;
     }
 
-    .topBar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .mainPanel {
-        min-width: 100%;
-    }
-
-    .sidePanel {
+    .chartCard,
+    .tableCard {
         width: 100%;
+        min-width: 100%;
     }
 
     .statCard {

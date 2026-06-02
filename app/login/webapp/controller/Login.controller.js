@@ -16,14 +16,15 @@ sap.ui.define([
 
         onLogin: async function () {
             const oData = this.getView().getModel().getData();
-            const sUser = (oData.username || "").trim();
+            // const sUser = (oData.username || "").trim();
+            const sUser = (oData.username || "").trim().toLowerCase();
             const sPass = oData.password || "";
             const oStrip = this.byId("msgError");
 
             oStrip.setVisible(false);
 
             if (!sUser || !sPass) {
-                oStrip.setText("Veuillez saisir le compte utilisateur et le mot de passe.");
+                oStrip.setText("Veuillez saisir l'adresse e-mail et le mot de passe.");
                 oStrip.setVisible(true);
                 return;
             }
@@ -67,11 +68,24 @@ sap.ui.define([
 
         onForgotPassword: function () {
             MessageBox.information(
-                "Cette option sera disponible après l'intégration de l'authentification SAP BTP XSUAA.",
+                "Cette option sera disponible après l'intégration de SAP BTP XSUAA.",
                 {
                     title: "Mot de passe oublié"
                 }
             );
+        },
+
+        onTogglePasswordVisibility: function () {
+            const oInput = this.byId("inpPassword");
+            const sType = oInput.getType();
+
+            if (sType === "Password") {
+                oInput.setType("Text");
+                oInput.setValueHelpIconSrc("sap-icon://hide");
+            } else {
+                oInput.setType("Password");
+                oInput.setValueHelpIconSrc("sap-icon://show");
+            }
         }
     });
 });
