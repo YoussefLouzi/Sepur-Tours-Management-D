@@ -6,31 +6,54 @@ service RouteManagementService {
     /* ENTITIES                                              */
     /* ===================================================== */
 
-    entity Users             as projection on db.Users;
-    entity Clients           as projection on db.Clients;
-    entity Vehicles          as projection on db.Vehicles;
-    entity Drivers           as projection on db.Drivers;
-    entity CollectionPoints  as projection on db.CollectionPoints;
+    entity Users as projection on db.Users;
+
+    entity Clients as projection on db.Clients;
+
+    entity Vehicles as projection on db.Vehicles;
+
+    entity Drivers as projection on db.Drivers;
+
+    entity CollectionPoints as projection on db.CollectionPoints;
+
     entity TourCollectionPoints as projection on db.TourCollectionPoints;
 
     entity Tours as projection on db.Tours {
         *,
-        client.name       as clientName : String,
-        vehicle.registrationNumber as vehicleRegistration : String,
-        driver.firstName  as driverFirstName : String,
-        driver.lastName   as driverLastName : String,
-        createdByUser.fullName as createdByName : String
+        client.name                 as clientName          : String,
+        vehicle.registrationNumber  as vehicleRegistration : String,
+        driver.firstName            as driverFirstName     : String,
+        driver.lastName             as driverLastName      : String,
+        createdByUser.fullName      as createdByName       : String,
+
+        virtual statusCriticality   : Integer,
+        virtual canValidate         : Boolean,
+        virtual canReject           : Boolean
+    }
+    actions {
+        action validate() returns Tours;
+        action reject(reason : String) returns Tours;
     };
 
-    entity Roadmaps as projection on db.Roadmaps {
-        *,
-        tour.tourCode as tourCode : String,
-        tour.tourDate as tourDate : Date,
-        tour.zone     as tourZone : String
-    };
+entity Roadmaps as projection on db.Roadmaps {
+    *,
+    tour.tourCode as tourCode : String,
+    tour.tourDate as tourDate : Date,
+    tour.zone     as tourZone : String,
 
-    entity RoadmapSteps      as projection on db.RoadmapSteps;
+    virtual statusCriticality : Integer,
+    virtual canValidate       : Boolean,
+    virtual canReject         : Boolean
+}
+actions {
+    action validateRoadmap() returns Roadmaps;
+    action rejectRoadmap(reason : String) returns Roadmaps;
+};
+
+    entity RoadmapSteps as projection on db.RoadmapSteps;
+
     entity DecisionHistories as projection on db.DecisionHistories;
+
 
     /* ===================================================== */
     /* TYPES — actions & functions                           */
@@ -63,30 +86,32 @@ service RouteManagementService {
     }
 
     type TourDetails {
-        tourID            : UUID;
-        tourCode          : String;
-        tourDate          : Date;
-        zone              : String;
-        collectionType    : String;
-        description       : LargeString;
-        status            : String;
-        rejectionReason   : LargeString;
-        clientName        : String;
+        tourID              : UUID;
+        tourCode            : String;
+        tourDate            : Date;
+        zone                : String;
+        collectionType      : String;
+        description         : LargeString;
+        status              : String;
+        rejectionReason     : LargeString;
+        clientName          : String;
         vehicleRegistration : String;
-        driverName        : String;
-        roadmapCode       : String;
-        roadmapStatus     : String;
-        decisionsCount    : Integer;
-        tourPointsCount   : Integer;
+        driverName          : String;
+        roadmapCode         : String;
+        roadmapStatus       : String;
+        decisionsCount      : Integer;
+        tourPointsCount     : Integer;
     }
+
 
     /* ===================================================== */
     /* ACTIONS & FUNCTIONS                                   */
     /* ===================================================== */
 
-    // Authentification locale (dev) — remplacer par XSUAA en production BTP
+    // Authentification locale DEV — à remplacer par XSUAA en production BTP
     action login(username : String, password : String) returns LoginResult;
 
+    // Actions globales conservées pour le dashboard et les anciennes interfaces
     action submitTour(tourID : UUID) returns Tours;
 
     action acceptTour(tourID : UUID, supervisorID : UUID) returns Tours;
@@ -95,6 +120,7 @@ service RouteManagementService {
 
     action createRoadmapFromTour(tourID : UUID) returns Roadmaps;
 
+    // Fonctions statistiques
     function getPlannerStats(userID : UUID) returns PlannerStats;
 
     function getSupervisorStats() returns SupervisorStats;

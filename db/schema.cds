@@ -64,10 +64,16 @@ entity Tours : cuid, managed {
     zone             : String(100);
     collectionType   : String(50);
     description      : LargeString;
-    status           : String(20) default 'DRAFT'; // DRAFT | PENDING | ACCEPTED | REJECTED
+
+    // CREATED  : créée par le planificateur, en attente de validation
+    // VALIDATED: validée par le superviseur
+    // REJECTED : rejetée par le superviseur avec motif
+    status           : String(20) default 'CREATED';
+
     rejectionReason  : LargeString;
+
     createdAt        : Timestamp @cds.on.insert: $now;
-    updatedAt        : Timestamp @cds.on.insert: $now  @cds.on.update: $now;
+    updatedAt        : Timestamp @cds.on.insert: $now @cds.on.update: $now;
 
     createdByUser : Association to Users;
     client        : Association to Clients;
@@ -76,8 +82,10 @@ entity Tours : cuid, managed {
 
     tourPoints : Composition of many TourCollectionPoints
         on tourPoints.tour = $self;
+
     decisions  : Composition of many DecisionHistories
         on decisions.tour = $self;
+
     roadmap    : Association to Roadmaps;
 }
 
@@ -92,14 +100,22 @@ entity TourCollectionPoints : cuid {
 /* ===================================================== */
 
 entity Roadmaps : cuid, managed {
-    roadmapCode : String(30);
-    status      : String(20) default 'DRAFT'; // DRAFT | ACTIVE | COMPLETED | CANCELLED
-    startDate   : Date;
-    endDate     : Date;
-    createdAt   : Timestamp @cds.on.insert: $now;
-    updatedAt   : Timestamp @cds.on.insert: $now  @cds.on.update: $now;
+    roadmapCode     : String(30);
+
+    // CREATED  : roadmap créée, en attente de validation
+    // VALIDATED: roadmap validée par le superviseur
+    // REJECTED : roadmap rejetée par le superviseur avec motif
+    status          : String(20) default 'CREATED';
+
+    startDate       : Date;
+    endDate         : Date;
+    rejectionReason : LargeString;
+
+    createdAt       : Timestamp @cds.on.insert: $now;
+    updatedAt       : Timestamp @cds.on.insert: $now @cds.on.update: $now;
 
     tour  : Association to Tours;
+
     steps : Composition of many RoadmapSteps
         on steps.roadmap = $self;
 }

@@ -533,11 +533,11 @@ sap.ui.define([
         },
 
         onOpenTours: function () {
-            window.location.href = "/tours/webapp/index.html";
+            window.location.href = "/supervisor-tours/webapp/index.html";
         },
 
         onOpenRoadmaps: function () {
-            window.location.href = "/roadmaps/webapp/index.html";
+            window.location.href = "/supervisor-roadmaps/webapp";
         },
 
         onLogout: function () {

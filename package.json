@@ -16,12 +16,14 @@
   "scripts": {
     "start": "cds-serve",
     "watch": "cds watch",
-    "watch-login": "cds watch --open login/webapp/index.html?sap-ui-xx-viewCache=false",
-    "watch-tours": "cds watch --open tours/webapp/index.html?sap-ui-xx-viewCache=false",
-    "watch-roadmaps": "cds watch --open roadmaps/webapp/index.html?sap-ui-xx-viewCache=false",
+    "watch-login": "cds watch --open sepur.login/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-tours": "cds watch --open ns.tours/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-roadmaps": "cds watch --open ns.roadmaps/index.html?sap-ui-xx-viewCache=false --livereload false",
     "undeploy": "cf undeploy Sepur_tours_management --delete-services --delete-service-keys --delete-service-brokers",
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
-    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
+    "watch-supervisor-tours": "cds watch --open sepur.supervisor.supervisortours/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-supervisor-roadmaps": "cds watch --open sepur.supervisor.supervisorroadmaps/index.html?sap-ui-xx-viewCache=false --livereload false"
   },
   "private": true,
   "workspaces": [
@@ -32,18 +34,20 @@
     "app/planner-dashboard",
     "app/supervisor-dashboard",
     "app/tours",
-    "app/roadmaps"
+    "app/roadmaps",
+    "app/supervisor-tours",
+    "app/supervisor-roadmaps"
   ],
-"cds": {
-  "requires": {
-    "[development]": {
-      "db": {
-        "kind": "sqlite"
-      },
-      "auth": {
-        "kind": "dummy"
+  "cds": {
+    "requires": {
+      "[development]": {
+        "db": {
+          "kind": "sqlite"
+        },
+        "auth": {
+          "kind": "dummy"
+        }
       }
     }
   }
-}
 }

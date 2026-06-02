@@ -38,9 +38,37 @@ modules:
       - nstours.zip
       name: nstours
       target-path: resources/
+    - artifacts:
+      - sepursupervisorsupervisortours.zip
+      name: sepursupervisorsupervisortours
+      target-path: resources/
+    - artifacts:
+      - sepursupervisorsupervisorroadmaps.zip
+      name: sepursupervisorsupervisorroadmaps
+      target-path: resources/
 - name: nstours
   type: html5
   path: app/tours
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: sepursupervisorsupervisortours
+  type: html5
+  path: app/supervisor-tours
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: sepursupervisorsupervisorroadmaps
+  type: html5
+  path: app/supervisor-roadmaps
   build-parameters:
     build-result: dist
     builder: custom
