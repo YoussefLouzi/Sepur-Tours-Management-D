@@ -46,6 +46,10 @@ modules:
       - sepursupervisorsupervisorroadmaps.zip
       name: sepursupervisorsupervisorroadmaps
       target-path: resources/
+    - artifacts:
+      - sepursupervisorsupervisordashboardfiori.zip
+      name: sepursupervisorsupervisordashboardfiori
+      target-path: resources/
 - name: nstours
   type: html5
   path: app/tours
@@ -69,6 +73,16 @@ modules:
 - name: sepursupervisorsupervisorroadmaps
   type: html5
   path: app/supervisor-roadmaps
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: sepursupervisorsupervisordashboardfiori
+  type: html5
+  path: app/supervisor-dashboard-fiori
   build-parameters:
     build-result: dist
     builder: custom

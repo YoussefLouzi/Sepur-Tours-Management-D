@@ -17,8 +17,8 @@ service RouteManagementService {
     entity CollectionPoints as projection on db.CollectionPoints;
 
     entity TourCollectionPoints as projection on db.TourCollectionPoints;
-
-    entity Tours as projection on db.Tours {
+@cds.redirection.target: true
+entity Tours as projection on db.Tours {
         *,
         client.name                 as clientName          : String,
         vehicle.registrationNumber  as vehicleRegistration : String,
@@ -35,20 +35,21 @@ service RouteManagementService {
         action reject(reason : String) returns Tours;
     };
 
+    @cds.redirection.target: true
 entity Roadmaps as projection on db.Roadmaps {
-    *,
-    tour.tourCode as tourCode : String,
-    tour.tourDate as tourDate : Date,
-    tour.zone     as tourZone : String,
+        *,
+        tour.tourCode as tourCode : String,
+        tour.tourDate as tourDate : Date,
+        tour.zone     as tourZone : String,
 
-    virtual statusCriticality : Integer,
-    virtual canValidate       : Boolean,
-    virtual canReject         : Boolean
-}
-actions {
-    action validateRoadmap() returns Roadmaps;
-    action rejectRoadmap(reason : String) returns Roadmaps;
-};
+        virtual statusCriticality : Integer,
+        virtual canValidate       : Boolean,
+        virtual canReject         : Boolean
+    }
+    actions {
+        action validateRoadmap() returns Roadmaps;
+        action rejectRoadmap(reason : String) returns Roadmaps;
+    };
 
     entity RoadmapSteps as projection on db.RoadmapSteps;
 
@@ -56,7 +57,57 @@ actions {
 
 
     /* ===================================================== */
-    /* TYPES — actions & functions                           */
+    /* ANALYTICS ENTITIES FOR OVP DASHBOARD                  */
+    /* ===================================================== */
+
+    @Aggregation.ApplySupported: {
+        Transformations: [
+            'aggregate',
+            'groupby',
+            'filter',
+            'search'
+        ],
+        GroupableProperties: [
+            status
+        ],
+        AggregatableProperties: [
+            {
+                Property: total
+            }
+        ]
+    }
+    entity TourStatusAnalytics as select from db.Tours {
+        key status   as status,
+            count(1) as total : Integer
+    }
+    group by status;
+
+
+    @Aggregation.ApplySupported: {
+        Transformations: [
+            'aggregate',
+            'groupby',
+            'filter',
+            'search'
+        ],
+        GroupableProperties: [
+            status
+        ],
+        AggregatableProperties: [
+            {
+                Property: total
+            }
+        ]
+    }
+    entity RoadmapStatusAnalytics as select from db.Roadmaps {
+        key status   as status,
+            count(1) as total : Integer
+    }
+    group by status;
+
+
+    /* ===================================================== */
+    /* TYPES                                                 */
     /* ===================================================== */
 
     type LoginResult {
@@ -108,10 +159,8 @@ actions {
     /* ACTIONS & FUNCTIONS                                   */
     /* ===================================================== */
 
-    // Authentification locale DEV — à remplacer par XSUAA en production BTP
     action login(username : String, password : String) returns LoginResult;
 
-    // Actions globales conservées pour le dashboard et les anciennes interfaces
     action submitTour(tourID : UUID) returns Tours;
 
     action acceptTour(tourID : UUID, supervisorID : UUID) returns Tours;
@@ -120,7 +169,6 @@ actions {
 
     action createRoadmapFromTour(tourID : UUID) returns Roadmaps;
 
-    // Fonctions statistiques
     function getPlannerStats(userID : UUID) returns PlannerStats;
 
     function getSupervisorStats() returns SupervisorStats;

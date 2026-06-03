@@ -701,6 +701,76 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     });
 
     /* ===================================================== */
+/* ANALYTICS — DASHBOARD OVP                             */
+/* ===================================================== */
+
+// this.on('READ', 'TourStatusAnalytics', async () => {
+//   const tours = await SELECT.from(Tours).columns('status');
+
+//   const counts = {
+//     CREATED: 0,
+//     VALIDATED: 0,
+//     REJECTED: 0
+//   };
+
+//   for (const tour of tours) {
+//     const status = normalizeTourStatus(tour.status);
+//     counts[status] = (counts[status] || 0) + 1;
+//   }
+
+//   return [
+//     {
+//       status: 'CREATED',
+//       total: counts.CREATED,
+//       criticality: 2
+//     },
+//     {
+//       status: 'VALIDATED',
+//       total: counts.VALIDATED,
+//       criticality: 3
+//     },
+//     {
+//       status: 'REJECTED',
+//       total: counts.REJECTED,
+//       criticality: 1
+//     }
+//   ];
+// });
+
+// this.on('READ', 'RoadmapStatusAnalytics', async () => {
+//   const roadmaps = await SELECT.from(Roadmaps).columns('status');
+
+//   const counts = {
+//     CREATED: 0,
+//     VALIDATED: 0,
+//     REJECTED: 0
+//   };
+
+//   for (const roadmap of roadmaps) {
+//     const status = normalizeRoadmapStatus(roadmap.status);
+//     counts[status] = (counts[status] || 0) + 1;
+//   }
+
+//   return [
+//     {
+//       status: 'CREATED',
+//       total: counts.CREATED,
+//       criticality: 2
+//     },
+//     {
+//       status: 'VALIDATED',
+//       total: counts.VALIDATED,
+//       criticality: 3
+//     },
+//     {
+//       status: 'REJECTED',
+//       total: counts.REJECTED,
+//       criticality: 1
+//     }
+//   ];
+// });
+
+    /* ===================================================== */
     /* TOUR DETAILS                                          */
     /* ===================================================== */
 

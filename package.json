@@ -23,7 +23,8 @@
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
     "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
     "watch-supervisor-tours": "cds watch --open sepur.supervisor.supervisortours/index.html?sap-ui-xx-viewCache=false --livereload false",
-    "watch-supervisor-roadmaps": "cds watch --open sepur.supervisor.supervisorroadmaps/index.html?sap-ui-xx-viewCache=false --livereload false"
+    "watch-supervisor-roadmaps": "cds watch --open sepur.supervisor.supervisorroadmaps/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-supervisor-dashboard-fiori": "cds watch --open sepur.supervisor.supervisordashboardfiori/index.html?sap-ui-xx-viewCache=false --livereload false"
   },
   "private": true,
   "workspaces": [
@@ -36,7 +37,8 @@
     "app/tours",
     "app/roadmaps",
     "app/supervisor-tours",
-    "app/supervisor-roadmaps"
+    "app/supervisor-roadmaps",
+    "app/supervisor-dashboard-fiori"
   ],
   "cds": {
     "requires": {
