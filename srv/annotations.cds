@@ -478,6 +478,19 @@ annotate service.TourStatusAnalytics with @(
         ]
     },
 
+    UI.Identification #TourStatusIdentification: [
+        {
+            $Type: 'UI.DataField',
+            Label: 'Statut',
+            Value: status
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Nombre de tournées',
+            Value: total
+        }
+    ],
+
     UI.LineItem #TourStatusTable: [
         {
             $Type: 'UI.DataField',
@@ -534,6 +547,19 @@ annotate service.RoadmapStatusAnalytics with @(
         ]
     },
 
+    UI.Identification #RoadmapStatusIdentification: [
+        {
+            $Type: 'UI.DataField',
+            Label: 'Statut',
+            Value: status
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Nombre de roadmaps',
+            Value: total
+        }
+    ],
+
     UI.LineItem #RoadmapStatusTable: [
         {
             $Type: 'UI.DataField',
@@ -553,7 +579,6 @@ annotate service.RoadmapStatusAnalytics with {
     total  @Common.Label: 'Nombre de roadmaps';
     total  @Aggregation.default: #SUM;
 };
-
 
 /* ===================================================== */
 /* RELATED ENTITIES                                      */

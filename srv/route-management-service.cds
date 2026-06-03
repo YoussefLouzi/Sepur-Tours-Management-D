@@ -56,54 +56,47 @@ entity Roadmaps as projection on db.Roadmaps {
     entity DecisionHistories as projection on db.DecisionHistories;
 
 
-    /* ===================================================== */
-    /* ANALYTICS ENTITIES FOR OVP DASHBOARD                  */
-    /* ===================================================== */
+   /* ===================================================== */
+/* ANALYTICS ENTITIES FOR OVP DASHBOARD                  */
+/* ===================================================== */
 
-    @Aggregation.ApplySupported: {
-        Transformations: [
-            'aggregate',
-            'groupby',
-            'filter',
-            'search'
-        ],
-        GroupableProperties: [
-            status
-        ],
-        AggregatableProperties: [
-            {
-                Property: total
-            }
-        ]
-    }
-    entity TourStatusAnalytics as select from db.Tours {
-        key status   as status,
-            count(1) as total : Integer
-    }
-    group by status;
+@readonly
+@Aggregation.ApplySupported: {
+    Transformations: [
+        'aggregate',
+        'groupby',
+        'filter',
+        'search'
+    ],
+    GroupableProperties: [
+        status
+    ],
+    AggregatableProperties: [
+        {
+            Property: total
+        }
+    ]
+}
+entity TourStatusAnalytics as projection on db.TourStatusAnalytics;
 
-
-    @Aggregation.ApplySupported: {
-        Transformations: [
-            'aggregate',
-            'groupby',
-            'filter',
-            'search'
-        ],
-        GroupableProperties: [
-            status
-        ],
-        AggregatableProperties: [
-            {
-                Property: total
-            }
-        ]
-    }
-    entity RoadmapStatusAnalytics as select from db.Roadmaps {
-        key status   as status,
-            count(1) as total : Integer
-    }
-    group by status;
+@readonly
+@Aggregation.ApplySupported: {
+    Transformations: [
+        'aggregate',
+        'groupby',
+        'filter',
+        'search'
+    ],
+    GroupableProperties: [
+        status
+    ],
+    AggregatableProperties: [
+        {
+            Property: total
+        }
+    ]
+}
+entity RoadmapStatusAnalytics as projection on db.RoadmapStatusAnalytics;
 
 
     /* ===================================================== */

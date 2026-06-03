@@ -140,3 +140,33 @@ entity DecisionHistories : cuid {
     decidedBy    : Association to Users;
     tour         : Association to Tours;
 }
+
+
+/* ===================================================== */
+/* ANALYTICS VIEWS FOR OVP DASHBOARD                     */
+/* ===================================================== */
+
+entity TourStatusAnalytics as select from Tours {
+    key status as status,
+        count(1) as total : Integer,
+        case
+            when status = 'VALIDATED' then 3
+            when status = 'REJECTED' then 1
+            else 2
+        end as criticality : Integer
+}
+group by status;
+
+entity RoadmapStatusAnalytics as select from Roadmaps {
+    key status as status,
+        count(1) as total : Integer,
+        case
+            when status = 'VALIDATED' then 3
+            when status = 'ACTIVE' then 3
+            when status = 'COMPLETED' then 3
+            when status = 'REJECTED' then 1
+            when status = 'CANCELLED' then 1
+            else 2
+        end as criticality : Integer
+}
+group by status;

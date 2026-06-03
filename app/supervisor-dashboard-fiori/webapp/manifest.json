@@ -47,13 +47,14 @@
     "dependencies": {
       "minUI5Version": "1.148.1",
       "libs": {
-        "sap.m": {},
-        "sap.ui.core": {},
-        "sap.fe.templates": {},
-        "sap.ovp": {},
-        "sap.ui.rta": {},
-        "sap.ui.layout": {}
-      }
+  "sap.m": {},
+  "sap.ui.core": {},
+  "sap.fe.templates": {},
+  "sap.ovp": {},
+  "sap.ui.rta": {},
+  "sap.ui.layout": {},
+  "sap.viz": {}
+}
     },
     "contentDensities": {
       "compact": true,
@@ -97,70 +98,71 @@
     "considerAnalyticalParameters": false,
     "globalFilterControlType": "MacroFilterBar",
     "cards": {
-      "cardTourStatusChart": {
-        "model": "mainModel",
-        "template": "sap.ovp.cards.v4.charts.analytical",
-        "settings": {
-          "title": "Statistiques des tournées",
-          "subTitle": "Répartition par statut",
-          "entitySet": "TourStatusAnalytics",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#TourStatusChart",
-          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#TourStatusPV",
-          "showRefresh": true,
-          "defaultSpan": {
-            "rows": 8,
-            "cols": 2
-          }
-        }
-      },
-      "cardRoadmapStatusChart": {
-        "model": "mainModel",
-        "template": "sap.ovp.cards.v4.charts.analytical",
-        "settings": {
-          "title": "Statistiques des roadmaps",
-          "subTitle": "Répartition par statut",
-          "entitySet": "RoadmapStatusAnalytics",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#RoadmapStatusChart",
-          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#RoadmapStatusPV",
-          "showRefresh": true,
-          "defaultSpan": {
-            "rows": 8,
-            "cols": 2
-          }
-        }
-      },
-      "cardTours": {
-        "model": "mainModel",
-        "template": "sap.ovp.cards.v4.table",
-        "settings": {
-          "title": "Tournées de collecte",
-          "subTitle": "Dernières tournées créées, validées ou rejetées",
-          "entitySet": "Tours",
-          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#DashboardTours",
-          "showRefresh": true,
-          "defaultSpan": {
-            "rows": 8,
-            "cols": 2
-          }
-        }
-      },
-      "cardRoadmaps": {
-        "model": "mainModel",
-        "template": "sap.ovp.cards.v4.table",
-        "settings": {
-          "title": "Roadmaps",
-          "subTitle": "Roadmaps générées à partir des tournées validées",
-          "entitySet": "Roadmaps",
-          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#DashboardRoadmaps",
-          "showRefresh": true,
-          "defaultSpan": {
-            "rows": 8,
-            "cols": 2
-          }
-        }
+  "cardTourStatusChart": {
+  "model": "mainModel",
+  "template": "sap.ovp.cards.v4.charts.analytical",
+  "settings": {
+    "title": "Statistiques des tournées",
+    "subTitle": "Répartition par statut",
+    "entitySet": "TourStatusAnalytics",
+    "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#TourStatusChart",
+    "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#TourStatusPV",
+    "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification#TourStatusIdentification",
+    "showRefresh": true,
+    "defaultSpan": {
+      "rows": 8,
+      "cols": 1
+    }
+  }
+},
+"cardRoadmapStatusChart": {
+  "model": "mainModel",
+  "template": "sap.ovp.cards.v4.charts.analytical",
+  "settings": {
+    "title": "Statistiques des roadmaps",
+    "subTitle": "Répartition par statut",
+    "entitySet": "RoadmapStatusAnalytics",
+    "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#RoadmapStatusChart",
+    "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#RoadmapStatusPV",
+    "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification#RoadmapStatusIdentification",
+    "showRefresh": true,
+    "defaultSpan": {
+      "rows": 8,
+      "cols": 1
+    }
+  }
+},
+  "cardTours": {
+    "model": "mainModel",
+    "template": "sap.ovp.cards.v4.table",
+    "settings": {
+      "title": "Tournées de collecte",
+      "subTitle": "Dernières tournées créées, validées ou rejetées",
+      "entitySet": "Tours",
+      "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#DashboardTours",
+      "showRefresh": true,
+      "defaultSpan": {
+        "rows": 8,
+        "cols": 2
       }
     }
   },
+  "cardRoadmaps": {
+    "model": "mainModel",
+    "template": "sap.ovp.cards.v4.table",
+    "settings": {
+      "title": "Roadmaps",
+      "subTitle": "Roadmaps générées à partir des tournées validées",
+      "entitySet": "Roadmaps",
+      "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#DashboardRoadmaps",
+      "showRefresh": true,
+      "defaultSpan": {
+        "rows": 8,
+        "cols": 2
+      }
+    }
+  }
+},
   "sap.fiori": {
     "registrationIds": [],
     "archeType": "analytical"
@@ -170,4 +172,5 @@
       "enableLazyLoading": true
     }
   }
+}
 }
