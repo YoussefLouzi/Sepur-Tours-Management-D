@@ -1,48 +1,55 @@
 <mvc:View
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:viz.data="sap.viz.ui5.data"
+    xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
     controllerName="sepur.planner.controller.Dashboard"
     displayBlock="true">
 
     <App>
         <Page showHeader="false" class="plannerPage">
             <content>
-
                 <HBox class="layoutRoot">
 
+                    <!-- SIDEBAR -->
                     <VBox class="sideNav">
 
-                        <HBox class="brandBox" alignItems="Center">
-                            <Image
-                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/1280px-SAP_2011_logo.svg.png"
-                                class="brandLogo"
-                                decorative="false" />
-                            <Text text="SEPUR" class="brandText" />
+                        <HBox class="brandBox" alignItems="Start">
+                            <VBox>
+                                <Image
+                                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/1280px-SAP_2011_logo.svg.png"
+                                    class="brandLogo"
+                                    decorative="false" />
+
+                                <Text text="SEPUR" class="brandText" />
+                                <Text text="Planification" class="brandSubText" />
+                            </VBox>
                         </HBox>
 
                         <VBox class="menuBox">
                             <Button text="Dashboard" icon="sap-icon://business-objects-experience" class="menuButton activeMenu" press=".onRefresh" />
                             <Button text="Tournées" icon="sap-icon://map" class="menuButton" press=".onOpenTours" />
                             <Button text="Roadmaps" icon="sap-icon://journey-arrive" class="menuButton" press=".onOpenRoadmaps" />
-                            <Button text="Clients" icon="sap-icon://customer" class="menuButton" />
-                            <Button text="Véhicules" icon="sap-icon://shipping-status" class="menuButton" />
-                            <Button text="Chauffeurs" icon="sap-icon://employee" class="menuButton" />
-                            <Button text="Paramètres" icon="sap-icon://action-settings" class="menuButton" />
+                            <Button text="Tournées rejetées" icon="sap-icon://message-error" class="menuButton" press=".onOpenRejectedTours" />
+                            <Button text="Accueil" icon="sap-icon://home" class="menuButton" press=".onOpenHome" />
                         </VBox>
 
                         <VBox class="logoutBox">
-                            <Button text="Réduire" icon="sap-icon://slim-arrow-left" class="menuButton" />
+                            <Button text="Actualiser" icon="sap-icon://refresh" class="menuButton" press=".onRefresh" />
                             <Button text="Déconnexion" icon="sap-icon://log" class="menuButton dangerMenu" press=".onLogout" />
                         </VBox>
 
                     </VBox>
 
-                    <VBox class="mainArea">
+                    <!-- MAIN AREA -->
+                    <VBox class="mainArea" busy="{/busy}">
 
+                        <!-- TOP BAR -->
                         <HBox class="topBar" justifyContent="SpaceBetween" alignItems="Center">
                             <VBox>
-                                <Title text="Espace de Paramétrage" level="H2" class="topTitle" />
-                                <Text text="Dashboard Planificateur" class="topSubTitle" />
+                                <Title text="Espace Planificateur" level="H2" class="topTitle" />
+                                <Text text="Suivi des tournées, des roadmaps et des actions de planification" class="topSubTitle" />
                             </VBox>
 
                             <HBox alignItems="Center">
@@ -53,132 +60,215 @@
                                     press=".onCreateTour"
                                     class="sapUiSmallMarginEnd" />
 
+                                <Button
+                                    icon="sap-icon://refresh"
+                                    type="Transparent"
+                                    press=".onRefresh"
+                                    class="sapUiSmallMarginEnd" />
+
                                 <Avatar
                                     initials="{/userInitials}"
-                                    displaySize="XS"
+                                    displaySize="S"
                                     backgroundColor="Accent6" />
                             </HBox>
                         </HBox>
 
-                        <HBox class="moduleTabs" alignItems="Center">
-                            <VBox class="moduleItem activeModule">
-                                <Text text="🏠" class="moduleIcon" />
-                                <Text text="Dashboard" class="moduleText" />
+                        <!-- WELCOME CARD -->
+                        <HBox class="welcomeCard" justifyContent="SpaceBetween" alignItems="Center">
+                            <VBox>
+                                <Text text="Bienvenue" class="welcomeLabel" />
+                                <Title text="{/user/fullName}" level="H3" class="welcomeTitle" />
+                                <Text text="Vous pouvez suivre les tournées créées, consulter les roadmaps et reprendre les éléments rejetés." class="welcomeText" />
                             </VBox>
-                            <VBox class="moduleItem">
-                                <Text text="🚚" class="moduleIcon" />
-                                <Text text="Tournées" class="moduleText" />
-                            </VBox>
-                            <VBox class="moduleItem">
-                                <Text text="🧭" class="moduleIcon" />
-                                <Text text="Roadmaps" class="moduleText" />
-                            </VBox>
-                            <VBox class="moduleItem">
-                                <Text text="👤" class="moduleIcon" />
-                                <Text text="Clients" class="moduleText" />
-                            </VBox>
-                            <VBox class="moduleItem">
-                                <Text text="⚙️" class="moduleIcon" />
-                                <Text text="Paramètres" class="moduleText" />
+
+                            <VBox class="welcomeActions">
+                                <Button text="Tournées" icon="sap-icon://map" type="Transparent" press=".onOpenTours" />
+                                <Button text="Roadmaps" icon="sap-icon://journey-arrive" type="Transparent" press=".onOpenRoadmaps" />
                             </VBox>
                         </HBox>
 
+                        <!-- KPI CARDS -->
                         <HBox class="statsRow" wrap="Wrap">
 
-                            <VBox class="statCard">
+                            <VBox class="statCard blue">
                                 <Text text="Total tournées" class="statLabel" />
                                 <ObjectNumber number="{/stats/totalTours}" class="statNumber" />
-                            </VBox>
-
-                            <VBox class="statCard">
-                                <Text text="Brouillons" class="statLabel" />
-                                <ObjectNumber number="{/stats/draftTours}" class="statNumber" />
+                                <Text text="Toutes les tournées suivies" class="statHint" />
                             </VBox>
 
                             <VBox class="statCard orange">
-                                <Text text="En attente" class="statLabel" />
-                                <ObjectNumber number="{/stats/pendingTours}" class="statNumber" />
+                                <Text text="Tournées créées" class="statLabel" />
+                                <ObjectNumber number="{/stats/createdTours}" class="statNumber" />
+                                <Text text="En attente de traitement" class="statHint" />
                             </VBox>
 
                             <VBox class="statCard green">
-                                <Text text="Acceptées" class="statLabel" />
-                                <ObjectNumber number="{/stats/acceptedTours}" class="statNumber" />
+                                <Text text="Tournées validées" class="statLabel" />
+                                <ObjectNumber number="{/stats/validatedTours}" class="statNumber" />
+                                <Text text="Acceptées par le superviseur" class="statHint" />
                             </VBox>
 
                             <VBox class="statCard red">
-                                <Text text="Rejetées" class="statLabel" />
+                                <Text text="Tournées rejetées" class="statLabel" />
                                 <ObjectNumber number="{/stats/rejectedTours}" class="statNumber" />
+                                <Text text="À corriger par le planificateur" class="statHint" />
                             </VBox>
 
-                            <VBox class="statCard blue">
+                            <VBox class="statCard purple">
                                 <Text text="Roadmaps" class="statLabel" />
                                 <ObjectNumber number="{/stats/totalRoadmaps}" class="statNumber" />
+                                <Text text="Roadmaps générées" class="statHint" />
                             </VBox>
 
                         </HBox>
 
-                        <HBox class="contentRow" wrap="Wrap">
+                        <!-- CHARTS -->
+                        <HBox class="chartsRow" wrap="Wrap">
 
                             <VBox class="chartCard">
-                                <Title text="Répartition des tournées par statut" level="H4" class="cardTitle" />
+                                <HBox class="cardHeader" justifyContent="SpaceBetween" alignItems="Center">
+                                    <VBox>
+                                        <Title text="Statistiques des tournées" level="H4" class="cardTitle" />
+                                        <Text text="Répartition par statut" class="mutedText" />
+                                    </VBox>
+                                    <Button icon="sap-icon://refresh" type="Transparent" press=".onRefresh" />
+                                </HBox>
 
-                                <VBox class="barChart">
+                                <viz:VizFrame
+                                    id="tourStatusChart"
+                                    uiConfig="{applicationSet:'fiori'}"
+                                    vizType="donut"
+                                    width="100%"
+                                    height="260px">
 
-                                    <HBox class="barItem" alignItems="Center">
-                                        <Text text="Brouillons" class="barLabel" />
-                                        <ProgressIndicator percentValue="{/chart/draftPercent}" displayValue="{/stats/draftTours}" class="barProgress" />
-                                    </HBox>
+                                    <viz:dataset>
+                                        <viz.data:FlattenedDataset data="{/tourChartData}">
+                                            <viz.data:dimensions>
+                                                <viz.data:DimensionDefinition name="Statut" value="{status}" />
+                                            </viz.data:dimensions>
+                                            <viz.data:measures>
+                                                <viz.data:MeasureDefinition name="Nombre" value="{total}" />
+                                            </viz.data:measures>
+                                        </viz.data:FlattenedDataset>
+                                    </viz:dataset>
 
-                                    <HBox class="barItem" alignItems="Center">
-                                        <Text text="En attente" class="barLabel" />
-                                        <ProgressIndicator percentValue="{/chart/pendingPercent}" displayValue="{/stats/pendingTours}" state="Warning" class="barProgress" />
-                                    </HBox>
-
-                                    <HBox class="barItem" alignItems="Center">
-                                        <Text text="Acceptées" class="barLabel" />
-                                        <ProgressIndicator percentValue="{/chart/acceptedPercent}" displayValue="{/stats/acceptedTours}" state="Success" class="barProgress" />
-                                    </HBox>
-
-                                    <HBox class="barItem" alignItems="Center">
-                                        <Text text="Rejetées" class="barLabel" />
-                                        <ProgressIndicator percentValue="{/chart/rejectedPercent}" displayValue="{/stats/rejectedTours}" state="Error" class="barProgress" />
-                                    </HBox>
-
-                                </VBox>
+                                    <viz:feeds>
+                                        <viz.feeds:FeedItem uid="size" type="Measure" values="Nombre" />
+                                        <viz.feeds:FeedItem uid="color" type="Dimension" values="Statut" />
+                                    </viz:feeds>
+                                </viz:VizFrame>
                             </VBox>
+
+                            <VBox class="chartCard">
+                                <HBox class="cardHeader" justifyContent="SpaceBetween" alignItems="Center">
+                                    <VBox>
+                                        <Title text="Statistiques des roadmaps" level="H4" class="cardTitle" />
+                                        <Text text="Répartition par statut" class="mutedText" />
+                                    </VBox>
+                                    <Button icon="sap-icon://refresh" type="Transparent" press=".onRefresh" />
+                                </HBox>
+
+                                <viz:VizFrame
+                                    id="roadmapStatusChart"
+                                    uiConfig="{applicationSet:'fiori'}"
+                                    vizType="column"
+                                    width="100%"
+                                    height="260px">
+
+                                    <viz:dataset>
+                                        <viz.data:FlattenedDataset data="{/roadmapChartData}">
+                                            <viz.data:dimensions>
+                                                <viz.data:DimensionDefinition name="Statut" value="{status}" />
+                                            </viz.data:dimensions>
+                                            <viz.data:measures>
+                                                <viz.data:MeasureDefinition name="Nombre" value="{total}" />
+                                            </viz.data:measures>
+                                        </viz.data:FlattenedDataset>
+                                    </viz:dataset>
+
+                                    <viz:feeds>
+                                        <viz.feeds:FeedItem uid="valueAxis" type="Measure" values="Nombre" />
+                                        <viz.feeds:FeedItem uid="categoryAxis" type="Dimension" values="Statut" />
+                                    </viz:feeds>
+                                </viz:VizFrame>
+                            </VBox>
+
+                        </HBox>
+
+                        <!-- TABLES -->
+                        <HBox class="tablesRow" wrap="Wrap">
 
                             <VBox class="tableCard">
                                 <HBox justifyContent="SpaceBetween" alignItems="Center" class="cardHeader">
                                     <VBox>
                                         <Title text="Dernières tournées" level="H4" class="cardTitle" />
-                                        <Text text="Dernière mise à jour : aujourd’hui" class="mutedText" />
+                                        <Text text="Tournées récemment créées ou modifiées" class="mutedText" />
                                     </VBox>
-
-                                    <Button icon="sap-icon://refresh" press=".onRefresh" />
+                                    <Button text="Voir tout" icon="sap-icon://navigation-right-arrow" type="Transparent" press=".onOpenTours" />
                                 </HBox>
 
                                 <Table
                                     items="{/tours}"
                                     growing="true"
-                                    growingThreshold="5"
+                                    growingThreshold="6"
                                     noDataText="Aucune tournée disponible.">
 
                                     <columns>
-                                        <Column><Text text="Code" /></Column>
+                                        <Column><Text text="N° tournée" /></Column>
                                         <Column><Text text="Date" /></Column>
+                                        <Column><Text text="Client" /></Column>
                                         <Column><Text text="Zone" /></Column>
                                         <Column><Text text="Statut" /></Column>
-                                        <Column><Text text="Action" /></Column>
                                     </columns>
 
                                     <items>
-                                        <ColumnListItem>
+                                        <ColumnListItem type="Navigation" press=".onOpenTours">
                                             <cells>
-                                                <ObjectIdentifier title="{tourCode}" />
-                                                <Text text="{tourDate}" />
+                                                <ObjectIdentifier title="{tourCode}" text="{collectionType}" />
+                                                <Text text="{path:'tourDate', formatter:'.formatDate'}" />
+                                                <Text text="{clientName}" />
                                                 <Text text="{zone}" />
-                                                <ObjectStatus text="{status}" state="{path:'status', formatter:'.formatStatusState'}" />
-                                                <Button icon="sap-icon://navigation-right-arrow" type="Transparent" press=".onOpenTours" />
+                                                <ObjectStatus
+                                                    text="{path:'status', formatter:'.formatStatusText'}"
+                                                    state="{path:'status', formatter:'.formatStatusState'}" />
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+
+                                </Table>
+                            </VBox>
+
+                            <VBox class="tableCard">
+                                <HBox justifyContent="SpaceBetween" alignItems="Center" class="cardHeader">
+                                    <VBox>
+                                        <Title text="Dernières roadmaps" level="H4" class="cardTitle" />
+                                        <Text text="Roadmaps liées aux tournées planifiées" class="mutedText" />
+                                    </VBox>
+                                    <Button text="Voir tout" icon="sap-icon://navigation-right-arrow" type="Transparent" press=".onOpenRoadmaps" />
+                                </HBox>
+
+                                <Table
+                                    items="{/roadmaps}"
+                                    growing="true"
+                                    growingThreshold="6"
+                                    noDataText="Aucune roadmap disponible.">
+
+                                    <columns>
+                                        <Column><Text text="N° roadmap" /></Column>
+                                        <Column><Text text="Tournée" /></Column>
+                                        <Column><Text text="Date début" /></Column>
+                                        <Column><Text text="Statut" /></Column>
+                                    </columns>
+
+                                    <items>
+                                        <ColumnListItem type="Navigation" press=".onOpenRoadmaps">
+                                            <cells>
+                                                <ObjectIdentifier title="{roadmapCode}" />
+                                                <Text text="{tourCode}" />
+                                                <Text text="{path:'startDate', formatter:'.formatDate'}" />
+                                                <ObjectStatus
+                                                    text="{path:'status', formatter:'.formatStatusText'}"
+                                                    state="{path:'status', formatter:'.formatStatusState'}" />
                                             </cells>
                                         </ColumnListItem>
                                     </items>
@@ -189,9 +279,7 @@
                         </HBox>
 
                     </VBox>
-
                 </HBox>
-
             </content>
         </Page>
     </App>

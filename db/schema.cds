@@ -3,14 +3,14 @@ namespace route.management;
 using { cuid, managed } from '@sap/cds/common';
 
 /* ===================================================== */
-/* USERS & AUTH (dev local — XSUAA plus tard)            */
+/* USERS                                                 */
 /* ===================================================== */
 
 entity Users : cuid {
-    username : String(100)  @mandatory;
-    password : String(100)  @mandatory;
+    username : String(100);
+    password : String(100);
     fullName : String(200);
-    role     : String(30);   // PLANIFICATEUR | SUPERVISEUR
+    role     : String(30);
     active   : Boolean default true;
 }
 
@@ -51,48 +51,71 @@ entity CollectionPoints : cuid {
     city      : String(100);
     latitude  : Decimal(9, 6);
     longitude : Decimal(9, 6);
-    client    : Association to Clients;
+
+    client : Association to Clients;
 }
 
 /* ===================================================== */
-/* TOURS & VALIDATION                                    */
+/* TOURS                                                 */
 /* ===================================================== */
 
 entity Tours : cuid, managed {
-    tourCode         : String(30);
-    tourDate         : Date;
-    zone             : String(100);
-    collectionType   : String(50);
-    description      : LargeString;
+    tourCode        : String(30);
+    tourDate        : Date;
+    zone            : String(100);
+    collectionType  : String(50);
+    description     : LargeString;
 
-    // CREATED  : créée par le planificateur, en attente de validation
-    // VALIDATED: validée par le superviseur
-    // REJECTED : rejetée par le superviseur avec motif
-    status           : String(20) default 'CREATED';
+    status          : String(20) default 'CREATED';
+    rejectionReason : LargeString;
 
-    rejectionReason  : LargeString;
-
-    createdAt        : Timestamp @cds.on.insert: $now;
-    updatedAt        : Timestamp @cds.on.insert: $now @cds.on.update: $now;
+    updatedAt       : Timestamp @cds.on.insert: $now @cds.on.update: $now;
 
     createdByUser : Association to Users;
     client        : Association to Clients;
     vehicle       : Association to Vehicles;
     driver        : Association to Drivers;
 
+    humanResources : Composition of many TourHumanResources
+        on humanResources.tour = $self;
+
+    materialResources : Composition of many TourMaterialResources
+        on materialResources.tour = $self;
+
     tourPoints : Composition of many TourCollectionPoints
         on tourPoints.tour = $self;
 
-    decisions  : Composition of many DecisionHistories
+    decisions : Composition of many DecisionHistories
         on decisions.tour = $self;
 
-    roadmap    : Association to Roadmaps;
+    roadmap : Association to Roadmaps;
+}
+
+entity TourHumanResources : cuid, managed {
+    sequence  : Integer;
+    role      : String(50);
+    note      : String(255);
+    updatedAt : Timestamp @cds.on.insert: $now @cds.on.update: $now;
+
+    tour   : Association to Tours;
+    driver : Association to Drivers;
+}
+
+entity TourMaterialResources : cuid, managed {
+    sequence  : Integer;
+    usage     : String(50);
+    note      : String(255);
+    updatedAt : Timestamp @cds.on.insert: $now @cds.on.update: $now;
+
+    tour    : Association to Tours;
+    vehicle : Association to Vehicles;
 }
 
 entity TourCollectionPoints : cuid {
-    sequence         : Integer;
-    tour             : Association to Tours;
-    collectionPoint  : Association to CollectionPoints;
+    sequence : Integer;
+
+    tour            : Association to Tours;
+    collectionPoint : Association to CollectionPoints;
 }
 
 /* ===================================================== */
@@ -101,32 +124,47 @@ entity TourCollectionPoints : cuid {
 
 entity Roadmaps : cuid, managed {
     roadmapCode     : String(30);
-
-    // CREATED  : roadmap créée, en attente de validation
-    // VALIDATED: roadmap validée par le superviseur
-    // REJECTED : roadmap rejetée par le superviseur avec motif
     status          : String(20) default 'CREATED';
-
     startDate       : Date;
     endDate         : Date;
     rejectionReason : LargeString;
 
-    createdAt       : Timestamp @cds.on.insert: $now;
     updatedAt       : Timestamp @cds.on.insert: $now @cds.on.update: $now;
 
-    tour  : Association to Tours;
+    /*
+     * Conservé pour compatibilité avec ton ancienne logique.
+     * Cette association peut représenter la première tournée.
+     */
+    tour : Association to Tours;
+
+    /*
+     * Nouvelle relation métier :
+     * une roadmap contient plusieurs tournées.
+     */
+    assignedTours : Composition of many RoadmapTours
+        on assignedTours.roadmap = $self;
 
     steps : Composition of many RoadmapSteps
         on steps.roadmap = $self;
 }
 
+entity RoadmapTours : cuid, managed {
+    sequence  : Integer;
+    note      : String(255);
+    updatedAt : Timestamp @cds.on.insert: $now @cds.on.update: $now;
+
+    roadmap : Association to Roadmaps;
+    tour    : Association to Tours;
+}
+
 entity RoadmapSteps : cuid {
-    sequence            : Integer;
-    plannedArrivalTime    : Time;
-    realArrivalTime       : Time;
-    status                : String(20) default 'PLANNED'; // PLANNED | DONE | SKIPPED
-    roadmap               : Association to Roadmaps;
-    collectionPoint       : Association to CollectionPoints;
+    sequence           : Integer;
+    plannedArrivalTime : Time;
+    realArrivalTime    : Time;
+    status             : String(20) default 'PLANNED';
+
+    roadmap         : Association to Roadmaps;
+    collectionPoint : Association to CollectionPoints;
 }
 
 /* ===================================================== */
@@ -134,39 +172,28 @@ entity RoadmapSteps : cuid {
 /* ===================================================== */
 
 entity DecisionHistories : cuid {
-    decision     : String(20); // ACCEPTED | REJECTED
+    decision     : String(20);
     reason       : LargeString;
     decisionDate : Timestamp @cds.on.insert: $now;
-    decidedBy    : Association to Users;
-    tour         : Association to Tours;
-}
 
+    decidedBy : Association to Users;
+    tour      : Association to Tours;
+}
 
 /* ===================================================== */
-/* ANALYTICS VIEWS FOR OVP DASHBOARD                     */
+/* ANALYTICS                                             */
 /* ===================================================== */
 
-entity TourStatusAnalytics as select from Tours {
-    key status as status,
-        count(1) as total : Integer,
-        case
-            when status = 'VALIDATED' then 3
-            when status = 'REJECTED' then 1
-            else 2
-        end as criticality : Integer
-}
-group by status;
+entity TourStatusAnalytics as
+    select from Tours {
+        key status,
+        count(1) as total : Integer
+    }
+    group by status;
 
-entity RoadmapStatusAnalytics as select from Roadmaps {
-    key status as status,
-        count(1) as total : Integer,
-        case
-            when status = 'VALIDATED' then 3
-            when status = 'ACTIVE' then 3
-            when status = 'COMPLETED' then 3
-            when status = 'REJECTED' then 1
-            when status = 'CANCELLED' then 1
-            else 2
-        end as criticality : Integer
-}
-group by status;
+entity RoadmapStatusAnalytics as
+    select from Roadmaps {
+        key status,
+        count(1) as total : Integer
+    }
+    group by status;

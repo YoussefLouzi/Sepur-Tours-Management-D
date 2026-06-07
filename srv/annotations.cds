@@ -20,7 +20,7 @@ annotate service.Tours with @(
 
     Capabilities.InsertRestrictions.Insertable: false,
     Capabilities.DeleteRestrictions.Deletable: false,
-    Capabilities.UpdateRestrictions.Updatable: false,
+    Capabilities.UpdateRestrictions.Updatable: true,
 
     UI.SelectionFields: [
         status,
@@ -137,6 +137,11 @@ annotate service.Tours with @(
             {
                 $Type: 'UI.DataField',
                 Label: 'Client',
+                Value: client
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Nom client',
                 Value: clientName
             },
             {
@@ -157,11 +162,21 @@ annotate service.Tours with @(
             {
                 $Type: 'UI.DataField',
                 Label: 'Ressource humaine',
+                Value: driver
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Nom chauffeur',
                 Value: driverLastName
             },
             {
                 $Type: 'UI.DataField',
                 Label: 'Ressource matérielle',
+                Value: vehicle
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Véhicule',
                 Value: vehicleRegistration
             }
         ]
@@ -192,16 +207,44 @@ annotate service.Tours with {
     status              @Common.Label: 'Statut de modification';
     tourCode            @Common.Label: 'N° tournée';
     tourDate            @Common.Label: 'Date de collecte';
-    clientName          @Common.Label: 'Client';
+
+    client              @Common.Label: 'Client';
+    clientName          @(
+        Common.Label: 'Nom client',
+        Core.Computed: true
+    );
+
     collectionType      @Common.Label: 'Matériau';
-    driverLastName      @Common.Label: 'Ressource humaine';
-    vehicleRegistration @Common.Label: 'Ressource matérielle';
+
+    driver              @Common.Label: 'Ressource humaine';
+    driverFirstName     @(
+        Common.Label: 'Prénom chauffeur',
+        Core.Computed: true
+    );
+    driverLastName      @(
+        Common.Label: 'Nom chauffeur',
+        Core.Computed: true
+    );
+
+    vehicle             @Common.Label: 'Ressource matérielle';
+    vehicleRegistration @(
+        Common.Label: 'Véhicule',
+        Core.Computed: true
+    );
+
     zone                @Common.Label: 'Zone';
     description         @Common.Label: 'Description';
     rejectionReason     @Common.Label: 'Motif de refus';
-    statusCriticality   @Common.Label: 'Criticité du statut';
+
+    statusCriticality   @(
+        Common.Label: 'Criticité du statut',
+        Core.Computed: true
+    );
     canValidate         @Core.Computed: true;
     canReject           @Core.Computed: true;
+
+    createdAt           @Core.Computed: true;
+    updatedAt           @Core.Computed: true;
 };
 
 
@@ -225,7 +268,7 @@ annotate service.Roadmaps with @(
 
     Capabilities.InsertRestrictions.Insertable: false,
     Capabilities.DeleteRestrictions.Deletable: false,
-    Capabilities.UpdateRestrictions.Updatable: false,
+    Capabilities.UpdateRestrictions.Updatable: true,
 
     UI.SelectionFields: [
         status,
@@ -245,7 +288,7 @@ annotate service.Roadmaps with @(
         },
         {
             $Type: 'UI.DataField',
-            Label: 'Tournée liée',
+            Label: 'Tournée principale',
             Value: tourCode
         },
         {
@@ -296,8 +339,13 @@ annotate service.Roadmaps with @(
         },
         {
             $Type: 'UI.ReferenceFacet',
-            Label: 'Tournée associée',
-            Target: '@UI.FieldGroup#RoadmapTour'
+            Label: 'Tournée principale',
+            Target: '@UI.FieldGroup#RoadmapMainTour'
+        },
+        {
+            $Type: 'UI.ReferenceFacet',
+            Label: 'Tournées affectées',
+            Target: 'assignedTours/@UI.LineItem'
         },
         {
             $Type: 'UI.ReferenceFacet',
@@ -332,11 +380,16 @@ annotate service.Roadmaps with @(
         ]
     },
 
-    UI.FieldGroup #RoadmapTour: {
+    UI.FieldGroup #RoadmapMainTour: {
         Data: [
             {
                 $Type: 'UI.DataField',
-                Label: 'Tournée liée',
+                Label: 'Tournée principale',
+                Value: tour
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'N° tournée',
                 Value: tourCode
             },
             {
@@ -348,12 +401,37 @@ annotate service.Roadmaps with @(
                 $Type: 'UI.DataField',
                 Label: 'Zone tournée',
                 Value: tourZone
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Type de collecte',
+                Value: tourCollectionType
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Client',
+                Value: tourClientName
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Chauffeur',
+                Value: tourDriverLastName
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Véhicule',
+                Value: tourVehicleRegistration
             }
         ]
     },
 
     UI.FieldGroup #RoadmapTracking: {
         Data: [
+            {
+                $Type: 'UI.DataField',
+                Label: 'Motif de refus',
+                Value: rejectionReason
+            },
             {
                 $Type: 'UI.DataField',
                 Label: 'Créé le',
@@ -369,16 +447,238 @@ annotate service.Roadmaps with @(
 );
 
 annotate service.Roadmaps with {
-    roadmapCode       @Common.Label: 'N° roadmap';
-    status            @Common.Label: 'Statut de modification';
-    startDate         @Common.Label: 'Date début';
-    endDate           @Common.Label: 'Date fin';
-    tourCode          @Common.Label: 'Tournée liée';
-    tourDate          @Common.Label: 'Date tournée';
-    tourZone          @Common.Label: 'Zone tournée';
-    statusCriticality @Common.Label: 'Criticité du statut';
-    canValidate       @Core.Computed: true;
-    canReject         @Core.Computed: true;
+    roadmapCode                 @Common.Label: 'N° roadmap';
+    status                      @Common.Label: 'Statut de modification';
+    startDate                   @Common.Label: 'Date début';
+    endDate                     @Common.Label: 'Date fin';
+    rejectionReason             @Common.Label: 'Motif de refus';
+
+    tour                        @Common.Label: 'Tournée principale';
+
+    tourCode                    @(
+        Common.Label: 'N° tournée',
+        Core.Computed: true
+    );
+    tourDate                    @(
+        Common.Label: 'Date tournée',
+        Core.Computed: true
+    );
+    tourZone                    @(
+        Common.Label: 'Zone tournée',
+        Core.Computed: true
+    );
+    tourCollectionType          @(
+        Common.Label: 'Type de collecte',
+        Core.Computed: true
+    );
+    tourClientName              @(
+        Common.Label: 'Client',
+        Core.Computed: true
+    );
+    tourDriverFirstName         @(
+        Common.Label: 'Prénom chauffeur',
+        Core.Computed: true
+    );
+    tourDriverLastName          @(
+        Common.Label: 'Chauffeur',
+        Core.Computed: true
+    );
+    tourVehicleRegistration     @(
+        Common.Label: 'Véhicule',
+        Core.Computed: true
+    );
+
+    statusCriticality           @(
+        Common.Label: 'Criticité du statut',
+        Core.Computed: true
+    );
+    canValidate                 @Core.Computed: true;
+    canReject                   @Core.Computed: true;
+
+    createdAt                   @Core.Computed: true;
+    updatedAt                   @Core.Computed: true;
+};
+
+
+/* ===================================================== */
+/* ROADMAP TOURS                                         */
+/* ===================================================== */
+
+annotate service.RoadmapTours with @(
+    UI.HeaderInfo: {
+        TypeName: 'Tournée affectée',
+        TypeNamePlural: 'Tournées affectées',
+        Title: {
+            $Type: 'UI.DataField',
+            Value: tourCode
+        },
+        Description: {
+            $Type: 'UI.DataField',
+            Value: note
+        }
+    },
+
+    Capabilities.InsertRestrictions.Insertable: true,
+    Capabilities.DeleteRestrictions.Deletable: true,
+    Capabilities.UpdateRestrictions.Updatable: true,
+
+    UI.LineItem: [
+        {
+            $Type: 'UI.DataField',
+            Label: 'Séquence',
+            Value: sequence
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Tournée',
+            Value: tour
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'N° tournée',
+            Value: tourCode
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Date tournée',
+            Value: tourDate
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Zone',
+            Value: tourZone
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Type collecte',
+            Value: tourCollectionType
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Client',
+            Value: clientName
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Chauffeur',
+            Value: driverLastName
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Véhicule',
+            Value: vehicleRegistration
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Note',
+            Value: note
+        },
+        {
+            $Type: 'UI.DataFieldForAction',
+            Label: 'Modifier ressources',
+            Action: 'RouteManagementService.updateResources',
+            Inline: false
+        }
+    ],
+
+    UI.FieldGroup #General: {
+        Data: [
+            {
+                $Type: 'UI.DataField',
+                Label: 'Séquence',
+                Value: sequence
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Tournée',
+                Value: tour
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'N° tournée',
+                Value: tourCode
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Date tournée',
+                Value: tourDate
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Zone',
+                Value: tourZone
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Client',
+                Value: clientName
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Chauffeur',
+                Value: driverLastName
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Véhicule',
+                Value: vehicleRegistration
+            },
+            {
+                $Type: 'UI.DataField',
+                Label: 'Note',
+                Value: note
+            }
+        ]
+    }
+);
+
+annotate service.RoadmapTours with {
+    sequence             @Common.Label: 'Séquence';
+    note                 @Common.Label: 'Note';
+    roadmap              @Common.Label: 'Roadmap';
+    tour                 @Common.Label: 'Tournée';
+
+    roadmapCode          @(
+        Common.Label: 'N° roadmap',
+        Core.Computed: true
+    );
+    tourCode             @(
+        Common.Label: 'N° tournée',
+        Core.Computed: true
+    );
+    tourDate             @(
+        Common.Label: 'Date tournée',
+        Core.Computed: true
+    );
+    tourZone             @(
+        Common.Label: 'Zone',
+        Core.Computed: true
+    );
+    tourCollectionType   @(
+        Common.Label: 'Type collecte',
+        Core.Computed: true
+    );
+    clientName           @(
+        Common.Label: 'Client',
+        Core.Computed: true
+    );
+    driverFirstName      @(
+        Common.Label: 'Prénom chauffeur',
+        Core.Computed: true
+    );
+    driverLastName       @(
+        Common.Label: 'Chauffeur',
+        Core.Computed: true
+    );
+    vehicleRegistration  @(
+        Common.Label: 'Véhicule',
+        Core.Computed: true
+    );
+
+    createdAt            @Core.Computed: true;
+    createdBy            @Core.Computed: true;
+    modifiedAt           @Core.Computed: true;
+    modifiedBy           @Core.Computed: true;
 };
 
 
@@ -421,7 +721,7 @@ annotate service.Roadmaps with @(
         },
         {
             $Type: 'UI.DataField',
-            Label: 'Tournée',
+            Label: 'Tournée principale',
             Value: tourCode
         },
         {
@@ -444,6 +744,11 @@ annotate service.Roadmaps with @(
 /* ===================================================== */
 
 annotate service.TourStatusAnalytics with @(
+    UI.SelectionVariant #TourStatusSV: {
+        Text: 'Filtre statistiques tournées',
+        SelectOptions: []
+    },
+
     UI.Chart #TourStatusChart: {
         $Type: 'UI.ChartDefinitionType',
         Title: 'Répartition des tournées par statut',
@@ -472,13 +777,19 @@ annotate service.TourStatusAnalytics with @(
     },
 
     UI.PresentationVariant #TourStatusPV: {
-        Text: 'Statistiques des tournées',
+        Text: 'Présentation statistiques tournées',
+        MaxItems: 10,
         Visualizations: [
             '@UI.Chart#TourStatusChart'
         ]
     },
 
-    UI.Identification #TourStatusIdentification: [
+    UI.DataPoint #TourStatusDP: {
+        Title: 'Total tournées',
+        Value: total
+    },
+
+    UI.Identification: [
         {
             $Type: 'UI.DataField',
             Label: 'Statut',
@@ -507,12 +818,18 @@ annotate service.TourStatusAnalytics with @(
 
 annotate service.TourStatusAnalytics with {
     status @Common.Label: 'Statut';
-    total  @Common.Label: 'Nombre de tournées';
-    total  @Aggregation.default: #SUM;
+    total  @(
+        Common.Label: 'Nombre de tournées',
+        Aggregation.default: #SUM
+    );
 };
 
-
 annotate service.RoadmapStatusAnalytics with @(
+    UI.SelectionVariant #RoadmapStatusSV: {
+        Text: 'Filtre statistiques roadmaps',
+        SelectOptions: []
+    },
+
     UI.Chart #RoadmapStatusChart: {
         $Type: 'UI.ChartDefinitionType',
         Title: 'Répartition des roadmaps par statut',
@@ -541,13 +858,19 @@ annotate service.RoadmapStatusAnalytics with @(
     },
 
     UI.PresentationVariant #RoadmapStatusPV: {
-        Text: 'Statistiques des roadmaps',
+        Text: 'Présentation statistiques roadmaps',
+        MaxItems: 10,
         Visualizations: [
             '@UI.Chart#RoadmapStatusChart'
         ]
     },
 
-    UI.Identification #RoadmapStatusIdentification: [
+    UI.DataPoint #RoadmapStatusDP: {
+        Title: 'Total roadmaps',
+        Value: total
+    },
+
+    UI.Identification: [
         {
             $Type: 'UI.DataField',
             Label: 'Statut',
@@ -576,9 +899,12 @@ annotate service.RoadmapStatusAnalytics with @(
 
 annotate service.RoadmapStatusAnalytics with {
     status @Common.Label: 'Statut';
-    total  @Common.Label: 'Nombre de roadmaps';
-    total  @Aggregation.default: #SUM;
+    total  @(
+        Common.Label: 'Nombre de roadmaps',
+        Aggregation.default: #SUM
+    );
 };
+
 
 /* ===================================================== */
 /* RELATED ENTITIES                                      */

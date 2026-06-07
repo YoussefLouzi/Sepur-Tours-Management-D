@@ -17,38 +17,65 @@ service RouteManagementService {
     entity CollectionPoints as projection on db.CollectionPoints;
 
     entity TourCollectionPoints as projection on db.TourCollectionPoints;
-@cds.redirection.target: true
-entity Tours as projection on db.Tours {
-        *,
-        client.name                 as clientName          : String,
-        vehicle.registrationNumber  as vehicleRegistration : String,
-        driver.firstName            as driverFirstName     : String,
-        driver.lastName             as driverLastName      : String,
-        createdByUser.fullName      as createdByName       : String,
 
-        virtual statusCriticality   : Integer,
-        virtual canValidate         : Boolean,
-        virtual canReject           : Boolean
+    @cds.redirection.target: true
+    entity Tours as projection on db.Tours {
+        *,
+        client.name                  as clientName          : String,
+        vehicle.registrationNumber   as vehicleRegistration : String,
+        driver.firstName             as driverFirstName     : String,
+        driver.lastName              as driverLastName      : String,
+        createdByUser.fullName       as createdByName       : String,
+
+        virtual statusCriticality    : Integer,
+        virtual canValidate          : Boolean,
+        virtual canReject            : Boolean
     }
     actions {
         action validate() returns Tours;
         action reject(reason : String) returns Tours;
     };
 
+    @odata.draft.enabled
     @cds.redirection.target: true
-entity Roadmaps as projection on db.Roadmaps {
+    entity Roadmaps as projection on db.Roadmaps {
         *,
-        tour.tourCode as tourCode : String,
-        tour.tourDate as tourDate : Date,
-        tour.zone     as tourZone : String,
+        tour.tourCode                  as tourCode                 : String,
+        tour.tourDate                  as tourDate                 : Date,
+        tour.zone                      as tourZone                 : String,
+        tour.collectionType            as tourCollectionType       : String,
+        tour.client.name               as tourClientName           : String,
+        tour.driver.firstName          as tourDriverFirstName      : String,
+        tour.driver.lastName           as tourDriverLastName       : String,
+        tour.vehicle.registrationNumber as tourVehicleRegistration : String,
 
-        virtual statusCriticality : Integer,
-        virtual canValidate       : Boolean,
-        virtual canReject         : Boolean
+        virtual statusCriticality      : Integer,
+        virtual canValidate            : Boolean,
+        virtual canReject              : Boolean
     }
     actions {
         action validateRoadmap() returns Roadmaps;
         action rejectRoadmap(reason : String) returns Roadmaps;
+    };
+
+    entity RoadmapTours as projection on db.RoadmapTours {
+        *,
+        roadmap.roadmapCode             as roadmapCode             : String,
+        tour.tourCode                   as tourCode                : String,
+        tour.tourDate                   as tourDate                : Date,
+        tour.zone                       as tourZone                : String,
+        tour.collectionType             as tourCollectionType      : String,
+        tour.client.name                as clientName              : String,
+        tour.driver.firstName           as driverFirstName         : String,
+        tour.driver.lastName            as driverLastName          : String,
+        tour.vehicle.registrationNumber as vehicleRegistration     : String
+    }
+    actions {
+        action updateResources(
+            clientID  : UUID,
+            driverID  : UUID,
+            vehicleID : UUID
+        ) returns RoadmapTours;
     };
 
     entity RoadmapSteps as projection on db.RoadmapSteps;
@@ -56,47 +83,47 @@ entity Roadmaps as projection on db.Roadmaps {
     entity DecisionHistories as projection on db.DecisionHistories;
 
 
-   /* ===================================================== */
-/* ANALYTICS ENTITIES FOR OVP DASHBOARD                  */
-/* ===================================================== */
+    /* ===================================================== */
+    /* ANALYTICS ENTITIES FOR OVP DASHBOARD                  */
+    /* ===================================================== */
 
-@readonly
-@Aggregation.ApplySupported: {
-    Transformations: [
-        'aggregate',
-        'groupby',
-        'filter',
-        'search'
-    ],
-    GroupableProperties: [
-        status
-    ],
-    AggregatableProperties: [
-        {
-            Property: total
-        }
-    ]
-}
-entity TourStatusAnalytics as projection on db.TourStatusAnalytics;
+    @readonly
+    @Aggregation.ApplySupported: {
+        Transformations: [
+            'aggregate',
+            'groupby',
+            'filter',
+            'search'
+        ],
+        GroupableProperties: [
+            status
+        ],
+        AggregatableProperties: [
+            {
+                Property: total
+            }
+        ]
+    }
+    entity TourStatusAnalytics as projection on db.TourStatusAnalytics;
 
-@readonly
-@Aggregation.ApplySupported: {
-    Transformations: [
-        'aggregate',
-        'groupby',
-        'filter',
-        'search'
-    ],
-    GroupableProperties: [
-        status
-    ],
-    AggregatableProperties: [
-        {
-            Property: total
-        }
-    ]
-}
-entity RoadmapStatusAnalytics as projection on db.RoadmapStatusAnalytics;
+    @readonly
+    @Aggregation.ApplySupported: {
+        Transformations: [
+            'aggregate',
+            'groupby',
+            'filter',
+            'search'
+        ],
+        GroupableProperties: [
+            status
+        ],
+        AggregatableProperties: [
+            {
+                Property: total
+            }
+        ]
+    }
+    entity RoadmapStatusAnalytics as projection on db.RoadmapStatusAnalytics;
 
 
     /* ===================================================== */

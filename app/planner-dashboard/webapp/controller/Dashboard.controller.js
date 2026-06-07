@@ -18,37 +18,77 @@ sap.ui.define([
             const oUser = JSON.parse(sUser);
 
             if (oUser.role !== "PLANIFICATEUR") {
-                MessageBox.error("Accès refusé. Ce dashboard est réservé au Planificateur.");
+                MessageBox.error("Accès refusé. Ce dashboard est réservé au planificateur.");
                 window.location.href = "/login/webapp/index.html";
                 return;
             }
 
             this.getView().setModel(new JSONModel({
+                busy: false,
                 user: oUser,
                 userInitials: this.getInitials(oUser.fullName),
+
                 stats: {
                     totalTours: 0,
-                    draftTours: 0,
-                    pendingTours: 0,
-                    acceptedTours: 0,
+                    createdTours: 0,
+                    validatedTours: 0,
                     rejectedTours: 0,
-                    totalRoadmaps: 0
+                    totalRoadmaps: 0,
+                    createdRoadmaps: 0,
+                    validatedRoadmaps: 0,
+                    rejectedRoadmaps: 0
                 },
-                chart: {
-                    draftPercent: 0,
-                    pendingPercent: 0,
-                    acceptedPercent: 0,
-                    rejectedPercent: 0
-                },
-                tours: []
+
+                tourChartData: [],
+                roadmapChartData: [],
+
+                tours: [],
+                roadmaps: []
             }));
 
             this.loadDashboardData();
         },
 
+        onAfterRendering: function () {
+            this.applyChartDesign();
+        },
+
+        applyChartDesign: function () {
+            const oTourChart = this.byId("tourStatusChart");
+            const oRoadmapChart = this.byId("roadmapStatusChart");
+
+            const oVizProperties = {
+                title: {
+                    visible: false
+                },
+                legend: {
+                    visible: true,
+                    position: "bottom"
+                },
+                plotArea: {
+                    dataLabel: {
+                        visible: true
+                    },
+                    colorPalette: [
+                        "#E9730C",
+                        "#107E3E",
+                        "#BB0000"
+                    ]
+                }
+            };
+
+            if (oTourChart) {
+                oTourChart.setVizProperties(oVizProperties);
+            }
+
+            if (oRoadmapChart) {
+                oRoadmapChart.setVizProperties(oVizProperties);
+            }
+        },
+
         getInitials: function (sName) {
             if (!sName) {
-                return "DU";
+                return "PL";
             }
 
             return sName
@@ -61,91 +101,185 @@ sap.ui.define([
                 .toUpperCase();
         },
 
-        loadDashboardData: async function () {
-            await Promise.all([
-                this.loadStats(),
-                this.loadTours()
-            ]);
+        normalizeStatus: function (sStatus) {
+            if (["DRAFT", "PENDING", "CREATED"].includes(sStatus)) {
+                return "CREATED";
+            }
+
+            if (["ACCEPTED", "VALIDATED", "ACTIVE", "COMPLETED"].includes(sStatus)) {
+                return "VALIDATED";
+            }
+
+            if (["REJECTED", "CANCELLED"].includes(sStatus)) {
+                return "REJECTED";
+            }
+
+            return "CREATED";
         },
 
-        loadStats: async function () {
+        loadDashboardData: async function () {
             const oModel = this.getView().getModel();
-            const oUser = oModel.getProperty("/user");
+
+            oModel.setProperty("/busy", true);
 
             try {
-                const oODataModel = this.getOwnerComponent().getModel();
-                const oContext = oODataModel.bindContext("/getPlannerStats(...)");
+                const aResults = await Promise.all([
+                    this.loadTours(),
+                    this.loadRoadmaps()
+                ]);
 
-                oContext.setParameter("userID", oUser.ID || null);
+                const aTours = aResults[0];
+                const aRoadmaps = aResults[1];
 
-                await oContext.execute();
+                this.calculateStatistics(aTours, aRoadmaps);
 
-                const oResult = oContext.getBoundContext().getObject();
-
-                const oStats = {
-                    totalTours: oResult.totalTours || 0,
-                    draftTours: oResult.draftTours || 0,
-                    pendingTours: oResult.pendingTours || 0,
-                    acceptedTours: oResult.acceptedTours || 0,
-                    rejectedTours: oResult.rejectedTours || 0,
-                    totalRoadmaps: oResult.totalRoadmaps || 0
-                };
-
-                oModel.setProperty("/stats", oStats);
-                this.updateChart(oStats);
+                MessageToast.show("Dashboard actualisé.");
 
             } catch (e) {
                 console.error(e);
-                MessageToast.show("Impossible de charger les statistiques.");
+                MessageBox.error("Impossible de charger les données du dashboard.");
+            } finally {
+                oModel.setProperty("/busy", false);
+                this.applyChartDesign();
             }
-        },
-
-        updateChart: function (oStats) {
-            const oModel = this.getView().getModel();
-            const total = oStats.totalTours || 1;
-
-            oModel.setProperty("/chart", {
-                draftPercent: Math.round((oStats.draftTours / total) * 100),
-                pendingPercent: Math.round((oStats.pendingTours / total) * 100),
-                acceptedPercent: Math.round((oStats.acceptedTours / total) * 100),
-                rejectedPercent: Math.round((oStats.rejectedTours / total) * 100)
-            });
         },
 
         loadTours: async function () {
             const oModel = this.getView().getModel();
 
-            try {
-                const response = await fetch("/odata/v4/route-management/Tours?$top=6&$orderby=createdAt desc");
+            const sUrl = "/odata/v4/route-management/Tours" +
+                "?$select=ID,tourCode,tourDate,zone,collectionType,status,clientName,vehicleRegistration,driverLastName,createdAt" +
+                "&$orderby=createdAt desc" +
+                "&$top=8";
 
-                if (!response.ok) {
-                    throw new Error("Erreur chargement tournées");
-                }
+            const response = await fetch(sUrl);
 
-                const data = await response.json();
-                oModel.setProperty("/tours", data.value || []);
-
-            } catch (e) {
-                console.error(e);
-                MessageToast.show("Impossible de charger les tournées.");
+            if (!response.ok) {
+                throw new Error("Erreur lors du chargement des tournées.");
             }
+
+            const data = await response.json();
+            const aTours = data.value || [];
+
+            oModel.setProperty("/tours", aTours);
+
+            return aTours;
+        },
+
+        loadRoadmaps: async function () {
+            const oModel = this.getView().getModel();
+
+            const sUrl = "/odata/v4/route-management/Roadmaps" +
+                "?$select=ID,roadmapCode,startDate,endDate,status,tourCode,tourDate,tourZone,createdAt" +
+                "&$orderby=createdAt desc" +
+                "&$top=8";
+
+            const response = await fetch(sUrl);
+
+            if (!response.ok) {
+                throw new Error("Erreur lors du chargement des roadmaps.");
+            }
+
+            const data = await response.json();
+            const aRoadmaps = data.value || [];
+
+            oModel.setProperty("/roadmaps", aRoadmaps);
+
+            return aRoadmaps;
+        },
+
+        calculateStatistics: function (aTours, aRoadmaps) {
+            const oModel = this.getView().getModel();
+
+            const oTourStats = {
+                CREATED: 0,
+                VALIDATED: 0,
+                REJECTED: 0
+            };
+
+            const oRoadmapStats = {
+                CREATED: 0,
+                VALIDATED: 0,
+                REJECTED: 0
+            };
+
+            aTours.forEach(function (oTour) {
+                const sStatus = this.normalizeStatus(oTour.status);
+                oTourStats[sStatus] = (oTourStats[sStatus] || 0) + 1;
+            }.bind(this));
+
+            aRoadmaps.forEach(function (oRoadmap) {
+                const sStatus = this.normalizeStatus(oRoadmap.status);
+                oRoadmapStats[sStatus] = (oRoadmapStats[sStatus] || 0) + 1;
+            }.bind(this));
+
+            const oStats = {
+                totalTours: aTours.length,
+                createdTours: oTourStats.CREATED,
+                validatedTours: oTourStats.VALIDATED,
+                rejectedTours: oTourStats.REJECTED,
+
+                totalRoadmaps: aRoadmaps.length,
+                createdRoadmaps: oRoadmapStats.CREATED,
+                validatedRoadmaps: oRoadmapStats.VALIDATED,
+                rejectedRoadmaps: oRoadmapStats.REJECTED
+            };
+
+            oModel.setProperty("/stats", oStats);
+
+            oModel.setProperty("/tourChartData", [
+                {
+                    status: "Créées",
+                    total: oTourStats.CREATED
+                },
+                {
+                    status: "Validées",
+                    total: oTourStats.VALIDATED
+                },
+                {
+                    status: "Rejetées",
+                    total: oTourStats.REJECTED
+                }
+            ]);
+
+            oModel.setProperty("/roadmapChartData", [
+                {
+                    status: "Créées",
+                    total: oRoadmapStats.CREATED
+                },
+                {
+                    status: "Validées",
+                    total: oRoadmapStats.VALIDATED
+                },
+                {
+                    status: "Rejetées",
+                    total: oRoadmapStats.REJECTED
+                }
+            ]);
         },
 
         onRefresh: function () {
             this.loadDashboardData();
-            MessageToast.show("Données actualisées.");
         },
 
         onCreateTour: function () {
-            window.location.href = "/tour-workspace/webapp/index.html";
+            window.location.href = "/tours/webapp/index.html";
         },
 
         onOpenTours: function () {
-            window.location.href = "/tour-workspace/webapp/index.html";
+            window.location.href = "/tours/webapp/index.html";
         },
 
         onOpenRoadmaps: function () {
             window.location.href = "/roadmaps/webapp/index.html";
+        },
+
+        onOpenRejectedTours: function () {
+            window.location.href = "/tours/webapp/index.html";
+        },
+
+        onOpenHome: function () {
+            window.location.href = "/home/webapp/index.html";
         },
 
         onLogout: function () {
@@ -154,18 +288,47 @@ sap.ui.define([
         },
 
         formatStatusState: function (sStatus) {
-            switch (sStatus) {
-                case "ACCEPTED":
+            const sNormalizedStatus = this.normalizeStatus(sStatus);
+
+            switch (sNormalizedStatus) {
+                case "VALIDATED":
                     return "Success";
-                case "PENDING":
-                    return "Warning";
                 case "REJECTED":
                     return "Error";
-                case "DRAFT":
-                    return "Information";
+                case "CREATED":
+                    return "Warning";
                 default:
                     return "None";
             }
+        },
+
+        formatStatusText: function (sStatus) {
+            const sNormalizedStatus = this.normalizeStatus(sStatus);
+
+            switch (sNormalizedStatus) {
+                case "CREATED":
+                    return "Créée";
+                case "VALIDATED":
+                    return "Validée";
+                case "REJECTED":
+                    return "Rejetée";
+                default:
+                    return sStatus || "";
+            }
+        },
+
+        formatDate: function (sDate) {
+            if (!sDate) {
+                return "";
+            }
+
+            const oDate = new Date(sDate);
+
+            if (isNaN(oDate.getTime())) {
+                return sDate;
+            }
+
+            return oDate.toLocaleDateString("fr-FR");
         }
     });
 });

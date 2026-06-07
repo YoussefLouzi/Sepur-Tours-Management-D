@@ -76,10 +76,6 @@ function isValidatedRoadmapStatus(status) {
   return normalizeRoadmapStatus(status) === ROADMAP_STATUS.VALIDATED;
 }
 
-function isRejectedRoadmapStatus(status) {
-  return normalizeRoadmapStatus(status) === ROADMAP_STATUS.REJECTED;
-}
-
 /* ===================================================== */
 /* CODE GENERATOR                                        */
 /* ===================================================== */
@@ -113,6 +109,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       Users,
       Tours,
       Roadmaps,
+      RoadmapTours,
       RoadmapSteps,
       DecisionHistories,
       TourCollectionPoints,
@@ -243,14 +240,69 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       const normalizedStatus = normalizeTourStatus(tour.status);
 
-      if (normalizedStatus === TOUR_STATUS.VALIDATED) {
-        const allowed = new Set(['status', 'rejectionReason', 'updatedAt']);
-        const keys = Object.keys(req.data).filter((k) => !k.startsWith('_'));
-        const forbidden = keys.filter((k) => !allowed.has(k) && k !== 'ID');
+      const technicalFields = new Set([
+  'ID',
+  'IsActiveEntity',
+  'HasActiveEntity',
+  'HasDraftEntity',
+  'DraftAdministrativeData',
+  'DraftAdministrativeData_DraftUUID',
+  'SiblingEntity',
 
-        if (forbidden.length) {
-          return reject(req, 'Modification interdite : la tournée est déjà validée.');
-        }
+  // Champs techniques / virtuels
+  'statusCriticality',
+  'canValidate',
+  'canReject',
+
+  // Champs calculés
+  'clientName',
+  'driverFirstName',
+  'driverLastName',
+  'vehicleRegistration',
+  'createdByName',
+
+  // Navigations envoyées par Fiori
+  'tourPoints',
+  'decisions',
+  'roadmap',
+
+  // Champs managed
+  'createdAt',
+  'createdBy',
+  'modifiedAt',
+  'modifiedBy'
+]);
+
+      const keys = Object.keys(req.data).filter((key) => {
+        return !key.startsWith('_') && !technicalFields.has(key);
+      });
+
+      const allowedForSupervisor = new Set([
+        'tourCode',
+        'tourDate',
+        'zone',
+        'collectionType',
+        'description',
+        'status',
+        'rejectionReason',
+        'client_ID',
+        'client',
+        'vehicle_ID',
+        'vehicle',
+        'driver_ID',
+        'driver',
+        'roadmap_ID',
+        'roadmap',
+        'updatedAt'
+      ]);
+
+      const forbidden = keys.filter((key) => !allowedForSupervisor.has(key));
+
+      if (forbidden.length) {
+        return reject(
+          req,
+          `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
+        );
       }
 
       if (normalizedStatus === TOUR_STATUS.REJECTED) {
@@ -260,11 +312,13 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
           'collectionType',
           'description',
           'client_ID',
+          'client',
           'vehicle_ID',
-          'driver_ID'
+          'vehicle',
+          'driver_ID',
+          'driver'
         ];
 
-        const keys = Object.keys(req.data).filter((k) => !k.startsWith('_'));
         const hasBusinessModification = keys.some((key) => businessFields.includes(key));
 
         if (hasBusinessModification) {
@@ -301,32 +355,150 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         return;
       }
 
-      const normalizedStatus = normalizeRoadmapStatus(roadmap.status);
+      const technicalFields = new Set([
+  'ID',
+  'IsActiveEntity',
+  'HasActiveEntity',
+  'HasDraftEntity',
+  'DraftAdministrativeData',
+  'DraftAdministrativeData_DraftUUID',
+  'SiblingEntity',
 
-      if (normalizedStatus === ROADMAP_STATUS.VALIDATED) {
-        const allowed = new Set(['status', 'rejectionReason', 'updatedAt']);
-        const keys = Object.keys(req.data).filter((k) => !k.startsWith('_'));
-        const forbidden = keys.filter((k) => !allowed.has(k) && k !== 'ID');
+  // Champs techniques / virtuels
+  'statusCriticality',
+  'canValidate',
+  'canReject',
 
-        if (forbidden.length) {
-          return reject(req, 'Modification interdite : la roadmap est déjà validée.');
-        }
+  // Champs calculés depuis la tournée principale
+  'tourCode',
+  'tourDate',
+  'tourZone',
+  'tourCollectionType',
+  'tourClientName',
+  'tourDriverFirstName',
+  'tourDriverLastName',
+  'tourVehicleRegistration',
+
+  // Navigations envoyées par Fiori pendant le draft/save
+  'assignedTours',
+  'steps',
+
+  // Champs managed
+  'createdAt',
+  'createdBy',
+  'modifiedAt',
+  'modifiedBy'
+]);
+
+      const keys = Object.keys(req.data).filter((key) => {
+        return !key.startsWith('_') && !technicalFields.has(key);
+      });
+
+      const allowedForSupervisor = new Set([
+        'roadmapCode',
+        'startDate',
+        'endDate',
+        'status',
+        'rejectionReason',
+        'tour_ID',
+        'tour',
+        'updatedAt'
+      ]);
+
+      const forbidden = keys.filter((key) => !allowedForSupervisor.has(key));
+
+      if (forbidden.length) {
+        return reject(
+          req,
+          `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
+        );
       }
+
+      const normalizedStatus = normalizeRoadmapStatus(roadmap.status);
 
       if (normalizedStatus === ROADMAP_STATUS.REJECTED) {
         const businessFields = [
+          'roadmapCode',
           'startDate',
           'endDate',
-          'tour_ID'
+          'tour_ID',
+          'tour'
         ];
 
-        const keys = Object.keys(req.data).filter((k) => !k.startsWith('_'));
         const hasBusinessModification = keys.some((key) => businessFields.includes(key));
 
         if (hasBusinessModification) {
           req.data.status = ROADMAP_STATUS.CREATED;
           req.data.rejectionReason = null;
         }
+      }
+    });
+
+    /* ===================================================== */
+    /* ROADMAP TOURS — BEFORE CREATE / UPDATE                */
+    /* ===================================================== */
+
+    this.before('CREATE', 'RoadmapTours', async (req) => {
+      if (!req.data.sequence) {
+        const roadmapID = req.data.roadmap_ID;
+        if (roadmapID) {
+          const existing = await SELECT.from(RoadmapTours)
+            .columns('sequence')
+            .where({ roadmap_ID: roadmapID })
+            .orderBy('sequence desc')
+            .limit(1);
+
+          req.data.sequence = existing.length && existing[0].sequence
+            ? existing[0].sequence + 1
+            : 1;
+        }
+      }
+    });
+
+    this.before('UPDATE', 'RoadmapTours', async (req) => {
+      const technicalFields = new Set([
+        'ID',
+        'IsActiveEntity',
+        'HasActiveEntity',
+        'HasDraftEntity',
+        'DraftAdministrativeData',
+        'DraftAdministrativeData_DraftUUID',
+        'SiblingEntity',
+        'roadmapCode',
+        'tourCode',
+        'tourDate',
+        'tourZone',
+        'tourCollectionType',
+        'clientName',
+        'driverFirstName',
+        'driverLastName',
+        'vehicleRegistration',
+        'createdAt',
+        'createdBy',
+        'modifiedAt',
+        'modifiedBy'
+      ]);
+
+      const keys = Object.keys(req.data).filter((key) => {
+        return !key.startsWith('_') && !technicalFields.has(key);
+      });
+
+      const allowed = new Set([
+        'sequence',
+        'note',
+        'roadmap_ID',
+        'roadmap',
+        'tour_ID',
+        'tour'
+      ]);
+
+      const forbidden = keys.filter((key) => !allowed.has(key));
+
+      if (forbidden.length) {
+        return reject(
+          req,
+          `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
+        );
       }
     });
 
@@ -593,6 +765,63 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     });
 
     /* ===================================================== */
+    /* ROADMAP TOURS — UPDATE RESOURCES ACTION               */
+    /* ===================================================== */
+
+    this.on('updateResources', 'RoadmapTours', async (req) => {
+      const roadmapTourID = req.params?.[0]?.ID;
+      const { clientID, driverID, vehicleID } = req.data;
+
+      if (!roadmapTourID) {
+        return reject(req, 'Identifiant de ligne roadmap/tournée manquant.');
+      }
+
+      const roadmapTour = await SELECT.one.from(RoadmapTours).where({ ID: roadmapTourID });
+
+      if (!roadmapTour) {
+        return reject(req, 'Ligne roadmap/tournée introuvable.');
+      }
+
+      if (!roadmapTour.tour_ID) {
+        return reject(req, 'Aucune tournée associée à cette ligne.');
+      }
+
+      const updateData = {
+        updatedAt: new Date().toISOString()
+      };
+
+      if (clientID) {
+        const client = await SELECT.one.from(Clients).where({ ID: clientID });
+        if (!client) {
+          return reject(req, 'Client introuvable.');
+        }
+        updateData.client_ID = clientID;
+      }
+
+      if (driverID) {
+        const driver = await SELECT.one.from(Drivers).where({ ID: driverID });
+        if (!driver) {
+          return reject(req, 'Ressource humaine introuvable.');
+        }
+        updateData.driver_ID = driverID;
+      }
+
+      if (vehicleID) {
+        const vehicle = await SELECT.one.from(Vehicles).where({ ID: vehicleID });
+        if (!vehicle) {
+          return reject(req, 'Ressource matérielle introuvable.');
+        }
+        updateData.vehicle_ID = vehicleID;
+      }
+
+      await UPDATE(Tours)
+        .set(updateData)
+        .where({ ID: roadmapTour.tour_ID });
+
+      return SELECT.one.from(RoadmapTours).where({ ID: roadmapTourID });
+    });
+
+    /* ===================================================== */
     /* CREATE ROADMAP FROM TOUR                              */
     /* ===================================================== */
 
@@ -627,6 +856,14 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
           startDate,
           endDate: startDate,
           rejectionReason: null,
+          tour_ID: tourID
+        });
+
+        await INSERT.into(RoadmapTours).entries({
+          ID: cds.utils.uuid(),
+          sequence: 1,
+          note: 'Tournée principale',
+          roadmap_ID: roadmapID,
           tour_ID: tourID
         });
 
@@ -699,76 +936,6 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       const tours = await SELECT.from(Tours);
       return tours.filter((t) => isCreatedStatus(t.status));
     });
-
-    /* ===================================================== */
-/* ANALYTICS — DASHBOARD OVP                             */
-/* ===================================================== */
-
-// this.on('READ', 'TourStatusAnalytics', async () => {
-//   const tours = await SELECT.from(Tours).columns('status');
-
-//   const counts = {
-//     CREATED: 0,
-//     VALIDATED: 0,
-//     REJECTED: 0
-//   };
-
-//   for (const tour of tours) {
-//     const status = normalizeTourStatus(tour.status);
-//     counts[status] = (counts[status] || 0) + 1;
-//   }
-
-//   return [
-//     {
-//       status: 'CREATED',
-//       total: counts.CREATED,
-//       criticality: 2
-//     },
-//     {
-//       status: 'VALIDATED',
-//       total: counts.VALIDATED,
-//       criticality: 3
-//     },
-//     {
-//       status: 'REJECTED',
-//       total: counts.REJECTED,
-//       criticality: 1
-//     }
-//   ];
-// });
-
-// this.on('READ', 'RoadmapStatusAnalytics', async () => {
-//   const roadmaps = await SELECT.from(Roadmaps).columns('status');
-
-//   const counts = {
-//     CREATED: 0,
-//     VALIDATED: 0,
-//     REJECTED: 0
-//   };
-
-//   for (const roadmap of roadmaps) {
-//     const status = normalizeRoadmapStatus(roadmap.status);
-//     counts[status] = (counts[status] || 0) + 1;
-//   }
-
-//   return [
-//     {
-//       status: 'CREATED',
-//       total: counts.CREATED,
-//       criticality: 2
-//     },
-//     {
-//       status: 'VALIDATED',
-//       total: counts.VALIDATED,
-//       criticality: 3
-//     },
-//     {
-//       status: 'REJECTED',
-//       total: counts.REJECTED,
-//       criticality: 1
-//     }
-//   ];
-// });
 
     /* ===================================================== */
     /* TOUR DETAILS                                          */
