@@ -27,16 +27,45 @@ sap.ui.define([
             }
 
             this.setModel(new JSONModel({
-                user: user,
-                userInitials: this._getInitials(user.fullName),
-                selectedModule: "TOURS",
-                // chartTitle: "Répartition des tournées par statut",
-                // chartSubtitle: "Statistiques des tournées créées dans le système",
-                chartData: [],
-                notifications: {
-                    count: 0,
-                    items: []
-                }
+                 busy: false,
+    user: user,
+    userInitials: this._getInitials(user.fullName),
+
+    selectedModule: "TOURS",
+    chartTitle: "Répartition des tournées par statut",
+    chartSubtitle: "Statistiques des tournées créées dans le système",
+    chartData: [],
+
+    tourStats: {
+        totalTours: 0,
+        pendingTours: 0,
+        acceptedTours: 0,
+        rejectedTours: 0
+    },
+
+    roadmapStats: {
+        totalRoadmaps: 0,
+        draftRoadmaps: 0,
+        activeRoadmaps: 0,
+        completedRoadmaps: 0,
+        cancelledRoadmaps: 0
+    },
+
+    salesOrderStats: {
+        totalSalesOrders: 0
+    },
+
+    historyStats: {
+        totalDecisions: 0,
+        acceptedDecisions: 0,
+        rejectedDecisions: 0
+    },
+
+    notifications: {
+        count: 0,
+        items: [],
+        lastSync: "-"
+    }
             }), "view");
         },
 

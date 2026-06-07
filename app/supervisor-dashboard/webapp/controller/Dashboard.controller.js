@@ -26,28 +26,162 @@ sap.ui.define([
             Format.numericFormatter(ChartFormatter.getInstance());
             this._loadDashboard();
 
+            setTimeout(function () {
+    this._applyOverviewChartDesign();
+}.bind(this), 500);
+
             this._notificationInterval = setInterval(() => {
                 this._loadNotifications();
             }, 30000);
         },
+        
 
         onExit: function () {
             if (this._notificationInterval) {
                 clearInterval(this._notificationInterval);
             }
+
         },
+        _prepareOverviewCharts: function () {
+    const viewModel = this.getOwnerComponent().getModel("view");
+
+    const t = viewModel.getProperty("/tourStats") || {};
+    const r = viewModel.getProperty("/roadmapStats") || {};
+
+    viewModel.setProperty("/tourDonutData", [
+        {
+            label: "En attente",
+            value: t.pendingTours || 0
+        },
+        {
+            label: "Acceptées",
+            value: t.acceptedTours || 0
+        },
+        {
+            label: "Rejetées",
+            value: t.rejectedTours || 0
+        }
+    ]);
+
+    viewModel.setProperty("/roadmapBarData", [
+        {
+            label: "Brouillon",
+            value: r.draftRoadmaps || 0
+        },
+        {
+            label: "Active",
+            value: r.activeRoadmaps || 0
+        },
+        {
+            label: "Terminée",
+            value: r.completedRoadmaps || 0
+        },
+        {
+            label: "Annulée",
+            value: r.cancelledRoadmaps || 0
+        }
+    ]);
+},
 
         _loadDashboard: async function () {
-            await Promise.all([
-                this._loadTourStats(),
-                this._loadRoadmapStats(),
-                this._loadSalesOrderStats(),
-                this._loadHistoryStats(),
-                this._loadNotifications()
-            ]);
+    const viewModel = this.getOwnerComponent().getModel("view");
 
-            this.onSelectTours();
-        },
+    viewModel.setProperty("/busy", true);
+
+    try {
+        await Promise.all([
+            this._loadTourStats(),
+            this._loadRoadmapStats(),
+            this._loadSalesOrderStats(),
+            this._loadHistoryStats(),
+            this._loadNotifications()
+        ]);
+
+        this._prepareOverviewCharts();
+        this._applyOverviewChartDesign();
+
+    } catch (e) {
+        console.error(e);
+        MessageToast.show("Impossible de charger toutes les statistiques.");
+    } finally {
+        viewModel.setProperty("/busy", false);
+    }
+},
+
+_applyOverviewChartDesign: function () {
+    const oDonut = this.byId("supervisorTourDonutChart");
+    const oBar = this.byId("supervisorRoadmapBarChart");
+
+    if (oDonut) {
+        oDonut.setVizProperties({
+            title: {
+                visible: false
+            },
+            legend: {
+                visible: true,
+                position: "right"
+            },
+            plotArea: {
+                dataLabel: {
+                    visible: true,
+                    type: "percentage"
+                },
+                colorPalette: [
+                    "#E9730C",
+                    "#107E3E",
+                    "#BB0000"
+                ],
+                background: {
+                    color: "transparent"
+                }
+            },
+            general: {
+                background: {
+                    color: "transparent"
+                }
+            }
+        });
+    }
+
+    if (oBar) {
+        oBar.setVizProperties({
+            title: {
+                visible: false
+            },
+            legend: {
+                visible: false
+            },
+            valueAxis: {
+                title: {
+                    visible: true,
+                    text: "Nombre"
+                }
+            },
+            categoryAxis: {
+                title: {
+                    visible: true,
+                    text: "Statut"
+                }
+            },
+            plotArea: {
+                dataLabel: {
+                    visible: true
+                },
+                colorPalette: [
+                    "#0A6ED1"
+                ],
+                background: {
+                    color: "transparent"
+                }
+            },
+            general: {
+                background: {
+                    color: "transparent"
+                }
+            }
+        });
+    }
+},
 
         _loadTourStats: async function () {
             const viewModel = this.getOwnerComponent().getModel("view");
