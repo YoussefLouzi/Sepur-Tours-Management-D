@@ -4,30 +4,59 @@
     "id": "ns.roadmaps",
     "type": "application",
     "i18n": "i18n/i18n.properties",
-    "applicationVersion": { "version": "0.0.1" },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "Roadmaps",
+    "description": "Application de gestion des roadmaps",
+    "resources": "resources.json",
     "dataSources": {
       "mainService": {
         "uri": "/odata/v4/route-management/",
         "type": "OData",
-        "settings": { "odataVersion": "4.0" }
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
       }
     }
   },
   "sap.ui": {
     "technology": "UI5",
-    "deviceTypes": { "desktop": true, "tablet": true, "phone": true }
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
   },
   "sap.ui5": {
+    "flexEnabled": true,
     "dependencies": {
-      "minUI5Version": "1.120.0",
-      "libs": { "sap.m": {}, "sap.ui.core": {}, "sap.fe.templates": {} }
+      "minUI5Version": "1.148.1",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
     },
     "models": {
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "ns.roadmaps.i18n.i18n" }
+        "settings": {
+          "bundleName": "ns.roadmaps.i18n.i18n"
+        }
       },
       "": {
         "dataSource": "mainService",
@@ -35,14 +64,31 @@
         "settings": {
           "operationMode": "Server",
           "autoExpandSelect": true,
-          "earlyRequests": true
+          "earlyRequests": true,
+          "synchronizationMode": "None"
         }
+      },
+      "@i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
       }
     },
+    "resources": {
+      "css": []
+    },
     "routing": {
+      "config": {},
       "routes": [
-        { "pattern": ":?query:", "name": "RoadmapsList", "target": "RoadmapsList" },
-        { "pattern": "Roadmaps({key}):?query:", "name": "RoadmapsObjectPage", "target": "RoadmapsObjectPage" }
+        {
+          "pattern": ":?query:",
+          "name": "RoadmapsList",
+          "target": "RoadmapsList"
+        },
+        {
+          "pattern": "Roadmaps({key}):?query:",
+          "name": "RoadmapsObjectPage",
+          "target": "RoadmapsObjectPage"
+        }
       ],
       "targets": {
         "RoadmapsList": {
@@ -52,8 +98,32 @@
           "options": {
             "settings": {
               "contextPath": "/Roadmaps",
+              "variantManagement": "Page",
+              "initialLoad": "Enabled",
+              "filterSettings": {
+                "initialLoad": true
+              },
               "navigation": {
-                "Roadmaps": { "detail": { "route": "RoadmapsObjectPage" } }
+                "Roadmaps": {
+                  "detail": {
+                    "route": "RoadmapsObjectPage"
+                  }
+                }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable",
+                    "selectionMode": "None",
+                    "enableExport": true,
+                    "personalization": {
+                      "column": true,
+                      "sort": true,
+                      "filter": true,
+                      "group": true
+                    }
+                  }
+                }
               }
             }
           }
@@ -63,11 +133,27 @@
           "id": "RoadmapsObjectPage",
           "name": "sap.fe.templates.ObjectPage",
           "options": {
-            "settings": { "contextPath": "/Roadmaps" }
+            "settings": {
+              "contextPath": "/Roadmaps",
+              "editableHeaderContent": false,
+              "showRelatedApps": false,
+              "sectionLayout": "Page"
+            }
           }
         }
       }
     }
   },
-  "sap.fiori": { "archeType": "transactional" }
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  },
+  "sap.fe": {
+    "app": {
+      "enableLazyLoading": true
+    },
+    "macros": {
+      "table": {}
+    }
+  }
 }

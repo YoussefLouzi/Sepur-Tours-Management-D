@@ -2,7 +2,10 @@
   "name": "roadmaps",
   "version": "0.0.1",
   "description": "Roadmaps — Fiori Elements",
-  "keywords": ["ui5", "sapui5"],
+  "keywords": [
+    "ui5",
+    "sapui5"
+  ],
   "main": "webapp/index.html",
   "dependencies": {},
   "devDependencies": {
