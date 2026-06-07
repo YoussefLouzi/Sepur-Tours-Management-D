@@ -18,8 +18,8 @@ annotate service.Tours with @(
         }
     },
 
-    Capabilities.InsertRestrictions.Insertable: false,
-    Capabilities.DeleteRestrictions.Deletable: false,
+    Capabilities.InsertRestrictions.Insertable: true,
+    Capabilities.DeleteRestrictions.Deletable: true,
     Capabilities.UpdateRestrictions.Updatable: true,
 
     UI.SelectionFields: [
@@ -266,8 +266,8 @@ annotate service.Roadmaps with @(
         }
     },
 
-    Capabilities.InsertRestrictions.Insertable: false,
-    Capabilities.DeleteRestrictions.Deletable: false,
+    Capabilities.InsertRestrictions.Insertable: true,
+    Capabilities.DeleteRestrictions.Deletable: true,
     Capabilities.UpdateRestrictions.Updatable: true,
 
     UI.SelectionFields: [
@@ -1049,3 +1049,19 @@ annotate service.CollectionPoints with @(
         }
     ]
 );
+
+/* ===================================================== */
+/* CAPABILITIES - PLANIFICATEUR TOURS                    */
+/* ===================================================== */
+
+// annotate RouteManagementService.Tours with @Capabilities.InsertRestrictions : {
+//     Insertable : true
+// };
+
+// annotate RouteManagementService.Tours with @Capabilities.UpdateRestrictions : {
+//     Updatable : true
+// };
+
+// annotate RouteManagementService.Tours with @Capabilities.DeleteRestrictions : {
+//     Deletable : true
+// };

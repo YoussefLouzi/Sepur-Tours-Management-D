@@ -17,7 +17,7 @@ function reject(req, message, status = 400) {
 }
 
 /* ===================================================== */
-/* TOURS STATUS HELPERS                                  */
+/* STATUS HELPERS                                        */
 /* ===================================================== */
 
 function normalizeTourStatus(status) {
@@ -25,7 +25,7 @@ function normalizeTourStatus(status) {
     return TOUR_STATUS.CREATED;
   }
 
-  if (['ACCEPTED', 'VALIDATED', 'COMPLETED'].includes(status)) {
+  if (['ACCEPTED', 'VALIDATED', 'COMPLETED', 'ASSIGNED'].includes(status)) {
     return TOUR_STATUS.VALIDATED;
   }
 
@@ -35,22 +35,6 @@ function normalizeTourStatus(status) {
 
   return TOUR_STATUS.CREATED;
 }
-
-function isCreatedStatus(status) {
-  return normalizeTourStatus(status) === TOUR_STATUS.CREATED;
-}
-
-function isValidatedStatus(status) {
-  return normalizeTourStatus(status) === TOUR_STATUS.VALIDATED;
-}
-
-function isRejectedStatus(status) {
-  return normalizeTourStatus(status) === TOUR_STATUS.REJECTED;
-}
-
-/* ===================================================== */
-/* ROADMAPS STATUS HELPERS                               */
-/* ===================================================== */
 
 function normalizeRoadmapStatus(status) {
   if (['DRAFT', 'PENDING', 'CREATED'].includes(status)) {
@@ -68,6 +52,18 @@ function normalizeRoadmapStatus(status) {
   return ROADMAP_STATUS.CREATED;
 }
 
+function isCreatedStatus(status) {
+  return normalizeTourStatus(status) === TOUR_STATUS.CREATED;
+}
+
+function isValidatedStatus(status) {
+  return normalizeTourStatus(status) === TOUR_STATUS.VALIDATED;
+}
+
+function isRejectedStatus(status) {
+  return normalizeTourStatus(status) === TOUR_STATUS.REJECTED;
+}
+
 function isCreatedRoadmapStatus(status) {
   return normalizeRoadmapStatus(status) === ROADMAP_STATUS.CREATED;
 }
@@ -76,26 +72,29 @@ function isValidatedRoadmapStatus(status) {
   return normalizeRoadmapStatus(status) === ROADMAP_STATUS.VALIDATED;
 }
 
+function isRejectedRoadmapStatus(status) {
+  return normalizeRoadmapStatus(status) === ROADMAP_STATUS.REJECTED;
+}
+
 /* ===================================================== */
 /* CODE GENERATOR                                        */
 /* ===================================================== */
 
-async function nextCode(entity, field, prefix) {
-  const { Tours, Roadmaps } = cds.entities('route.management');
-  const target = entity === 'Tours' ? Tours : Roadmaps;
-  const codeField = field;
+async function nextCode(entityName, fieldName, prefix) {
+  const entities = cds.entities('route.management');
+  const target = entities[entityName];
 
   const rows = await SELECT.from(target)
-    .columns(codeField)
-    .orderBy(`${codeField} desc`)
+    .columns(fieldName)
+    .orderBy(`${fieldName} desc`)
     .limit(1);
 
   let seq = 1;
 
-  if (rows.length && rows[0][codeField]) {
-    const m = String(rows[0][codeField]).match(/(\d+)$/);
-    if (m) {
-      seq = parseInt(m[1], 10) + 1;
+  if (rows.length && rows[0][fieldName]) {
+    const match = String(rows[0][fieldName]).match(/(\d+)$/);
+    if (match) {
+      seq = parseInt(match[1], 10) + 1;
     }
   }
 
@@ -186,13 +185,24 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.on('login', async (req) => {
-      const { username, password } = req.data;
+      const email = req.data.email || req.data.username;
+      const { password } = req.data;
 
-      if (!username || !password) {
-        return reject(req, 'Identifiants requis.');
+      if (!email || !password) {
+        return reject(req, 'E-mail et mot de passe requis.');
       }
 
-      const user = await SELECT.one.from(Users).where({ username, password });
+      let user = await SELECT.one.from(Users).where({
+        email,
+        password
+      });
+
+      if (!user) {
+        user = await SELECT.one.from(Users).where({
+          username: email,
+          password
+        });
+      }
 
       if (!user) {
         return reject(req, 'Identifiants incorrects.', 401);
@@ -204,6 +214,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       return {
         ID: user.ID,
+        email: user.email,
         username: user.username,
         fullName: user.fullName,
         role: user.role,
@@ -241,43 +252,37 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       const normalizedStatus = normalizeTourStatus(tour.status);
 
       const technicalFields = new Set([
-  'ID',
-  'IsActiveEntity',
-  'HasActiveEntity',
-  'HasDraftEntity',
-  'DraftAdministrativeData',
-  'DraftAdministrativeData_DraftUUID',
-  'SiblingEntity',
-
-  // Champs techniques / virtuels
-  'statusCriticality',
-  'canValidate',
-  'canReject',
-
-  // Champs calculés
-  'clientName',
-  'driverFirstName',
-  'driverLastName',
-  'vehicleRegistration',
-  'createdByName',
-
-  // Navigations envoyées par Fiori
-  'tourPoints',
-  'decisions',
-  'roadmap',
-
-  // Champs managed
-  'createdAt',
-  'createdBy',
-  'modifiedAt',
-  'modifiedBy'
-]);
+        'ID',
+        'IsActiveEntity',
+        'HasActiveEntity',
+        'HasDraftEntity',
+        'DraftAdministrativeData',
+        'DraftAdministrativeData_DraftUUID',
+        'SiblingEntity',
+        'statusCriticality',
+        'canValidate',
+        'canReject',
+        'clientName',
+        'driverFirstName',
+        'driverLastName',
+        'vehicleRegistration',
+        'createdByName',
+        'tourPoints',
+        'decisions',
+        'roadmap',
+        'humanResources',
+        'materialResources',
+        'createdAt',
+        'createdBy',
+        'modifiedAt',
+        'modifiedBy'
+      ]);
 
       const keys = Object.keys(req.data).filter((key) => {
         return !key.startsWith('_') && !technicalFields.has(key);
       });
 
-      const allowedForSupervisor = new Set([
+      const allowedFields = new Set([
         'tourCode',
         'tourDate',
         'zone',
@@ -293,10 +298,12 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'driver',
         'roadmap_ID',
         'roadmap',
+        'createdByUser_ID',
+        'createdByUser',
         'updatedAt'
       ]);
 
-      const forbidden = keys.filter((key) => !allowedForSupervisor.has(key));
+      const forbidden = keys.filter((key) => !allowedFields.has(key));
 
       if (forbidden.length) {
         return reject(
@@ -356,45 +363,37 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       }
 
       const technicalFields = new Set([
-  'ID',
-  'IsActiveEntity',
-  'HasActiveEntity',
-  'HasDraftEntity',
-  'DraftAdministrativeData',
-  'DraftAdministrativeData_DraftUUID',
-  'SiblingEntity',
-
-  // Champs techniques / virtuels
-  'statusCriticality',
-  'canValidate',
-  'canReject',
-
-  // Champs calculés depuis la tournée principale
-  'tourCode',
-  'tourDate',
-  'tourZone',
-  'tourCollectionType',
-  'tourClientName',
-  'tourDriverFirstName',
-  'tourDriverLastName',
-  'tourVehicleRegistration',
-
-  // Navigations envoyées par Fiori pendant le draft/save
-  'assignedTours',
-  'steps',
-
-  // Champs managed
-  'createdAt',
-  'createdBy',
-  'modifiedAt',
-  'modifiedBy'
-]);
+        'ID',
+        'IsActiveEntity',
+        'HasActiveEntity',
+        'HasDraftEntity',
+        'DraftAdministrativeData',
+        'DraftAdministrativeData_DraftUUID',
+        'SiblingEntity',
+        'statusCriticality',
+        'canValidate',
+        'canReject',
+        'tourCode',
+        'tourDate',
+        'tourZone',
+        'tourCollectionType',
+        'tourClientName',
+        'tourDriverFirstName',
+        'tourDriverLastName',
+        'tourVehicleRegistration',
+        'assignedTours',
+        'steps',
+        'createdAt',
+        'createdBy',
+        'modifiedAt',
+        'modifiedBy'
+      ]);
 
       const keys = Object.keys(req.data).filter((key) => {
         return !key.startsWith('_') && !technicalFields.has(key);
       });
 
-      const allowedForSupervisor = new Set([
+      const allowedFields = new Set([
         'roadmapCode',
         'startDate',
         'endDate',
@@ -405,7 +404,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'updatedAt'
       ]);
 
-      const forbidden = keys.filter((key) => !allowedForSupervisor.has(key));
+      const forbidden = keys.filter((key) => !allowedFields.has(key));
 
       if (forbidden.length) {
         return reject(
@@ -435,12 +434,13 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     });
 
     /* ===================================================== */
-    /* ROADMAP TOURS — BEFORE CREATE / UPDATE                */
+    /* ROADMAP TOURS                                         */
     /* ===================================================== */
 
     this.before('CREATE', 'RoadmapTours', async (req) => {
       if (!req.data.sequence) {
         const roadmapID = req.data.roadmap_ID;
+
         if (roadmapID) {
           const existing = await SELECT.from(RoadmapTours)
             .columns('sequence')
@@ -483,7 +483,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         return !key.startsWith('_') && !technicalFields.has(key);
       });
 
-      const allowed = new Set([
+      const allowedFields = new Set([
         'sequence',
         'note',
         'roadmap_ID',
@@ -492,7 +492,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'tour'
       ]);
 
-      const forbidden = keys.filter((key) => !allowed.has(key));
+      const forbidden = keys.filter((key) => !allowedFields.has(key));
 
       if (forbidden.length) {
         return reject(
@@ -562,6 +562,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         .where({ ID: tourID });
 
       await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
         decision: TOUR_STATUS.VALIDATED,
         reason: null,
         decidedBy_ID: supervisorID,
@@ -609,6 +610,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         .where({ ID: tourID });
 
       await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
         decision: TOUR_STATUS.REJECTED,
         reason: trimmedReason,
         decidedBy_ID: supervisorID,
@@ -648,6 +650,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         .where({ ID: tourID });
 
       await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
         decision: TOUR_STATUS.VALIDATED,
         reason: null,
         tour_ID: tourID
@@ -689,6 +692,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         .where({ ID: tourID });
 
       await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
         decision: TOUR_STATUS.REJECTED,
         reason: trimmedReason,
         tour_ID: tourID
@@ -879,15 +883,16 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
         let seq = 1;
 
-        for (const p of points) {
-          const cpId = p.collectionPoint_ID || p.ID;
+        for (const point of points) {
+          const collectionPointID = point.collectionPoint_ID || point.ID;
 
           await INSERT.into(RoadmapSteps).entries({
-            sequence: p.sequence || seq,
+            ID: cds.utils.uuid(),
+            sequence: point.sequence || seq,
             plannedArrivalTime: `08:${String(seq).padStart(2, '0')}:00`,
             status: 'PLANNED',
             roadmap_ID: roadmapID,
-            collectionPoint_ID: cpId
+            collectionPoint_ID: collectionPointID
           });
 
           seq += 1;
@@ -902,7 +907,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.on('getPlannerStats', async (req) => {
-      const { userID } = req.data;
+      const { userID } = req.data || {};
       const where = userID ? { createdByUser_ID: userID } : {};
 
       const tours = await SELECT.from(Tours).columns('status').where(where);
@@ -910,10 +915,10 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       return {
         totalTours: tours.length,
-        draftTours: tours.filter((t) => isCreatedStatus(t.status)).length,
-        pendingTours: tours.filter((t) => isCreatedStatus(t.status)).length,
-        acceptedTours: tours.filter((t) => isValidatedStatus(t.status)).length,
-        rejectedTours: tours.filter((t) => isRejectedStatus(t.status)).length,
+        draftTours: tours.filter((tour) => isCreatedStatus(tour.status)).length,
+        pendingTours: tours.filter((tour) => isCreatedStatus(tour.status)).length,
+        acceptedTours: tours.filter((tour) => isValidatedStatus(tour.status)).length,
+        rejectedTours: tours.filter((tour) => isRejectedStatus(tour.status)).length,
         totalRoadmaps: roadmaps.length
       };
     });
@@ -924,17 +929,17 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       return {
         totalTours: tours.length,
-        pendingValidation: tours.filter((t) => isCreatedStatus(t.status)).length,
-        acceptedTours: tours.filter((t) => isValidatedStatus(t.status)).length,
-        rejectedTours: tours.filter((t) => isRejectedStatus(t.status)).length,
-        activeRoadmaps: roadmaps.filter((r) => isValidatedRoadmapStatus(r.status)).length,
+        pendingValidation: tours.filter((tour) => isCreatedStatus(tour.status)).length,
+        acceptedTours: tours.filter((tour) => isValidatedStatus(tour.status)).length,
+        rejectedTours: tours.filter((tour) => isRejectedStatus(tour.status)).length,
+        activeRoadmaps: roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length,
         totalRoadmaps: roadmaps.length
       };
     });
 
     this.on('getPendingTours', async () => {
       const tours = await SELECT.from(Tours);
-      return tours.filter((t) => isCreatedStatus(t.status));
+      return tours.filter((tour) => isCreatedStatus(tour.status));
     });
 
     /* ===================================================== */

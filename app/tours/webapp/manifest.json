@@ -103,6 +103,7 @@
             "settings": {
               "contextPath": "/Tours",
               "variantManagement": "Page",
+              "initialLoad": "Enabled",
               "navigation": {
                 "Tours": {
                   "detail": {

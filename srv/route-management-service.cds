@@ -18,6 +18,7 @@ service RouteManagementService {
 
     entity TourCollectionPoints as projection on db.TourCollectionPoints;
 
+    @odata.draft.enabled
     @cds.redirection.target: true
     entity Tours as projection on db.Tours {
         *,
@@ -40,18 +41,18 @@ service RouteManagementService {
     @cds.redirection.target: true
     entity Roadmaps as projection on db.Roadmaps {
         *,
-        tour.tourCode                  as tourCode                 : String,
-        tour.tourDate                  as tourDate                 : Date,
-        tour.zone                      as tourZone                 : String,
-        tour.collectionType            as tourCollectionType       : String,
-        tour.client.name               as tourClientName           : String,
-        tour.driver.firstName          as tourDriverFirstName      : String,
-        tour.driver.lastName           as tourDriverLastName       : String,
-        tour.vehicle.registrationNumber as tourVehicleRegistration : String,
+        tour.tourCode                   as tourCode                 : String,
+        tour.tourDate                   as tourDate                 : Date,
+        tour.zone                       as tourZone                 : String,
+        tour.collectionType             as tourCollectionType       : String,
+        tour.client.name                as tourClientName           : String,
+        tour.driver.firstName           as tourDriverFirstName      : String,
+        tour.driver.lastName            as tourDriverLastName       : String,
+        tour.vehicle.registrationNumber as tourVehicleRegistration  : String,
 
-        virtual statusCriticality      : Integer,
-        virtual canValidate            : Boolean,
-        virtual canReject              : Boolean
+        virtual statusCriticality       : Integer,
+        virtual canValidate             : Boolean,
+        virtual canReject               : Boolean
     }
     actions {
         action validateRoadmap() returns Roadmaps;
@@ -60,15 +61,15 @@ service RouteManagementService {
 
     entity RoadmapTours as projection on db.RoadmapTours {
         *,
-        roadmap.roadmapCode             as roadmapCode             : String,
-        tour.tourCode                   as tourCode                : String,
-        tour.tourDate                   as tourDate                : Date,
-        tour.zone                       as tourZone                : String,
-        tour.collectionType             as tourCollectionType      : String,
-        tour.client.name                as clientName              : String,
-        tour.driver.firstName           as driverFirstName         : String,
-        tour.driver.lastName            as driverLastName          : String,
-        tour.vehicle.registrationNumber as vehicleRegistration     : String
+        roadmap.roadmapCode             as roadmapCode         : String,
+        tour.tourCode                   as tourCode            : String,
+        tour.tourDate                   as tourDate            : Date,
+        tour.zone                       as tourZone            : String,
+        tour.collectionType             as tourCollectionType  : String,
+        tour.client.name                as clientName          : String,
+        tour.driver.firstName           as driverFirstName     : String,
+        tour.driver.lastName            as driverLastName      : String,
+        tour.vehicle.registrationNumber as vehicleRegistration : String
     }
     actions {
         action updateResources(
@@ -81,11 +82,6 @@ service RouteManagementService {
     entity RoadmapSteps as projection on db.RoadmapSteps;
 
     entity DecisionHistories as projection on db.DecisionHistories;
-
-
-    /* ===================================================== */
-    /* ANALYTICS ENTITIES FOR OVP DASHBOARD                  */
-    /* ===================================================== */
 
     @readonly
     @Aggregation.ApplySupported: {
@@ -125,13 +121,13 @@ service RouteManagementService {
     }
     entity RoadmapStatusAnalytics as projection on db.RoadmapStatusAnalytics;
 
-
     /* ===================================================== */
     /* TYPES                                                 */
     /* ===================================================== */
 
     type LoginResult {
         ID       : UUID;
+        email    : String;
         username : String;
         fullName : String;
         role     : String;
@@ -174,12 +170,11 @@ service RouteManagementService {
         tourPointsCount     : Integer;
     }
 
-
     /* ===================================================== */
     /* ACTIONS & FUNCTIONS                                   */
     /* ===================================================== */
 
-    action login(username : String, password : String) returns LoginResult;
+    action login(email : String, username : String, password : String) returns LoginResult;
 
     action submitTour(tourID : UUID) returns Tours;
 
@@ -197,3 +192,382 @@ service RouteManagementService {
 
     function getTourDetails(tourID : UUID) returns TourDetails;
 }
+
+/* ===================================================== */
+/* VALUE HELPS                                           */
+/* ===================================================== */
+
+annotate RouteManagementService.Tours with {
+    client @Common.ValueList : {
+        CollectionPath : 'Clients',
+        Parameters : [
+            {
+                $Type : 'Common.ValueListParameterInOut',
+                LocalDataProperty : client_ID,
+                ValueListProperty : 'ID'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'code'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'name'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'city'
+            }
+        ]
+    };
+
+    vehicle @Common.ValueList : {
+        CollectionPath : 'Vehicles',
+        Parameters : [
+            {
+                $Type : 'Common.ValueListParameterInOut',
+                LocalDataProperty : vehicle_ID,
+                ValueListProperty : 'ID'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'registrationNumber'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'type'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'capacity'
+            }
+        ]
+    };
+
+    driver @Common.ValueList : {
+        CollectionPath : 'Drivers',
+        Parameters : [
+            {
+                $Type : 'Common.ValueListParameterInOut',
+                LocalDataProperty : driver_ID,
+                ValueListProperty : 'ID'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'firstName'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'lastName'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'phone'
+            }
+        ]
+    };
+};
+
+annotate RouteManagementService.Roadmaps with {
+    tour @Common.ValueList : {
+        CollectionPath : 'Tours',
+        Parameters : [
+            {
+                $Type : 'Common.ValueListParameterInOut',
+                LocalDataProperty : tour_ID,
+                ValueListProperty : 'ID'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'tourCode'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'tourDate'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'zone'
+            }
+        ]
+    };
+};
+
+/* ===================================================== */
+/* TOURS ANNOTATIONS                                     */
+/* ===================================================== */
+
+annotate RouteManagementService.Tours with @(
+    UI.HeaderInfo : {
+        TypeName       : 'Tournée',
+        TypeNamePlural : 'Tournées',
+        Title          : {
+            Value : tourCode
+        },
+        Description    : {
+            Value : status
+        }
+    },
+
+    UI.SelectionFields : [
+        tourCode,
+        tourDate,
+        zone,
+        collectionType,
+        client_ID,
+        vehicle_ID,
+        driver_ID,
+        status
+    ],
+
+    UI.LineItem : [
+        {
+            $Type : 'UI.DataField',
+            Label : 'Code tournée',
+            Value : tourCode,
+            ![@UI.Importance] : #High
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Date',
+            Value : tourDate,
+            ![@UI.Importance] : #High
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Zone',
+            Value : zone
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Type de collecte',
+            Value : collectionType
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Client',
+            Value : clientName,
+            ![@UI.Importance] : #High
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Véhicule',
+            Value : vehicleRegistration
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Chauffeur',
+            Value : driverLastName
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Statut',
+            Value : status,
+            Criticality : statusCriticality,
+            CriticalityRepresentation : #WithIcon,
+            ![@UI.Importance] : #High
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Motif de rejet',
+            Value : rejectionReason
+        }
+    ],
+
+    UI.Identification : [
+        {
+            $Type : 'UI.DataField',
+            Label : 'Code tournée',
+            Value : tourCode
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Date',
+            Value : tourDate
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Zone',
+            Value : zone
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Type de collecte',
+            Value : collectionType
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Client',
+            Value : client_ID
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Véhicule',
+            Value : vehicle_ID
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Chauffeur',
+            Value : driver_ID
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Statut',
+            Value : status,
+            Criticality : statusCriticality,
+            CriticalityRepresentation : #WithIcon
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Description',
+            Value : description
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Motif de rejet',
+            Value : rejectionReason
+        }
+    ],
+
+    UI.Facets : [
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Informations générales',
+            Target : '@UI.FieldGroup#General'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Ressources',
+            Target : '@UI.FieldGroup#Resources'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Suivi',
+            Target : '@UI.FieldGroup#Tracking'
+        }
+    ],
+
+    UI.FieldGroup #General : {
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Label : 'Code tournée',
+                Value : tourCode
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Date',
+                Value : tourDate
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Zone',
+                Value : zone
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Type de collecte',
+                Value : collectionType
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Client',
+                Value : client_ID
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Description',
+                Value : description
+            }
+        ]
+    },
+
+    UI.FieldGroup #Resources : {
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Label : 'Véhicule',
+                Value : vehicle_ID
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Chauffeur',
+                Value : driver_ID
+            }
+        ]
+    },
+
+    UI.FieldGroup #Tracking : {
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Label : 'Statut',
+                Value : status,
+                Criticality : statusCriticality,
+                CriticalityRepresentation : #WithIcon
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Motif de rejet',
+                Value : rejectionReason
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Créé par',
+                Value : createdByName
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Dernière modification',
+                Value : updatedAt
+            }
+        ]
+    }
+);
+
+/* ===================================================== */
+/* ROADMAPS ANNOTATIONS                                  */
+/* ===================================================== */
+
+annotate RouteManagementService.Roadmaps with @(
+    UI.HeaderInfo : {
+        TypeName       : 'Roadmap',
+        TypeNamePlural : 'Roadmaps',
+        Title          : {
+            Value : roadmapCode
+        },
+        Description    : {
+            Value : status
+        }
+    },
+
+    UI.LineItem : [
+        {
+            $Type : 'UI.DataField',
+            Label : 'Code roadmap',
+            Value : roadmapCode
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Date début',
+            Value : startDate
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Date fin',
+            Value : endDate
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Tournée',
+            Value : tourCode
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Statut',
+            Value : status,
+            Criticality : statusCriticality,
+            CriticalityRepresentation : #WithIcon
+        }
+    ]
+);

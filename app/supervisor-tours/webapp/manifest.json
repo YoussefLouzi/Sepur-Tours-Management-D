@@ -10,11 +10,6 @@
     "title": "{{appTitle}}",
     "description": "{{appDescription}}",
     "resources": "resources.json",
-    "sourceTemplate": {
-      "id": "@sap/generator-fiori:lrop",
-      "version": "1.25.0",
-      "toolsId": "499de7b3-b6cf-44c0-b191-32628d2f90bd"
-    },
     "dataSources": {
       "mainService": {
         "uri": "/odata/v4/route-management/",
@@ -69,7 +64,8 @@
         "settings": {
           "operationMode": "Server",
           "autoExpandSelect": true,
-          "earlyRequests": true
+          "earlyRequests": true,
+          "synchronizationMode": "None"
         }
       },
       "@i18n": {
@@ -85,50 +81,64 @@
       "routes": [
         {
           "pattern": ":?query:",
-          "name": "ToursList",
-          "target": "ToursList"
+          "name": "SupervisorToursList",
+          "target": "SupervisorToursList"
         },
         {
           "pattern": "Tours({key}):?query:",
-          "name": "ToursObjectPage",
-          "target": "ToursObjectPage"
+          "name": "SupervisorToursObjectPage",
+          "target": "SupervisorToursObjectPage"
         }
       ],
       "targets": {
-        "ToursList": {
+        "SupervisorToursList": {
           "type": "Component",
-          "id": "ToursList",
+          "id": "SupervisorToursList",
           "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
               "contextPath": "/Tours",
               "variantManagement": "Page",
-               "initialLoad": "Enabled",
+              "initialLoad": "Enabled",
+              "creationMode": {
+                "name": "Disabled"
+              },
               "navigation": {
                 "Tours": {
                   "detail": {
-                    "route": "ToursObjectPage"
+                    "route": "SupervisorToursObjectPage"
                   }
                 }
               },
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
-                    "type": "ResponsiveTable"
+                    "type": "ResponsiveTable",
+                    "selectionMode": "None",
+                    "selectAll": false,
+                    "enableExport": true,
+                    "personalization": {
+                      "column": true,
+                      "sort": true,
+                      "filter": true,
+                      "group": true
+                    }
                   }
                 }
               }
             }
           }
         },
-        "ToursObjectPage": {
+        "SupervisorToursObjectPage": {
           "type": "Component",
-          "id": "ToursObjectPage",
+          "id": "SupervisorToursObjectPage",
           "name": "sap.fe.templates.ObjectPage",
           "options": {
             "settings": {
+              "contextPath": "/Tours",
               "editableHeaderContent": false,
-              "contextPath": "/Tours"
+              "showRelatedApps": false,
+              "sectionLayout": "Page"
             }
           }
         }
@@ -142,6 +152,9 @@
   "sap.fe": {
     "app": {
       "enableLazyLoading": true
+    },
+    "macros": {
+      "table": {}
     }
   }
 }

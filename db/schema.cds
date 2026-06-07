@@ -7,10 +7,11 @@ using { cuid, managed } from '@sap/cds/common';
 /* ===================================================== */
 
 entity Users : cuid {
+    email    : String(120);
     username : String(100);
     password : String(100);
     fullName : String(200);
-    role     : String(30);
+    role     : String(30);     // PLANIFICATEUR | SUPERVISEUR
     active   : Boolean default true;
 }
 
@@ -131,16 +132,8 @@ entity Roadmaps : cuid, managed {
 
     updatedAt       : Timestamp @cds.on.insert: $now @cds.on.update: $now;
 
-    /*
-     * Conservé pour compatibilité avec ton ancienne logique.
-     * Cette association peut représenter la première tournée.
-     */
     tour : Association to Tours;
 
-    /*
-     * Nouvelle relation métier :
-     * une roadmap contient plusieurs tournées.
-     */
     assignedTours : Composition of many RoadmapTours
         on assignedTours.roadmap = $self;
 
@@ -149,19 +142,18 @@ entity Roadmaps : cuid, managed {
 }
 
 entity RoadmapTours : cuid, managed {
-    sequence  : Integer;
-    note      : String(255);
-    updatedAt : Timestamp @cds.on.insert: $now @cds.on.update: $now;
+    sequence : Integer;
+    note     : String(255);
 
     roadmap : Association to Roadmaps;
     tour    : Association to Tours;
 }
 
-entity RoadmapSteps : cuid {
+entity RoadmapSteps : cuid, managed {
     sequence           : Integer;
     plannedArrivalTime : Time;
     realArrivalTime    : Time;
-    status             : String(20) default 'PLANNED';
+    status             : String(30) default 'PLANNED';
 
     roadmap         : Association to Roadmaps;
     collectionPoint : Association to CollectionPoints;
@@ -171,7 +163,7 @@ entity RoadmapSteps : cuid {
 /* DECISION HISTORY                                      */
 /* ===================================================== */
 
-entity DecisionHistories : cuid {
+entity DecisionHistories : cuid, managed {
     decision     : String(20);
     reason       : LargeString;
     decisionDate : Timestamp @cds.on.insert: $now;
@@ -184,16 +176,30 @@ entity DecisionHistories : cuid {
 /* ANALYTICS                                             */
 /* ===================================================== */
 
-entity TourStatusAnalytics as
-    select from Tours {
-        key status,
-        count(1) as total : Integer
-    }
-    group by status;
+entity TourStatusAnalytics as select from Tours {
+    key status as status,
+        count(1) as total : Integer,
+        case
+            when status = 'VALIDATED' then 3
+            when status = 'ACCEPTED' then 3
+            when status = 'COMPLETED' then 3
+            when status = 'REJECTED' then 1
+            when status = 'CANCELLED' then 1
+            else 2
+        end as criticality : Integer
+}
+group by status;
 
-entity RoadmapStatusAnalytics as
-    select from Roadmaps {
-        key status,
-        count(1) as total : Integer
-    }
-    group by status;
+entity RoadmapStatusAnalytics as select from Roadmaps {
+    key status as status,
+        count(1) as total : Integer,
+        case
+            when status = 'VALIDATED' then 3
+            when status = 'ACTIVE' then 3
+            when status = 'COMPLETED' then 3
+            when status = 'REJECTED' then 1
+            when status = 'CANCELLED' then 1
+            else 2
+        end as criticality : Integer
+}
+group by status;
