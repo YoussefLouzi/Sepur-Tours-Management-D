@@ -2,8 +2,33 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
-], function (Controller, JSONModel, MessageToast, MessageBox) {
+    "sap/m/MessageBox",
+    "sap/m/Popover",
+    "sap/m/VBox",
+    "sap/m/HBox",
+    "sap/m/Text",
+    "sap/m/Button",
+    "sap/m/Toolbar",
+    "sap/m/ToolbarSpacer",
+    "sap/m/Title",
+    "sap/m/ObjectStatus",
+    "sap/ui/core/Icon"
+], function (
+    Controller,
+    JSONModel,
+    MessageToast,
+    MessageBox,
+    Popover,
+    VBox,
+    HBox,
+    Text,
+    Button,
+    Toolbar,
+    ToolbarSpacer,
+    Title,
+    ObjectStatus,
+    Icon
+) {
     "use strict";
 
     return Controller.extend("sepur.planner.controller.Dashboard", {
@@ -44,14 +69,38 @@ sap.ui.define([
                 },
 
                 tourChartData: [],
-                roadmapChartData: []
+                roadmapChartData: [],
+
+                notifications: {
+                    unreadCount: 0,
+                    totalCount: 0,
+                    items: [],
+                    lastSync: "-"
+                }
             }));
 
             this.loadDashboardData();
+
+            this._notificationInterval = setInterval(function () {
+                this._loadNotificationsSilent();
+            }.bind(this), 30000);
+        },
+
+        onExit: function () {
+            if (this._notificationInterval) {
+                clearInterval(this._notificationInterval);
+                this._notificationInterval = null;
+            }
+
+            if (this._notificationPopover) {
+                this._notificationPopover.destroy();
+                this._notificationPopover = null;
+            }
         },
 
         onAfterRendering: function () {
             this._applyChartDesign();
+            this._updateNotificationButtonState();
         },
 
         _applyChartDesign: function () {
@@ -60,9 +109,7 @@ sap.ui.define([
 
             if (oTourChart) {
                 oTourChart.setVizProperties({
-                    title: {
-                        visible: false
-                    },
+                    title: { visible: false },
                     legend: {
                         visible: true,
                         position: "right"
@@ -91,12 +138,8 @@ sap.ui.define([
 
             if (oRoadmapChart) {
                 oRoadmapChart.setVizProperties({
-                    title: {
-                        visible: false
-                    },
-                    legend: {
-                        visible: false
-                    },
+                    title: { visible: false },
+                    legend: { visible: false },
                     valueAxis: {
                         title: {
                             visible: true,
@@ -165,16 +208,16 @@ sap.ui.define([
             oModel.setProperty("/busy", true);
 
             try {
-                const [aTours, aRoadmaps] = await Promise.all([
+                const aResults = await Promise.all([
                     this._loadTours(),
                     this._loadRoadmaps()
                 ]);
 
-                this._calculateStatistics(aTours, aRoadmaps);
+                this._lastTours = aResults[0];
+                this._lastRoadmaps = aResults[1];
 
-                MessageToast.show("Données actualisées.", {
-                    duration: 1600
-                });
+                this._calculateStatistics(this._lastTours, this._lastRoadmaps);
+                this._buildNotifications(this._lastTours, this._lastRoadmaps);
 
             } catch (e) {
                 console.error("[Dashboard] Erreur chargement:", e);
@@ -184,7 +227,26 @@ sap.ui.define([
 
                 setTimeout(function () {
                     this._applyChartDesign();
+                    this._updateNotificationButtonState();
                 }.bind(this), 300);
+            }
+        },
+
+        _loadNotificationsSilent: async function () {
+            try {
+                const aResults = await Promise.all([
+                    this._loadTours(),
+                    this._loadRoadmaps()
+                ]);
+
+                this._lastTours = aResults[0];
+                this._lastRoadmaps = aResults[1];
+
+                this._calculateStatistics(this._lastTours, this._lastRoadmaps);
+                this._buildNotifications(this._lastTours, this._lastRoadmaps);
+                this._updateNotificationButtonState();
+            } catch (e) {
+                console.error("[Notifications] Erreur:", e);
             }
         },
 
@@ -258,34 +320,257 @@ sap.ui.define([
             });
 
             oModel.setProperty("/tourChartData", [
-                {
-                    status: "Créées",
-                    total: oTourStats.CREATED
-                },
-                {
-                    status: "Validées",
-                    total: oTourStats.VALIDATED
-                },
-                {
-                    status: "Rejetées",
-                    total: oTourStats.REJECTED
-                }
+                { status: "Créées", total: oTourStats.CREATED },
+                { status: "Validées", total: oTourStats.VALIDATED },
+                { status: "Rejetées", total: oTourStats.REJECTED }
             ]);
 
             oModel.setProperty("/roadmapChartData", [
-                {
-                    status: "Créées",
-                    total: oRoadmapStats.CREATED
-                },
-                {
-                    status: "Validées",
-                    total: oRoadmapStats.VALIDATED
-                },
-                {
-                    status: "Rejetées",
-                    total: oRoadmapStats.REJECTED
-                }
+                { status: "Créées", total: oRoadmapStats.CREATED },
+                { status: "Validées", total: oRoadmapStats.VALIDATED },
+                { status: "Rejetées", total: oRoadmapStats.REJECTED }
             ]);
+        },
+
+        _getReadNotificationIds: function () {
+            try {
+                return JSON.parse(localStorage.getItem("sepur.planner.readNotifications") || "[]");
+            } catch (e) {
+                return [];
+            }
+        },
+
+        _setReadNotificationIds: function (aIds) {
+            localStorage.setItem("sepur.planner.readNotifications", JSON.stringify(aIds || []));
+        },
+
+        _buildNotifications: function (aTours, aRoadmaps) {
+            const oModel = this.getView().getModel();
+            const aReadIds = this._getReadNotificationIds();
+            const aNotifications = [];
+
+            aTours.forEach(function (oTour) {
+                const sStatus = this.normalizeStatus(oTour.status);
+
+                if (sStatus === "VALIDATED" || sStatus === "REJECTED") {
+                    const sId = "TOUR-" + oTour.ID + "-" + sStatus;
+
+                    aNotifications.push({
+                        id: sId,
+                        entity: "TOUR",
+                        type: sStatus === "VALIDATED" ? "Success" : "Error",
+                        icon: sStatus === "VALIDATED" ? "sap-icon://accept" : "sap-icon://decline",
+                        title: sStatus === "VALIDATED" ? "Tournée validée" : "Tournée rejetée",
+                        description: (oTour.tourCode || "-") + " | " + (oTour.clientName || "-") + " | " + (oTour.zone || "-"),
+                        detail: sStatus === "VALIDATED"
+                            ? "Le superviseur a validé cette tournée."
+                            : "Le superviseur a rejeté cette tournée. Une correction est nécessaire.",
+                        status: sStatus,
+                        unread: aReadIds.indexOf(sId) === -1
+                    });
+                }
+            }.bind(this));
+
+            aRoadmaps.forEach(function (oRoadmap) {
+                const sStatus = this.normalizeStatus(oRoadmap.status);
+
+                if (sStatus === "VALIDATED" || sStatus === "REJECTED") {
+                    const sId = "ROADMAP-" + oRoadmap.ID + "-" + sStatus;
+
+                    aNotifications.push({
+                        id: sId,
+                        entity: "ROADMAP",
+                        type: sStatus === "VALIDATED" ? "Success" : "Error",
+                        icon: sStatus === "VALIDATED" ? "sap-icon://accept" : "sap-icon://decline",
+                        title: sStatus === "VALIDATED" ? "Roadmap validée" : "Roadmap rejetée",
+                        description: (oRoadmap.roadmapCode || "-") + " | Tournée : " + (oRoadmap.tourCode || "-"),
+                        detail: sStatus === "VALIDATED"
+                            ? "Le superviseur a validé cette roadmap."
+                            : "Le superviseur a rejeté cette roadmap. Une vérification est nécessaire.",
+                        status: sStatus,
+                        unread: aReadIds.indexOf(sId) === -1
+                    });
+                }
+            }.bind(this));
+
+            const iUnread = aNotifications.filter(function (n) {
+                return n.unread;
+            }).length;
+
+            oModel.setProperty("/notifications", {
+                unreadCount: iUnread,
+                totalCount: aNotifications.length,
+                items: aNotifications,
+                lastSync: new Date().toLocaleString("fr-FR")
+            });
+
+            this._updateNotificationButtonState();
+        },
+
+        _updateNotificationButtonState: function () {
+            const oButton = this.byId("btnPlannerNotifications");
+
+            if (!oButton) {
+                return;
+            }
+
+            const iUnread = this.getView().getModel().getProperty("/notifications/unreadCount") || 0;
+
+            if (iUnread > 0) {
+                oButton.addStyleClass("notificationButtonUnread");
+            } else {
+                oButton.removeStyleClass("notificationButtonUnread");
+            }
+        },
+
+        _markCurrentNotificationsAsRead: function () {
+            const oModel = this.getView().getModel();
+            const aNotifications = oModel.getProperty("/notifications/items") || [];
+
+            const aIds = aNotifications.map(function (n) {
+                return n.id;
+            });
+
+            this._setReadNotificationIds(aIds);
+
+            aNotifications.forEach(function (n) {
+                n.unread = false;
+            });
+
+            oModel.setProperty("/notifications/items", aNotifications);
+            oModel.setProperty("/notifications/unreadCount", 0);
+
+            this._updateNotificationButtonState();
+        },
+
+        _createNotificationItem: function (oNotification) {
+            const sStateClass = oNotification.type === "Success"
+                ? "notificationSuccess"
+                : "notificationError";
+
+            const oIcon = new Icon({
+                src: oNotification.icon
+            }).addStyleClass("notificationIcon " + sStateClass);
+
+            const oTitle = new Text({
+                text: oNotification.title
+            }).addStyleClass("notificationTitle");
+
+            const oStatus = new ObjectStatus({
+                text: oNotification.unread ? "Non lue" : "Lue",
+                state: oNotification.unread ? "Information" : "None"
+            }).addStyleClass("notificationStatus");
+
+            const oDescription = new Text({
+                text: oNotification.description
+            }).addStyleClass("notificationDescription");
+
+            const oDetail = new Text({
+                text: oNotification.detail
+            }).addStyleClass("notificationDetail");
+
+            const oHeader = new HBox({
+                justifyContent: "SpaceBetween",
+                alignItems: "Center",
+                items: [
+                    new HBox({
+                        alignItems: "Center",
+                        items: [
+                            oIcon,
+                            oTitle
+                        ]
+                    }),
+                    oStatus
+                ]
+            }).addStyleClass("notificationItemHeader");
+
+            return new VBox({
+                items: [
+                    oHeader,
+                    oDescription,
+                    oDetail
+                ]
+            }).addStyleClass(oNotification.unread ? "notificationCard notificationUnread" : "notificationCard");
+        },
+
+        onOpenNotifications: function (oEvent) {
+            this._buildNotifications(this._lastTours || [], this._lastRoadmaps || []);
+
+            const oModel = this.getView().getModel();
+            const aNotifications = oModel.getProperty("/notifications/items") || [];
+            const sLastSync = oModel.getProperty("/notifications/lastSync") || "-";
+
+            if (this._notificationPopover) {
+                this._notificationPopover.destroy();
+                this._notificationPopover = null;
+            }
+
+            const oContent = new VBox({
+                width: "28rem"
+            }).addStyleClass("notificationPopoverContent");
+
+            const oHeader = new Toolbar({
+                content: [
+                    new Title({
+                        text: "Notifications",
+                        level: "H4"
+                    }).addStyleClass("notificationPopoverTitle"),
+                    new ToolbarSpacer(),
+                    new Button({
+                        text: "Tout marquer comme lu",
+                        icon: "sap-icon://accept",
+                        type: "Transparent",
+                        press: this.onMarkAllNotificationsRead.bind(this)
+                    }).addStyleClass("markReadButton")
+                ]
+            }).addStyleClass("notificationPopoverToolbar");
+
+            oContent.addItem(oHeader);
+
+            oContent.addItem(new Text({
+                text: "Dernière synchronisation : " + sLastSync
+            }).addStyleClass("notificationSyncText"));
+
+            if (!aNotifications.length) {
+                oContent.addItem(
+                    new VBox({
+                        items: [
+                            new Icon({
+                                src: "sap-icon://bell"
+                            }).addStyleClass("emptyNotificationIcon"),
+                            new Text({
+                                text: "Aucune notification pour le moment."
+                            }).addStyleClass("emptyNotificationText")
+                        ]
+                    }).addStyleClass("emptyNotificationBox")
+                );
+            } else {
+                aNotifications.forEach(function (oNotification) {
+                    oContent.addItem(this._createNotificationItem(oNotification));
+                }.bind(this));
+            }
+
+            this._notificationPopover = new Popover({
+                placement: "Bottom",
+                showHeader: false,
+                contentWidth: "29rem",
+                content: oContent
+            }).addStyleClass("plannerNotificationPopover");
+
+            this.getView().addDependent(this._notificationPopover);
+            this._notificationPopover.openBy(oEvent.getSource());
+
+            this._markCurrentNotificationsAsRead();
+        },
+
+        onMarkAllNotificationsRead: function () {
+            this._markCurrentNotificationsAsRead();
+
+            if (this._notificationPopover) {
+                this._notificationPopover.close();
+            }
+
+            MessageToast.show("Notifications marquées comme lues.");
         },
 
         onRefresh: function () {
