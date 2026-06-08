@@ -44,10 +44,7 @@ sap.ui.define([
                 },
 
                 tourChartData: [],
-                roadmapChartData: [],
-
-                tours: [],
-                roadmaps: []
+                roadmapChartData: []
             }));
 
             this.loadDashboardData();
@@ -68,21 +65,12 @@ sap.ui.define([
                     },
                     legend: {
                         visible: true,
-                        position: "right",
-                        label: {
-                            style: {
-                                fontFamily: "'72', Arial"
-                            }
-                        }
+                        position: "right"
                     },
                     plotArea: {
                         dataLabel: {
                             visible: true,
-                            type: "percentage",
-                            style: {
-                                fontFamily: "'72', Arial",
-                                fontWeight: "bold"
-                            }
+                            type: "percentage"
                         },
                         colorPalette: [
                             "#E9730C",
@@ -123,11 +111,7 @@ sap.ui.define([
                     },
                     plotArea: {
                         dataLabel: {
-                            visible: true,
-                            style: {
-                                fontFamily: "'72', Arial",
-                                fontWeight: "bold"
-                            }
+                            visible: true
                         },
                         colorPalette: [
                             "#0A6ED1"
@@ -205,12 +189,10 @@ sap.ui.define([
         },
 
         _loadTours: async function () {
-            const oModel = this.getView().getModel();
-
             const sUrl = "/odata/v4/route-management/Tours" +
                 "?$select=ID,tourCode,tourDate,zone,collectionType,status,clientName,vehicleRegistration,driverLastName,createdAt" +
                 "&$orderby=createdAt desc" +
-                "&$top=8";
+                "&$top=1000";
 
             const response = await fetch(sUrl);
 
@@ -219,20 +201,14 @@ sap.ui.define([
             }
 
             const data = await response.json();
-            const aTours = data.value || [];
-
-            oModel.setProperty("/tours", aTours);
-
-            return aTours;
+            return data.value || [];
         },
 
         _loadRoadmaps: async function () {
-            const oModel = this.getView().getModel();
-
             const sUrl = "/odata/v4/route-management/Roadmaps" +
                 "?$select=ID,roadmapCode,startDate,endDate,status,tourCode,tourDate,tourZone,createdAt" +
                 "&$orderby=createdAt desc" +
-                "&$top=8";
+                "&$top=1000";
 
             const response = await fetch(sUrl);
 
@@ -241,11 +217,7 @@ sap.ui.define([
             }
 
             const data = await response.json();
-            const aRoadmaps = data.value || [];
-
-            oModel.setProperty("/roadmaps", aRoadmaps);
-
-            return aRoadmaps;
+            return data.value || [];
         },
 
         _calculateStatistics: function (aTours, aRoadmaps) {
@@ -349,50 +321,6 @@ sap.ui.define([
                         window.location.href = "/login/webapp/index.html";
                     }
                 }
-            });
-        },
-
-        formatStatusState: function (sStatus) {
-            switch (this.normalizeStatus(sStatus)) {
-                case "VALIDATED":
-                    return "Success";
-                case "REJECTED":
-                    return "Error";
-                case "CREATED":
-                    return "Warning";
-                default:
-                    return "None";
-            }
-        },
-
-        formatStatusText: function (sStatus) {
-            switch (this.normalizeStatus(sStatus)) {
-                case "CREATED":
-                    return "Créée";
-                case "VALIDATED":
-                    return "Validée";
-                case "REJECTED":
-                    return "Rejetée";
-                default:
-                    return sStatus || "";
-            }
-        },
-
-        formatDate: function (sDate) {
-            if (!sDate) {
-                return "";
-            }
-
-            const oDate = new Date(sDate);
-
-            if (isNaN(oDate.getTime())) {
-                return sDate;
-            }
-
-            return oDate.toLocaleDateString("fr-FR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric"
             });
         }
     });
