@@ -27,45 +27,44 @@ sap.ui.define([
             }
 
             this.setModel(new JSONModel({
-                 busy: false,
-    user: user,
-    userInitials: this._getInitials(user.fullName),
+                busy: false,
 
-    selectedModule: "TOURS",
-    chartTitle: "Répartition des tournées par statut",
-    chartSubtitle: "Statistiques des tournées créées dans le système",
-    chartData: [],
+                user: user,
+                userInitials: this._getInitials(user.fullName),
 
-    tourStats: {
-        totalTours: 0,
-        pendingTours: 0,
-        acceptedTours: 0,
-        rejectedTours: 0
-    },
+                tourStats: {
+                    totalTours: 0,
+                    pendingTours: 0,
+                    acceptedTours: 0,
+                    rejectedTours: 0
+                },
 
-    roadmapStats: {
-        totalRoadmaps: 0,
-        draftRoadmaps: 0,
-        activeRoadmaps: 0,
-        completedRoadmaps: 0,
-        cancelledRoadmaps: 0
-    },
+                roadmapStats: {
+                    totalRoadmaps: 0,
+                    draftRoadmaps: 0,
+                    activeRoadmaps: 0,
+                    completedRoadmaps: 0,
+                    cancelledRoadmaps: 0
+                },
 
-    salesOrderStats: {
-        totalSalesOrders: 0
-    },
+                salesOrderStats: {
+                    totalSalesOrders: 0
+                },
 
-    historyStats: {
-        totalDecisions: 0,
-        acceptedDecisions: 0,
-        rejectedDecisions: 0
-    },
+                historyStats: {
+                    totalDecisions: 0,
+                    acceptedDecisions: 0,
+                    rejectedDecisions: 0
+                },
 
-    notifications: {
-        count: 0,
-        items: [],
-        lastSync: "-"
-    }
+                tourDonutData: [],
+                roadmapBarData: [],
+
+                notifications: {
+                    count: 0,
+                    items: [],
+                    lastSync: "-"
+                }
             }), "view");
         },
 

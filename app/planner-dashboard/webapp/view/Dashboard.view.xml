@@ -131,121 +131,149 @@
     justifyContent="Start"
     alignItems="Start">
 
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Total tournées" class="kpiCleanTitle" />
-            <Text text="Toutes les tournées enregistrées" class="kpiCleanSubtitle" />
-        </VBox>
+    <GenericTile
+        header="Total tournées"
+        subheader="Toutes les tournées enregistrées"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenTours">
+        <tileContent>
+            <TileContent footer="Tournées">
+                <NumericContent
+                    value="{/stats/totalTours}"
+                    icon="sap-icon://map"
+                    valueColor="Neutral"
+                    indicator="None"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://map" class="kpiCleanIcon kpiNeutral" />
-            <Title text="{/stats/totalTours}" level="H1" class="kpiCleanNumber kpiNeutral" />
-        </HBox>
+    <GenericTile
+        header="Tournées créées"
+        subheader="En attente de traitement"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenTours">
+        <tileContent>
+            <TileContent footer="À suivre">
+                <NumericContent
+                    value="{/stats/createdTours}"
+                    icon="sap-icon://pending"
+                    valueColor="Critical"
+                    indicator="None"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
-        <Text text="Tournées" class="kpiCleanFooter" />
-    </VBox>
+    <GenericTile
+        header="Tournées validées"
+        subheader="Acceptées par le superviseur"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenTours">
+        <tileContent>
+            <TileContent footer="Validées">
+                <NumericContent
+                    value="{/stats/validatedTours}"
+                    icon="sap-icon://accept"
+                    valueColor="Good"
+                    indicator="Up"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Tournées créées" class="kpiCleanTitle" />
-            <Text text="En attente de traitement" class="kpiCleanSubtitle" />
-        </VBox>
+    <GenericTile
+        header="Tournées rejetées"
+        subheader="Correction nécessaire"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenRejectedTours">
+        <tileContent>
+            <TileContent footer="À corriger">
+                <NumericContent
+                    value="{/stats/rejectedTours}"
+                    icon="sap-icon://message-error"
+                    valueColor="Error"
+                    indicator="Down"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://synchronize" class="kpiCleanIcon kpiCritical" />
-            <Title text="{/stats/createdTours}" level="H1" class="kpiCleanNumber kpiCritical" />
-        </HBox>
+    <GenericTile
+        header="Total roadmaps"
+        subheader="Roadmaps disponibles"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenRoadmaps">
+        <tileContent>
+            <TileContent footer="Roadmaps">
+                <NumericContent
+                    value="{/stats/totalRoadmaps}"
+                    icon="sap-icon://journey-arrive"
+                    valueColor="Neutral"
+                    indicator="None"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
-        <Text text="À suivre" class="kpiCleanFooter" />
-    </VBox>
+    <GenericTile
+        header="Roadmaps créées"
+        subheader="En attente de traitement"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenRoadmaps">
+        <tileContent>
+            <TileContent footer="À traiter">
+                <NumericContent
+                    value="{/stats/createdRoadmaps}"
+                    icon="sap-icon://pending"
+                    valueColor="Critical"
+                    indicator="None"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Tournées validées" class="kpiCleanTitle" />
-            <Text text="Acceptées par le superviseur" class="kpiCleanSubtitle" />
-        </VBox>
+    <GenericTile
+        header="Roadmaps validées"
+        subheader="Acceptées par le superviseur"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenRoadmaps">
+        <tileContent>
+            <TileContent footer="Validées">
+                <NumericContent
+                    value="{/stats/validatedRoadmaps}"
+                    icon="sap-icon://accept"
+                    valueColor="Good"
+                    indicator="Up"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://accept" class="kpiCleanIcon kpiGood" />
-            <Title text="{/stats/validatedTours}" level="H1" class="kpiCleanNumber kpiGood" />
-            <core:Icon src="sap-icon://trend-up" class="kpiTrendIcon kpiGood" />
-        </HBox>
-
-        <Text text="Validées" class="kpiCleanFooter" />
-    </VBox>
-
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Tournées rejetées" class="kpiCleanTitle" />
-            <Text text="Correction nécessaire" class="kpiCleanSubtitle" />
-        </VBox>
-
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://decline" class="kpiCleanIcon kpiError" />
-            <Title text="{/stats/rejectedTours}" level="H1" class="kpiCleanNumber kpiError" />
-            <core:Icon src="sap-icon://trend-down" class="kpiTrendIcon kpiError" />
-        </HBox>
-
-        <Text text="À corriger" class="kpiCleanFooter" />
-    </VBox>
-
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Total roadmaps" class="kpiCleanTitle" />
-            <Text text="Roadmaps disponibles" class="kpiCleanSubtitle" />
-        </VBox>
-
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://journey-arrive" class="kpiCleanIcon kpiNeutral" />
-            <Title text="{/stats/totalRoadmaps}" level="H1" class="kpiCleanNumber kpiNeutral" />
-        </HBox>
-
-        <Text text="Roadmaps" class="kpiCleanFooter" />
-    </VBox>
-
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Roadmaps créées" class="kpiCleanTitle" />
-            <Text text="En attente de traitement" class="kpiCleanSubtitle" />
-        </VBox>
-
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://synchronize" class="kpiCleanIcon kpiCritical" />
-            <Title text="{/stats/createdRoadmaps}" level="H1" class="kpiCleanNumber kpiCritical" />
-        </HBox>
-
-        <Text text="À traiter" class="kpiCleanFooter" />
-    </VBox>
-
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Roadmaps validées" class="kpiCleanTitle" />
-            <Text text="Acceptées par le superviseur" class="kpiCleanSubtitle" />
-        </VBox>
-
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://accept" class="kpiCleanIcon kpiGood" />
-            <Title text="{/stats/validatedRoadmaps}" level="H1" class="kpiCleanNumber kpiGood" />
-            <core:Icon src="sap-icon://trend-up" class="kpiTrendIcon kpiGood" />
-        </HBox>
-
-        <Text text="Validées" class="kpiCleanFooter" />
-    </VBox>
-
-    <VBox class="kpiCleanCard">
-        <VBox>
-            <Text text="Roadmaps rejetées" class="kpiCleanTitle" />
-            <Text text="Correction nécessaire" class="kpiCleanSubtitle" />
-        </VBox>
-
-        <HBox class="kpiCleanValueRow" alignItems="Center">
-            <core:Icon src="sap-icon://decline" class="kpiCleanIcon kpiError" />
-            <Title text="{/stats/rejectedRoadmaps}" level="H1" class="kpiCleanNumber kpiError" />
-            <core:Icon src="sap-icon://trend-down" class="kpiTrendIcon kpiError" />
-        </HBox>
-
-        <Text text="À corriger" class="kpiCleanFooter" />
-    </VBox>
+    <GenericTile
+        header="Roadmaps rejetées"
+        subheader="Correction nécessaire"
+        frameType="TwoByOne"
+        class="sapKpiTile"
+        press=".onOpenRejectedTours">
+        <tileContent>
+            <TileContent footer="À corriger">
+                <NumericContent
+                    value="{/stats/rejectedRoadmaps}"
+                    icon="sap-icon://message-error"
+                    valueColor="Error"
+                    indicator="Down"
+                    withMargin="false" />
+            </TileContent>
+        </tileContent>
+    </GenericTile>
 
 </FlexBox>
 

@@ -137,7 +137,8 @@ body,
     box-shadow: 0 0.2rem 0.8rem rgba(15, 23, 42, 0.04);
 }
 
-.headerBrand {
+.headerBrand,
+.pageTitleBlock {
     gap: 0.75rem;
 }
 
@@ -164,7 +165,8 @@ body,
     font-weight: 800;
 }
 
-.headerNavButton .sapMBtnInner {
+.headerNavButton .sapMBtnInner,
+.topNavButton .sapMBtnInner {
     color: #0a6ed1 !important;
     font-weight: 700;
     border: none !important;
@@ -172,6 +174,7 @@ body,
 }
 
 .headerNavButton .sapMBtnIcon,
+.topNavButton .sapMBtnIcon,
 .refreshButton .sapMBtnIcon,
 .notificationButton .sapMBtnIcon {
     color: #0a6ed1 !important;
@@ -202,143 +205,209 @@ body,
 /* BODY                                                  */
 /* ===================================================== */
 
+.dashboardScroll {
+    height: calc(100vh - 4.3rem) !important;
+    background: #f5f7fa;
+}
+
 .dashboardBody {
-    height: calc(100vh - 4.3rem);
-    overflow-y: auto;
+    min-height: calc(100vh - 4.3rem);
     overflow-x: hidden;
     padding: 1rem 1.25rem 1.6rem 1.25rem;
     box-sizing: border-box;
     background: #f5f7fa;
 }
 
+.dashboardScroll::-webkit-scrollbar,
 .dashboardBody::-webkit-scrollbar {
     width: 0.45rem;
 }
 
+.dashboardScroll::-webkit-scrollbar-track,
 .dashboardBody::-webkit-scrollbar-track {
     background: transparent;
 }
 
+.dashboardScroll::-webkit-scrollbar-thumb,
 .dashboardBody::-webkit-scrollbar-thumb {
     background: #c7d3df;
     border-radius: 1rem;
 }
 
-/* ===================================================== */
-/* SECTION HEADER                                        */
-/* ===================================================== */
 
-.sectionHeader {
-    margin-bottom: 0.7rem;
-}
-
-.sectionTitle {
-    color: #0b1f3a;
-    font-weight: 800;
-    font-size: 1rem;
-}
-
-.sectionSubtitle {
-    color: #607083;
-    font-size: 0.76rem;
-    margin-top: 0.12rem;
-}
-
-/* ===================================================== */
-/* KPI CARDS - STYLE COMPACT COMME IMAGE                 */
-/* ===================================================== */
+/* ═══════════════════════════════════════════════════════════════
+   KPI GRID — 4 colonnes, 2 lignes, espacement uniforme
+   ═══════════════════════════════════════════════════════════════ */
 
 .kpiGridProfessional {
-    width: 100%;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 0.65rem !important;
-    margin-bottom: 0.85rem;
-    align-items: stretch;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.1rem !important;
+    align-items: stretch !important;
 }
 
-.kpiCleanCard {
-    width: calc((100% - 1.95rem) / 4);
-    min-width: 13rem;
-    height: 7.35rem;
-    background: #ffffff;
-    border: 1px solid #dce5ee;
-    border-radius: 0.65rem;
-    box-shadow: 0 0.12rem 0.45rem rgba(15, 23, 42, 0.10);
-    padding: 0.65rem 0.8rem;
-    box-sizing: border-box;
-    justify-content: space-between;
+/* ── GenericTile wrapper ── */
+/* ── GenericTile wrapper ── */
+.sapKpiTile {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 9.25rem !important;
+
+    background: #ffffff !important;
+    border: 1px solid #dce5ee !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.07) !important;
+    overflow: hidden !important;
     transition: box-shadow 0.18s ease, transform 0.18s ease;
+    cursor: pointer;
 }
 
-.kpiCleanCard:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 0.3rem 0.8rem rgba(15, 23, 42, 0.14);
+.sapKpiTile:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.13) !important;
 }
 
-.kpiCleanTitle {
-    color: #0b1f3a;
-    font-size: 0.74rem;
-    font-weight: 800;
-    line-height: 0.92rem;
+/* ── GenericTile interne ── */
+.sapKpiTile .sapMGT {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0.75rem !important;
+    background: #ffffff !important;
+    padding: 0 !important;
 }
 
-.kpiCleanSubtitle {
-    color: #607083;
-    font-size: 0.68rem;
-    line-height: 0.85rem;
-    margin-top: 0.05rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* Header section : titre + sous-titre */
+.sapKpiTile .sapMGTHdrContent {
+    height: 3.2rem !important;
+    padding: 0.75rem 0.85rem 0 0.85rem !important;
+    box-sizing: border-box !important;
 }
 
-.kpiCleanValueRow {
-    margin-top: 0.45rem;
-    min-height: 1.8rem;
+.sapKpiTile .sapMGTHdrTxt {
+    color: #0b1f3a !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    line-height: 0.95rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-.kpiCleanIcon {
-    font-size: 1.05rem;
-    margin-right: 0.3rem;
+.sapKpiTile .sapMGTSubHdrTxt {
+    color: #607083 !important;
+    font-size: 0.68rem !important;
+    line-height: 0.85rem !important;
+    margin-top: 0.08rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-.kpiCleanNumber {
-    font-size: 1.55rem !important;
-    font-weight: 400 !important;
-    line-height: 1.65rem !important;
-    margin: 0 !important;
+/* Content section : valeur numérique + icône */
+.sapKpiTile .sapMGTContent {
+    height: 5.65rem !important;
+    padding: 0.45rem 0.85rem 0.6rem 0.85rem !important;
+    box-sizing: border-box !important;
 }
 
-.kpiTrendIcon {
-    font-size: 0.72rem;
-    margin-left: 0.25rem;
-    margin-top: 0.1rem;
+.sapKpiTile .sapMTileCnt {
+    height: 100% !important;
 }
 
-.kpiCleanFooter {
-    color: #607083;
-    font-size: 0.66rem;
-    font-weight: 700;
-    line-height: 0.78rem;
-    margin-top: 0.1rem;
+.sapKpiTile .sapMTileCntContent {
+    height: 2.8rem !important;
+    padding-top: 0.3rem !important;
+    box-sizing: border-box !important;
 }
 
-.kpiNeutral {
+/* NumericContent */
+.sapKpiTile .sapMNC {
+    width: 100% !important;
+    height: 2.35rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.sapKpiTile .sapMNCInner {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.sapKpiTile .sapMNCValue {
+    font-size: 1.65rem !important;
+    font-weight: 300 !important;
+    line-height: 1.75rem !important;
+}
+
+.sapKpiTile .sapMNCIconImage {
+    font-size: 1.1rem !important;
+    margin-right: 0.35rem !important;
+}
+
+.sapKpiTile .sapMNCIndScale {
+    font-size: 0.75rem !important;
+    margin-left: 0.22rem !important;
+    align-self: center !important;
+}
+
+/* Footer */
+.sapKpiTile .sapMTileCntFtrTxt {
+    color: #607083 !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    line-height: 0.85rem !important;
+    padding-top: 0.15rem !important;
+    display: block !important;
+}
+
+/* Couleurs sémantiques SAP/Fiori */
+.sapKpiTile .sapMNCNeutral,
+.sapKpiTile .sapMNCNeutral .sapMNCIconImage,
+.sapKpiTile .sapMNCNeutral .sapMNCIndScale {
     color: #526b82 !important;
 }
 
-.kpiCritical {
-    color: #d45d00 !important;
+.sapKpiTile .sapMNCCritical,
+.sapKpiTile .sapMNCCritical .sapMNCIconImage,
+.sapKpiTile .sapMNCCritical .sapMNCIndScale {
+    color: #e76500 !important;
 }
 
-.kpiGood {
+.sapKpiTile .sapMNCGood,
+.sapKpiTile .sapMNCGood .sapMNCIconImage,
+.sapKpiTile .sapMNCGood .sapMNCIndScale {
     color: #107e3e !important;
 }
 
-.kpiError {
+.sapKpiTile .sapMNCError,
+.sapKpiTile .sapMNCError .sapMNCIconImage,
+.sapKpiTile .sapMNCError .sapMNCIndScale {
     color: #bb0000 !important;
 }
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .kpiGridProfessional {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .kpiGridProfessional {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .kpiGridProfessional {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 
 /* ===================================================== */
 /* CHARTS                                                */
@@ -364,6 +433,12 @@ body,
     margin-bottom: 0.65rem;
 }
 
+.cardHeaderIcon {
+    color: #0a6ed1;
+    font-size: 0.95rem;
+    margin-right: 0.65rem;
+}
+
 .cardIconBox {
     width: 1.8rem;
     height: 1.8rem;
@@ -372,11 +447,6 @@ body,
     align-items: center;
     justify-content: center;
     margin-right: 0.65rem;
-}
-
-.cardHeaderIcon {
-    color: #0a6ed1;
-    font-size: 0.95rem;
 }
 
 .cardTitle {
@@ -506,8 +576,8 @@ body,
 /* ===================================================== */
 
 @media (max-width: 1200px) {
-    .kpiCleanCard {
-        width: calc((100% - 1.3rem) / 3);
+    .sapKpiTile {
+        width: calc((100% - 1.3rem) / 3) !important;
     }
 }
 
@@ -530,13 +600,14 @@ body,
         overflow: visible;
     }
 
+    .dashboardScroll,
     .dashboardBody {
-        height: auto;
+        height: auto !important;
         overflow: visible;
     }
 
-    .kpiCleanCard {
-        width: calc((100% - 0.65rem) / 2);
+    .sapKpiTile {
+        width: calc((100% - 0.65rem) / 2) !important;
     }
 
     .chartCard {
@@ -558,8 +629,8 @@ body,
         padding: 1rem;
     }
 
-    .kpiCleanCard {
-        width: 100%;
-        min-width: 100%;
+    .sapKpiTile {
+        width: 100% !important;
+        min-width: 100% !important;
     }
 }
