@@ -4,248 +4,248 @@ using RouteManagementService as service from './route-management-service';
 /* TOURS                                                 */
 /* ===================================================== */
 
-annotate service.Tours with @(
-    UI.HeaderInfo: {
-        TypeName: 'Tournée',
-        TypeNamePlural: 'Tournées de collecte',
-        Title: {
-            $Type: 'UI.DataField',
-            Value: tourCode
-        },
-        Description: {
-            $Type: 'UI.DataField',
-            Value: status
-        }
-    },
+// annotate service.Tours with @(
+//     UI.HeaderInfo: {
+//         TypeName: 'Tournée',
+//         TypeNamePlural: 'Tournées de collecte',
+//         Title: {
+//             $Type: 'UI.DataField',
+//             Value: tourCode
+//         },
+//         Description: {
+//             $Type: 'UI.DataField',
+//             Value: status
+//         }
+//     },
 
-    Capabilities.InsertRestrictions.Insertable: true,
-    Capabilities.DeleteRestrictions.Deletable: true,
-    Capabilities.UpdateRestrictions.Updatable: true,
+//     Capabilities.InsertRestrictions.Insertable: true,
+//     Capabilities.DeleteRestrictions.Deletable: true,
+//     Capabilities.UpdateRestrictions.Updatable: true,
 
-    UI.SelectionFields: [
-        status,
-        tourCode,
-        tourDate,
-        clientName,
-        collectionType,
-        driverLastName,
-        vehicleRegistration
-    ],
+//     UI.SelectionFields: [
+//         status,
+//         tourCode,
+//         tourDate,
+//         clientName,
+//         collectionType,
+//         driverLastName,
+//         vehicleRegistration
+//     ],
 
-    UI.LineItem: [
-        {
-            $Type: 'UI.DataField',
-            Label: 'N° tournée',
-            Value: tourCode
-        },
-        {
-            $Type: 'UI.DataField',
-            Label: 'Date de collecte',
-            Value: tourDate
-        },
-        {
-            $Type: 'UI.DataField',
-            Label: 'Client',
-            Value: clientName
-        },
-        {
-            $Type: 'UI.DataField',
-            Label: 'Matériau',
-            Value: collectionType
-        },
-        {
-            $Type: 'UI.DataField',
-            Label: 'Ressource humaine',
-            Value: driverLastName
-        },
-        {
-            $Type: 'UI.DataField',
-            Label: 'Ressource matérielle',
-            Value: vehicleRegistration
-        },
-        {
-            $Type: 'UI.DataField',
-            Label: 'Statut',
-            Value: status,
-            Criticality: statusCriticality
-        },
-        {
-            $Type: 'UI.DataFieldForAction',
-            Label: 'Valider',
-            Action: 'RouteManagementService.validate',
-            Inline: true
-        },
-        {
-            $Type: 'UI.DataFieldForAction',
-            Label: 'Rejeter',
-            Action: 'RouteManagementService.reject',
-            Inline: true
-        }
-    ],
+//     UI.LineItem: [
+//         {
+//             $Type: 'UI.DataField',
+//             Label: 'N° tournée',
+//             Value: tourCode
+//         },
+//         {
+//             $Type: 'UI.DataField',
+//             Label: 'Date de collecte',
+//             Value: tourDate
+//         },
+//         {
+//             $Type: 'UI.DataField',
+//             Label: 'Client',
+//             Value: clientName
+//         },
+//         {
+//             $Type: 'UI.DataField',
+//             Label: 'Matériau',
+//             Value: collectionType
+//         },
+//         {
+//             $Type: 'UI.DataField',
+//             Label: 'Ressource humaine',
+//             Value: driverLastName
+//         },
+//         {
+//             $Type: 'UI.DataField',
+//             Label: 'Ressource matérielle',
+//             Value: vehicleRegistration
+//         },
+//         {
+//             $Type: 'UI.DataField',
+//             Label: 'Statut',
+//             Value: status,
+//             Criticality: statusCriticality
+//         },
+//         {
+//             $Type: 'UI.DataFieldForAction',
+//             Label: 'Valider',
+//             Action: 'RouteManagementService.validate',
+//             Inline: true
+//         },
+//         {
+//             $Type: 'UI.DataFieldForAction',
+//             Label: 'Rejeter',
+//             Action: 'RouteManagementService.reject',
+//             Inline: true
+//         }
+//     ],
 
-    UI.Facets: [
-        {
-            $Type: 'UI.ReferenceFacet',
-            Label: 'Informations générales',
-            Target: '@UI.FieldGroup#General'
-        },
-        {
-            $Type: 'UI.ReferenceFacet',
-            Label: 'Client et matériau',
-            Target: '@UI.FieldGroup#ClientMaterial'
-        },
-        {
-            $Type: 'UI.ReferenceFacet',
-            Label: 'Affectation des ressources',
-            Target: '@UI.FieldGroup#Resources'
-        },
-        {
-            $Type: 'UI.ReferenceFacet',
-            Label: 'Suivi de la tournée',
-            Target: '@UI.FieldGroup#Tracking'
-        }
-    ],
+//     UI.Facets: [
+//         {
+//             $Type: 'UI.ReferenceFacet',
+//             Label: 'Informations générales',
+//             Target: '@UI.FieldGroup#General'
+//         },
+//         {
+//             $Type: 'UI.ReferenceFacet',
+//             Label: 'Client et matériau',
+//             Target: '@UI.FieldGroup#ClientMaterial'
+//         },
+//         {
+//             $Type: 'UI.ReferenceFacet',
+//             Label: 'Affectation des ressources',
+//             Target: '@UI.FieldGroup#Resources'
+//         },
+//         {
+//             $Type: 'UI.ReferenceFacet',
+//             Label: 'Suivi de la tournée',
+//             Target: '@UI.FieldGroup#Tracking'
+//         }
+//     ],
 
-    UI.FieldGroup #General: {
-        Data: [
-            {
-                $Type: 'UI.DataField',
-                Label: 'N° tournée',
-                Value: tourCode
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Date de collecte',
-                Value: tourDate
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Zone',
-                Value: zone
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Statut',
-                Value: status,
-                Criticality: statusCriticality
-            }
-        ]
-    },
+//     UI.FieldGroup #General: {
+//         Data: [
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'N° tournée',
+//                 Value: tourCode
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Date de collecte',
+//                 Value: tourDate
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Zone',
+//                 Value: zone
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Statut',
+//                 Value: status,
+//                 Criticality: statusCriticality
+//             }
+//         ]
+//     },
 
-    UI.FieldGroup #ClientMaterial: {
-        Data: [
-            {
-                $Type: 'UI.DataField',
-                Label: 'Client',
-                Value: client
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Nom client',
-                Value: clientName
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Matériau',
-                Value: collectionType
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Description',
-                Value: description
-            }
-        ]
-    },
+//     UI.FieldGroup #ClientMaterial: {
+//         Data: [
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Client',
+//                 Value: client
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Nom client',
+//                 Value: clientName
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Matériau',
+//                 Value: collectionType
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Description',
+//                 Value: description
+//             }
+//         ]
+//     },
 
-    UI.FieldGroup #Resources: {
-        Data: [
-            {
-                $Type: 'UI.DataField',
-                Label: 'Ressource humaine',
-                Value: driver
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Nom chauffeur',
-                Value: driverLastName
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Ressource matérielle',
-                Value: vehicle
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Véhicule',
-                Value: vehicleRegistration
-            }
-        ]
-    },
+//     UI.FieldGroup #Resources: {
+//         Data: [
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Ressource humaine',
+//                 Value: driver
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Nom chauffeur',
+//                 Value: driverLastName
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Ressource matérielle',
+//                 Value: vehicle
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Véhicule',
+//                 Value: vehicleRegistration
+//             }
+//         ]
+//     },
 
-    UI.FieldGroup #Tracking: {
-        Data: [
-            {
-                $Type: 'UI.DataField',
-                Label: 'Motif de refus',
-                Value: rejectionReason
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Créé le',
-                Value: createdAt
-            },
-            {
-                $Type: 'UI.DataField',
-                Label: 'Mis à jour le',
-                Value: updatedAt
-            }
-        ]
-    }
-);
+//     UI.FieldGroup #Tracking: {
+//         Data: [
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Motif de refus',
+//                 Value: rejectionReason
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Créé le',
+//                 Value: createdAt
+//             },
+//             {
+//                 $Type: 'UI.DataField',
+//                 Label: 'Mis à jour le',
+//                 Value: updatedAt
+//             }
+//         ]
+//     }
+// );
 
-annotate service.Tours with {
-    status              @Common.Label: 'Statut de modification';
-    tourCode            @Common.Label: 'N° tournée';
-    tourDate            @Common.Label: 'Date de collecte';
+// annotate service.Tours with {
+//     status              @Common.Label: 'Statut de modification';
+//     tourCode            @Common.Label: 'N° tournée';
+//     tourDate            @Common.Label: 'Date de collecte';
 
-    client              @Common.Label: 'Client';
-    clientName          @(
-        Common.Label: 'Nom client',
-        Core.Computed: true
-    );
+//     client              @Common.Label: 'Client';
+//     clientName          @(
+//         Common.Label: 'Nom client',
+//         Core.Computed: true
+//     );
 
-    collectionType      @Common.Label: 'Matériau';
+//     collectionType      @Common.Label: 'Matériau';
 
-    driver              @Common.Label: 'Ressource humaine';
-    driverFirstName     @(
-        Common.Label: 'Prénom chauffeur',
-        Core.Computed: true
-    );
-    driverLastName      @(
-        Common.Label: 'Nom chauffeur',
-        Core.Computed: true
-    );
+//     driver              @Common.Label: 'Ressource humaine';
+//     driverFirstName     @(
+//         Common.Label: 'Prénom chauffeur',
+//         Core.Computed: true
+//     );
+//     driverLastName      @(
+//         Common.Label: 'Nom chauffeur',
+//         Core.Computed: true
+//     );
 
-    vehicle             @Common.Label: 'Ressource matérielle';
-    vehicleRegistration @(
-        Common.Label: 'Véhicule',
-        Core.Computed: true
-    );
+//     vehicle             @Common.Label: 'Ressource matérielle';
+//     vehicleRegistration @(
+//         Common.Label: 'Véhicule',
+//         Core.Computed: true
+//     );
 
-    zone                @Common.Label: 'Zone';
-    description         @Common.Label: 'Description';
-    rejectionReason     @Common.Label: 'Motif de refus';
+//     zone                @Common.Label: 'Zone';
+//     description         @Common.Label: 'Description';
+//     rejectionReason     @Common.Label: 'Motif de refus';
 
-    statusCriticality   @(
-        Common.Label: 'Criticité du statut',
-        Core.Computed: true
-    );
-    canValidate         @Core.Computed: true;
-    canReject           @Core.Computed: true;
+//     statusCriticality   @(
+//         Common.Label: 'Criticité du statut',
+//         Core.Computed: true
+//     );
+//     canValidate         @Core.Computed: true;
+//     canReject           @Core.Computed: true;
 
-    createdAt           @Core.Computed: true;
-    updatedAt           @Core.Computed: true;
-};
+//     createdAt           @Core.Computed: true;
+//     updatedAt           @Core.Computed: true;
+// };
 
 
 /* ===================================================== */
