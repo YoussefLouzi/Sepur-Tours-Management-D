@@ -1,730 +1,454 @@
-/* ════════════════════════════════════════════════════════════════════
-   SEPUR · Planner Dashboard · style.css
-   SAP UI5 Fiori Horizon Design System · v4.0
-   ════════════════════════════════════════════════════════════════════ */
-
-/* ── CSS Variables — SAP Fiori Horizon Palette ──────────────────────── */
-:root {
-    /* SAP Fiori Horizon Blue – Brand */
-    --clr-brand:       #0070f2;
-    --clr-brand-dk:    #0040b0;
-    --clr-brand-lt:    #e8f3ff;
-    --clr-brand-md:    #c0dcff;
-
-    /* Semantic colors – Fiori standard */
-    --clr-orange:      #e76500;
-    --clr-orange-lt:   #fff3e6;
-    --clr-green:       #107e3e;
-    --clr-green-lt:    #e8f5ee;
-    --clr-red:         #bb0000;
-    --clr-red-lt:      #ffeaea;
-    --clr-purple:      #5d36bc;
-    --clr-purple-lt:   #f0ecfa;
-
-    /* Surfaces */
-    --bg-page:         #f4f6f8;
-    --bg-card:         #ffffff;
-    --bg-side:         #ffffff;
-    --bg-side-header:  #fafbfc;
-
-    /* Typography */
-    --txt-primary:     #1d2d3e;
-    --txt-secondary:   #556b82;
-    --txt-muted:       #8da0b4;
-    --txt-inverse:     #ffffff;
-
-    /* Borders & Shadows */
-    --border:          #dde1e7;
-    --border-focus:    #0070f2;
-    --shadow-side:     4px 0 20px rgba(0, 64, 176, 0.08);
-    --shadow-card:     0 1px 3px rgba(15, 32, 55, 0.06), 0 4px 16px rgba(15, 32, 55, 0.05);
-    --shadow-hover:    0 6px 24px rgba(15, 32, 55, 0.12);
-    --shadow-active:   0 0 0 3px rgba(0, 112, 242, 0.18);
-
-    /* Geometry */
-    --radius:          10px;
-    --radius-sm:       7px;
-    --radius-xs:       5px;
-
-    /* Sidebar dimensions */
-    --sidebar-w:       252px;
-    --sidebar-col:     60px;
-    --transition:      0.22s cubic-bezier(0.4, 0, 0.2, 1);
+.plannerPage {
+    background: #f5f7fa;
 }
 
-/* ── Reset & Base ────────────────────────────────────────────────────── */
-html, body, .sapUiBody {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background: var(--bg-page);
-    font-family: "72", "72full", Arial, Helvetica, sans-serif;
-}
-
-* { box-sizing: border-box; }
-
-.plannerPage { background: var(--bg-page); }
-
-/* ════════════════════════════════════════════════════════════════════
-   LAYOUT ROOT — Full viewport, no scroll on root
-   ════════════════════════════════════════════════════════════════════ */
 .layoutRoot {
-    height: 100vh;
-    width:  100vw;
-    overflow: hidden;
-    background: var(--bg-page);
-    display: flex !important;
+    width: 100%;
+    min-height: 100vh;
+    background: #f5f7fa;
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   ██████████  SIDEBAR  ██████████
-   ════════════════════════════════════════════════════════════════════ */
+/* SIDEBAR FIXE */
+
 .sideNav {
-    width:      var(--sidebar-w);
-    min-width:  var(--sidebar-w);
-    height:     100vh;
-    background: var(--bg-side);
-    border-right: 1px solid var(--border);
-    box-shadow: var(--shadow-side);
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 13.5rem;
+    min-height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #dde5ee;
+    box-shadow: 0.25rem 0 1.2rem rgba(15, 23, 42, 0.04);
+    padding: 0.9rem 0.7rem;
     box-sizing: border-box;
-    overflow:   hidden;
-    overflow-y: auto;
-    display:    flex !important;
+    z-index: 20;
+    display: flex !important;
     flex-direction: column;
-    flex-shrink: 0;
-    transition: width var(--transition), min-width var(--transition);
-    scrollbar-width: thin;
-    scrollbar-color: #cdd8e5 transparent;
-    z-index:    100;
 }
 
-.sideNav::-webkit-scrollbar       { width: 3px; }
-.sideNav::-webkit-scrollbar-track { background: transparent; }
-.sideNav::-webkit-scrollbar-thumb { background: #cdd8e5; border-radius: 4px; }
-
-/* ── Collapsed state ─────────────────────────────────────────────── */
-.sideNavCollapsed {
-    width:     var(--sidebar-col) !important;
-    min-width: var(--sidebar-col) !important;
+.brandArea {
+    padding: 0.6rem 0.6rem 1rem 0.6rem;
+    border-bottom: 1px solid #edf2f7;
+    margin-bottom: 1rem;
 }
 
-.sideNavCollapsed .brandContent {
-    display:  none !important;
-    width:    0;
-    overflow: hidden;
+.sepurLogo {
+    width: 7.5rem;
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 0.5rem;
+    display: block;
 }
 
-.sideNavCollapsed .menuButton .sapMBtnContent,
-.sideNavCollapsed .logoutBox  .sapMBtnContent {
-    display:  none !important;
-    width:    0;
-    overflow: hidden;
-}
-
-.sideNavCollapsed .menuButton .sapMBtnInner,
-.sideNavCollapsed .logoutBox  .sapMBtnInner {
-    justify-content: center !important;
-    padding-left:    0 !important;
-    padding-right:   0 !important;
-}
-
-.sideNavCollapsed .menuButton .sapMBtnIcon,
-.sideNavCollapsed .logoutBox  .sapMBtnIcon {
-    margin-right: 0 !important;
-}
-
-/* Brand box collapsed — logo caché, seul le toggle reste */
-.sideNavCollapsed .brandBox {
-    flex-direction:  row !important;
-    justify-content: center !important;
-    padding:         0.9rem 0 !important;
-    min-height:      56px;
-}
-
-.sideNavCollapsed .brandContent { display: none !important; }
-
-.sideNavCollapsed .toggleSideButton {
-    position: static !important;
-    transform: none !important;
-}
-
-.sideNavCollapsed .menuBox   { padding: 0.5rem 0; }
-.sideNavCollapsed .logoutBox { padding: 0.25rem 0 0.5rem 0; }
-
-/* Cacher le point bleu en mode collapsed */
-.sideNavCollapsed .activeMenu::after { display: none !important; }
-
-/* ══════════════════════════════════════════════════════════
-   BRAND BOX — Logo centré + sous-titre + bouton toggle
-   Style : image SOFALIM/SEPUR — fond blanc, logo centré
-   ══════════════════════════════════════════════════════════ */
-.brandBox {
-    display:         flex;
-    flex-direction:  column;
-    align-items:     center;
-    justify-content: center;
-    padding:         1.2rem 0.75rem 1rem 0.75rem;
-    border-bottom:   1px solid var(--border);
-    min-height:      80px;
-    background:      #ffffff;
-    box-sizing:      border-box;
-    flex-shrink:     0;
-    position:        relative;
-}
-
-/* Logo centré, proportionnel */
-.brandLogo {
-    height:        38px !important;
-    width:         auto !important;
-    max-width:     160px !important;
-    object-fit:    contain !important;
-    display:       block !important;
-    margin:        0 auto 0.3rem auto !important;
-}
-
-/* Sous-titre centré */
-.brandSubText.sapMText {
-    font-size:      0.62rem !important;
-    color:          var(--txt-muted) !important;
-    font-weight:    600 !important;
-    letter-spacing: 0.08em;
+.brandSubtitle {
+    color: #6b7c8f;
+    font-size: 0.72rem;
+    font-weight: 700;
     text-transform: uppercase;
-    line-height:    1 !important;
-    white-space:    nowrap;
-    text-align:     center;
-    display:        block;
+    letter-spacing: 0.05rem;
 }
 
-/* ── Toggle button — positionné en absolu à droite ────────── */
-.toggleSideButton {
-    position:   absolute !important;
-    right:      8px;
-    top:        50%;
-    transform:  translateY(-50%);
+.menuArea {
+    gap: 0.25rem;
 }
 
-.toggleSideButton .sapMBtnInner {
-    width:         26px !important;
-    height:        26px !important;
-    min-width:     26px !important;
-    border-radius: 50% !important;
-    background:    transparent !important;
-    border:        1px solid var(--border) !important;
-    display:       flex !important;
-    align-items:   center !important;
-    justify-content: center !important;
-    padding:       0 !important;
-    transition:    background var(--transition), border-color var(--transition);
+.bottomArea {
+    margin-top: auto;
+    border-top: 1px solid #edf2f7;
+    padding-top: 0.8rem;
 }
 
-.toggleSideButton .sapMBtnInner:hover {
-    background:   var(--clr-brand-lt) !important;
-    border-color: var(--clr-brand) !important;
-}
-
-.toggleSideButton .sapMBtnIcon {
-    color:     var(--txt-secondary) !important;
-    font-size: 0.75rem !important;
-    margin:    0 !important;
-    transition: color var(--transition);
-}
-
-.toggleSideButton .sapMBtnInner:hover .sapMBtnIcon {
-    color: var(--clr-brand) !important;
-}
-
-/* ══════════════════════════════════════════════════════════
-   MENU BOX — Navigation items
-   Style : texte simple, point bleu pour item actif
-   ══════════════════════════════════════════════════════════ */
-.menuBox {
-    padding:        0.6rem 0 0.5rem 0;
-    display:        flex !important;
-    flex-direction: column;
-    gap:            0;
-    flex:           1;
-}
-
-/* ── Individual menu button — style liste épurée ─────────── */
 .menuButton {
-    width:         100%;
-    border-radius: 0 !important;
-    background:    transparent !important;
-    border:        none !important;
-    margin-bottom: 0;
-    position:      relative;
+    width: 100%;
+    justify-content: flex-start;
+    margin-bottom: 0.25rem;
+    position: relative;
 }
 
 .menuButton .sapMBtnInner {
-    height:          2.75rem;
-    justify-content: flex-start !important;
-    color:           var(--txt-primary) !important;
-    background:      transparent !important;
-    border:          none !important;
-    border-radius:   0 !important;
-    text-shadow:     none !important;
-    font-family:     "72", Arial, sans-serif;
-    font-weight:     400;
-    font-size:       0.9rem;
-    padding-left:    1.25rem !important;
-    padding-right:   2rem !important;
-    transition:      background var(--transition), color var(--transition);
+    justify-content: flex-start;
+    border: none;
+    border-radius: 0.45rem;
+    background: transparent;
+    color: #223548;
+    font-weight: 600;
 }
 
-.menuButton .sapMBtnContent {
-    text-align:    left;
-    flex:          1;
-    white-space:   nowrap;
-    overflow:      hidden;
-    text-overflow: ellipsis;
-}
-
-/* Icônes — discrètes comme dans l'image */
 .menuButton .sapMBtnIcon {
-    color:        var(--txt-muted) !important;
-    font-size:    0.95rem !important;
-    margin-right: 0.65rem !important;
-    flex-shrink:  0;
-    transition:   color var(--transition);
+    color: #0a6ed1 !important;
 }
 
-/* Hover — léger fond gris clair */
 .menuButton:hover .sapMBtnInner {
-    background: #f5f6f7 !important;
-    color:      var(--txt-primary) !important;
+    background: #f2f6fb;
 }
 
-/* ── Active — POINT BLEU à droite (comme image SOFALIM) ───── */
 .activeMenu .sapMBtnInner {
-    background:  #eef4ff !important;
-    color:       var(--clr-brand) !important;
-    font-weight: 600 !important;
+    background: #eaf3ff !important;
+    color: #0a6ed1 !important;
+    border: 1px solid #0a6ed1 !important;
 }
 
-.activeMenu .sapMBtnIcon {
-    color: var(--clr-brand) !important;
+.logoutButton .sapMBtnInner {
+    color: #bb0000 !important;
 }
 
-/* Point bleu indicateur — positionné à droite */
-.activeMenu::after {
-    content:       "";
-    position:      absolute;
-    right:         14px;
-    top:           50%;
-    transform:     translateY(-50%);
-    width:         8px;
-    height:        8px;
-    border-radius: 50%;
-    background:    var(--clr-brand);
-    pointer-events: none;
+.logoutButton .sapMBtnIcon {
+    color: #bb0000 !important;
 }
 
-/* ── Danger / Déconnexion ──────────────────────────────────── */
-.dangerMenu .sapMBtnInner {
-    color: var(--clr-red) !important;
-}
-.dangerMenu .sapMBtnIcon {
-    color: var(--clr-red) !important;
-}
-.dangerMenu:hover .sapMBtnInner {
-    background: var(--clr-red-lt) !important;
-    color:      #990000 !important;
-}
-.dangerMenu:hover .sapMBtnIcon {
-    color: #990000 !important;
-}
+/* MAIN AREA */
 
-/* ══════════════════════════════════════════════════════════
-   LOGOUT BOX — pinned to bottom of sidebar
-   ══════════════════════════════════════════════════════════ */
-.logoutBox {
-    margin-top:     auto;
-    padding:        0.25rem 0 0.5rem 0;
-    border-top:     1px solid var(--border);
-    display:        flex !important;
-    flex-direction: column;
-    gap:            0;
-    flex-shrink:    0;
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   MAIN AREA — fills remaining space, scrolls internally
-   ════════════════════════════════════════════════════════════════════ */
 .mainArea {
-    flex:        1 1 0;
-    min-width:   0;
-    height:      100vh;
-    overflow-y:  auto;
-    overflow-x:  hidden;
-    padding:     1rem 1.25rem 1.5rem 1.25rem;
-    box-sizing:  border-box;
-    background:  var(--bg-page);
-    scrollbar-width: thin;
-    scrollbar-color: #cdd8e5 transparent;
+    margin-left: 13.5rem;
+    flex: 1;
+    min-height: 100vh;
+    padding: 0;
+    overflow: auto;
+    background: #f5f7fa;
 }
 
-.mainArea::-webkit-scrollbar       { width: 5px; }
-.mainArea::-webkit-scrollbar-track { background: transparent; }
-.mainArea::-webkit-scrollbar-thumb { background: #cdd8e5; border-radius: 6px; }
+/* HEADER FIXE */
 
-/* ════════════════════════════════════════════════════════════════════
-   TOP BAR
-   ════════════════════════════════════════════════════════════════════ */
 .topBar {
-    background:    var(--bg-card);
-    border-radius: var(--radius);
-    padding:       0.85rem 1.25rem;
-    margin-bottom: 1.1rem;
-    box-shadow:    var(--shadow-card);
-    border:        1px solid var(--border);
-    min-height:    64px;
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    height: 4.3rem;
+    background: #ffffff;
+    border-bottom: 1px solid #dfe7ef;
+    padding: 0 1.6rem;
+    box-shadow: 0 0.2rem 0.8rem rgba(15, 23, 42, 0.04);
 }
 
-.topTitle.sapMTitle {
-    font-size:   1.2rem !important;
-    font-weight: 800 !important;
-    color:       var(--txt-primary) !important;
-    line-height: 1.25 !important;
+.headerBrand {
+    gap: 0.75rem;
 }
 
-.topSubTitle.sapMText {
-    color:      var(--txt-secondary);
-    font-size:  0.78rem;
-    margin-top: 0.15rem;
+.sapHeaderLogo {
+    width: 4rem;
+    height: auto;
+    display: block;
 }
 
-.topActions { gap: 0.5rem; }
-
-.btnCreate.sapMBtn .sapMBtnInner,
-.btnRefreshTop.sapMBtn .sapMBtnInner {
-    border-radius: var(--radius-sm) !important;
+.topTitle {
+    color: #0b1f3a;
+    font-weight: 800;
+    font-size: 1.08rem;
 }
 
-.btnRefreshTop.sapMBtn .sapMBtnInner {
-    border: 1px solid var(--border) !important;
+.topSubtitle {
+    color: #607083;
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
 }
 
-.topAvatar { margin-left: 0.25rem; cursor: pointer; }
-
-/* ════════════════════════════════════════════════════════════════════
-   KPI SECTION LABEL
-   ════════════════════════════════════════════════════════════════════ */
-.kpiSectionLabel {
-    gap:           0.45rem;
-    margin-bottom: 0.5rem;
-    margin-top:    0.2rem;
-    padding-left:  0.15rem;
+.topActions {
+    gap: 0.45rem;
 }
 
-.kpiSectionIcon.sapUiIcon {
-    font-size: 0.95rem !important;
+.btnCreate .sapMBtnInner,
+.refreshButton .sapMBtnInner {
+    border-radius: 0.6rem;
+    font-weight: 800;
 }
 
-.kpiSectionTitle.sapMTitle {
-    font-size:      0.72rem !important;
-    font-weight:    800 !important;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color:          var(--txt-secondary) !important;
+.refreshButton .sapMBtnIcon {
+    color: #0a6ed1 !important;
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   KPI GRID
-   ════════════════════════════════════════════════════════════════════ */
+.topAvatar {
+    box-shadow: 0 0 0 0.16rem #eaf3ff;
+}
+
+/* BODY */
+
+.dashboardBody {
+    padding: 1.3rem 1.6rem 1.8rem 1.6rem;
+    box-sizing: border-box;
+}
+
+/* SECTION TITLE */
+
+.sectionTitleRow {
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+    margin-top: 0.1rem;
+}
+
+.sectionIcon {
+    color: #0a6ed1;
+    font-size: 1rem;
+}
+
+.sectionIconPurple {
+    color: #6c32a9;
+}
+
+.sectionTitle {
+    color: #0b1f3a;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+/* KPI */
+
 .kpiGrid {
-    gap:           0.75rem;
-    margin-bottom: 1.1rem;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
 }
 
 .kpiCard {
-    flex:          1 1 200px;
-    background:    var(--bg-card);
-    border-radius: var(--radius);
-    padding:       1rem 1rem 0.75rem 1.15rem;
-    box-sizing:    border-box;
-    box-shadow:    var(--shadow-card);
-    border:        1px solid var(--border);
-    position:      relative;
-    overflow:      hidden;
-    transition:    box-shadow var(--transition), transform var(--transition);
-    cursor:        default;
+    flex: 1 1 10.8rem;
+    min-height: 7.4rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.06);
+    padding: 0.9rem;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
 }
 
-.kpiCard:hover {
-    box-shadow: var(--shadow-hover);
-    transform:  translateY(-2px);
-}
-
-/* Left accent bar */
 .kpiCard::before {
-    content:       "";
-    position:      absolute;
-    left: 0; top: 0;
-    width:         4px;
-    height:        100%;
-    border-radius: 10px 0 0 10px;
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0.25rem;
+    height: 100%;
 }
-.kpiBlue::before   { background: var(--clr-brand);  }
-.kpiOrange::before { background: var(--clr-orange);  }
-.kpiGreen::before  { background: var(--clr-green);   }
-.kpiRed::before    { background: var(--clr-red);     }
-.kpiPurple::before { background: var(--clr-purple);  }
 
-/* Decorative circle top-right */
-.kpiCard::after {
-    content:       "";
-    position:      absolute;
-    top: -30px; right: -30px;
-    width:         88px;
-    height:        88px;
-    border-radius: 50%;
-    opacity:       0.06;
-    pointer-events: none;
+.kpiBlue::before {
+    background: #0a6ed1;
 }
-.kpiBlue::after   { background: var(--clr-brand);   }
-.kpiOrange::after { background: var(--clr-orange);   }
-.kpiGreen::after  { background: var(--clr-green);    }
-.kpiRed::after    { background: var(--clr-red);      }
-.kpiPurple::after { background: var(--clr-purple);   }
 
-/* KPI content */
-.kpiTop    { margin-bottom: 0.55rem; }
-.kpiLabels { flex: 1; min-width: 0; }
+.kpiOrange::before {
+    background: #e9730c;
+}
 
-.kpiBigNumber.sapMTitle {
-    font-size:   2rem !important;
+.kpiGreen::before {
+    background: #107e3e;
+}
+
+.kpiRed::before {
+    background: #bb0000;
+}
+
+.kpiPurple::before {
+    background: #6c32a9;
+}
+
+.kpiTitle {
+    color: #1f2d3d;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.kpiSubtitle {
+    color: #6b7c8f;
+    font-size: 0.67rem;
+    margin-top: 0.1rem;
+}
+
+.kpiIcon {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.kpiIconBlue,
+.kpiNumBlue {
+    color: #0a6ed1 !important;
+}
+
+.kpiIconOrange,
+.kpiNumOrange {
+    color: #e9730c !important;
+}
+
+.kpiIconGreen,
+.kpiNumGreen {
+    color: #107e3e !important;
+}
+
+.kpiIconRed,
+.kpiNumRed {
+    color: #bb0000 !important;
+}
+
+.kpiIconPurple,
+.kpiNumPurple {
+    color: #6c32a9 !important;
+}
+
+.kpiNumber {
+    margin-top: 0.6rem;
+    font-size: 1.8rem !important;
     font-weight: 800 !important;
-    line-height: 1.1 !important;
-    margin:      0 0 0.18rem 0 !important;
-}
-.kpiNumBlue.sapMTitle   { color: var(--clr-brand)  !important; }
-.kpiNumOrange.sapMTitle { color: var(--clr-orange)  !important; }
-.kpiNumGreen.sapMTitle  { color: var(--clr-green)   !important; }
-.kpiNumRed.sapMTitle    { color: var(--clr-red)     !important; }
-.kpiNumPurple.sapMTitle { color: var(--clr-purple)  !important; }
-
-.kpiTitle.sapMText {
-    font-size:   0.85rem;
-    font-weight: 700;
-    color:       var(--txt-primary);
-    line-height: 1.3;
 }
 
-.kpiSubtitle.sapMText {
-    font-size:  0.72rem;
-    color:      var(--txt-muted);
-    margin-top: 0.08rem;
+.kpiFooter {
+    color: #718497;
+    font-size: 0.68rem;
+    margin-top: 0.25rem;
 }
 
-.kpiIcon.sapUiIcon {
-    font-size:   1.45rem !important;
-    opacity:     0.75;
-    flex-shrink: 0;
-    margin-top:  0.1rem;
-}
-.kpiIconBlue.sapUiIcon   { color: var(--clr-brand)  !important; }
-.kpiIconOrange.sapUiIcon { color: var(--clr-orange)  !important; }
-.kpiIconGreen.sapUiIcon  { color: var(--clr-green)   !important; }
-.kpiIconRed.sapUiIcon    { color: var(--clr-red)     !important; }
-.kpiIconPurple.sapUiIcon { color: var(--clr-purple)  !important; }
+/* QUICK NAV */
 
-.kpiFooterRow {
-    gap:         0.3rem;
-    padding-top: 0.45rem;
-    border-top:  1px solid var(--border);
-}
-
-.kpiTrendIcon.sapUiIcon  { font-size: 0.78rem !important; }
-.kpiTrendBlue.sapUiIcon  { color: var(--clr-brand)  !important; }
-.kpiTrendOrange.sapUiIcon{ color: var(--clr-orange)  !important; }
-.kpiTrendGreen.sapUiIcon { color: var(--clr-green)   !important; }
-.kpiTrendRed.sapUiIcon   { color: var(--clr-red)     !important; }
-.kpiTrendPurple.sapUiIcon{ color: var(--clr-purple)  !important; }
-
-.kpiFooter.sapMText {
-    font-size: 0.71rem;
-    color:     var(--txt-muted);
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   QUICK NAV
-   ════════════════════════════════════════════════════════════════════ */
 .quickNav {
-    background:    var(--bg-card);
-    border-radius: var(--radius);
-    padding:       0.6rem 0.85rem;
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.85rem;
     margin-bottom: 1rem;
-    box-shadow:    var(--shadow-card);
-    border:        1px solid var(--border);
-    gap:           0.5rem;
-    flex-wrap:     wrap;
+    box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.05);
+    border: 1px solid #e2e8f0;
+    gap: 0.5rem;
 }
 
 .quickButton .sapMBtnInner {
-    border-radius: var(--radius-sm) !important;
-    border:        1px solid var(--border) !important;
-    background:    #f7f9fb !important;
-    color:         var(--txt-primary) !important;
-    font-weight:   600;
-    font-size:     0.83rem;
-    transition:    all var(--transition);
+    border-radius: 0.55rem !important;
+    border: 1px solid #dde5ee !important;
+    background: #ffffff !important;
+    color: #223548 !important;
+    font-weight: 700;
 }
 
-.quickButton .sapMBtnIcon { color: var(--clr-brand) !important; }
+.quickButton .sapMBtnIcon {
+    color: #0a6ed1 !important;
+}
 
 .quickButton:hover .sapMBtnInner,
 .activeQuick .sapMBtnInner {
-    background:   var(--clr-brand-lt) !important;
-    color:        var(--clr-brand-dk) !important;
-    border-color: var(--clr-brand) !important;
+    background: #eaf3ff !important;
+    color: #0a6ed1 !important;
+    border-color: #0a6ed1 !important;
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   CHART CARDS
-   ════════════════════════════════════════════════════════════════════ */
+/* CHARTS */
+
 .chartsRow {
-    gap:           0.85rem;
+    gap: 1rem;
     margin-bottom: 1rem;
 }
 
 .chartCard {
-    flex:          1 1 340px;
-    background:    var(--bg-card);
-    border-radius: var(--radius);
-    padding:       1rem 1.15rem;
-    box-sizing:    border-box;
-    box-shadow:    var(--shadow-card);
-    border:        1px solid var(--border);
+    flex: 1;
+    min-width: 28rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.05);
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   TABLE CARDS
-   ════════════════════════════════════════════════════════════════════ */
+.cardHeader {
+    margin-bottom: 0.75rem;
+}
+
+.cardHeaderIcon {
+    color: #0a6ed1;
+    font-size: 1.2rem;
+    margin-right: 0.65rem;
+}
+
+.cardTitle {
+    color: #0b1f3a;
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.mutedText {
+    color: #607083;
+    font-size: 0.72rem;
+}
+
+/* TABLES */
+
 .tablesRow {
-    gap:           0.85rem;
+    gap: 1rem;
     margin-bottom: 1rem;
 }
 
 .tableCard {
-    flex:          1 1 400px;
-    background:    var(--bg-card);
-    border-radius: var(--radius);
-    padding:       1rem 1.15rem;
-    box-sizing:    border-box;
-    box-shadow:    var(--shadow-card);
-    border:        1px solid var(--border);
-    overflow:      hidden;
-}
-
-/* Card header — shared between chart & table cards */
-.cardHeader { margin-bottom: 0.75rem; }
-
-.cardHeaderIcon.sapUiIcon {
-    font-size:    1.1rem !important;
-    color:        var(--clr-brand) !important;
-    margin-right: 0.5rem;
-    flex-shrink:  0;
-}
-
-.cardHeaderText { flex: 1; min-width: 0; }
-
-.cardTitle.sapMTitle {
-    font-size:   0.95rem !important;
-    font-weight: 800 !important;
-    color:       var(--txt-primary) !important;
-}
-
-.mutedText.sapMText {
-    font-size:  0.73rem;
-    color:      var(--txt-muted);
-    margin-top: 0.08rem;
+    flex: 1;
+    min-width: 30rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.05);
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .seeAllBtn .sapMBtnInner {
-    color:       var(--clr-brand) !important;
+    color: #0a6ed1 !important;
     font-weight: 700;
-    font-size:   0.82rem;
 }
 
-/* Table column headers */
-.colHeader.sapMText {
-    font-weight:    700 !important;
-    font-size:      0.78rem;
-    color:          var(--txt-secondary) !important;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+.colHeader {
+    font-weight: 800;
+    color: #607083;
+    font-size: 0.72rem;
 }
 
 .sapMListTblHeaderCell {
-    background:    #f7f9fb !important;
-    border-bottom: 2px solid var(--border) !important;
+    background: #f7f9fb !important;
+    border-bottom: 1px solid #dde5ee !important;
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   FOOTER
-   ════════════════════════════════════════════════════════════════════ */
-.dashFooter {
-    padding:    0.75rem 0.5rem 0.25rem 0.5rem;
-    margin-top: 0.25rem;
+.sapMListTblRow:hover {
+    background: #f5f9ff !important;
 }
 
-.footerText.sapMText {
-    font-size: 0.71rem;
-    color:     var(--txt-muted);
-}
+/* RESPONSIVE */
 
-.footerBadge.sapMText {
-    font-size:     0.68rem;
-    color:         var(--txt-muted);
-    margin-left:   0.4rem;
-    border:        1px solid var(--border);
-    padding:       0.1rem 0.45rem;
-    border-radius: 100px;
-}
+@media (max-width: 1100px) {
+    .sideNav {
+        position: relative;
+        width: 100%;
+        min-height: auto;
+    }
 
-/* ════════════════════════════════════════════════════════════════════
-   RESPONSIVE BREAKPOINTS
-   ════════════════════════════════════════════════════════════════════ */
-@media (max-width: 1280px) {
-    .kpiCard { flex: 1 1 calc(25% - 1rem); max-width: none; }
-}
+    .layoutRoot {
+        flex-direction: column;
+    }
 
-@media (max-width: 1024px) {
-    .kpiCard  { flex: 1 1 calc(50% - 0.85rem); }
-    .chartsRow, .tablesRow { flex-direction: column; }
-    .chartCard, .tableCard { flex: unset; width: 100%; }
+    .mainArea {
+        margin-left: 0;
+    }
+
+    .chartCard,
+    .tableCard {
+        min-width: 100%;
+    }
 }
 
 @media (max-width: 760px) {
-    .kpiCard { flex: 1 1 100%; max-width: 100%; }
-
     .topBar {
-        flex-direction:  column;
-        align-items:     flex-start !important;
-        gap:             0.75rem;
-        padding:         0.75rem 1rem;
+        height: auto;
+        padding: 0.8rem 1rem;
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.8rem;
     }
 
-    .mainArea { padding: 0.75rem; }
-    .quickNav { flex-direction: column; align-items: flex-start; }
-    .quickButton { width: 100%; }
-}
-
-/* Mobile: sidebar becomes a slide-over overlay */
-@media (max-width: 580px) {
-    .sideNav {
-        position:   fixed;
-        top: 0; left: 0;
-        z-index:    9999;
-        box-shadow: 6px 0 32px rgba(0, 40, 100, 0.18);
+    .dashboardBody {
+        padding: 1rem;
     }
 
-    .sideNavCollapsed {
-        width:     0 !important;
-        min-width: 0 !important;
-        border:    none !important;
-        padding:   0 !important;
+    .kpiCard {
+        flex: 1 1 100%;
     }
 
-    .mainArea { width: 100vw; }
+    .quickNav {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .quickButton {
+        width: 100%;
+    }
 }

@@ -8,9 +8,6 @@ sap.ui.define([
 
     return Controller.extend("sepur.planner.controller.Dashboard", {
 
-        /* ══════════════════════════════════════════════════════════
-           LIFECYCLE
-           ══════════════════════════════════════════════════════════ */
         onInit: function () {
             const sUser = localStorage.getItem("sepur.user");
 
@@ -32,25 +29,24 @@ sap.ui.define([
 
             this.getView().setModel(new JSONModel({
                 busy: false,
-                sidebarCollapsed: false,
                 user: oUser,
                 userInitials: this.getInitials(oUser.fullName),
 
                 stats: {
-                    totalTours:       0,
-                    createdTours:     0,
-                    validatedTours:   0,
-                    rejectedTours:    0,
-                    totalRoadmaps:    0,
-                    createdRoadmaps:  0,
+                    totalTours: 0,
+                    createdTours: 0,
+                    validatedTours: 0,
+                    rejectedTours: 0,
+                    totalRoadmaps: 0,
+                    createdRoadmaps: 0,
                     validatedRoadmaps: 0,
                     rejectedRoadmaps: 0
                 },
 
-                tourChartData:    [],
+                tourChartData: [],
                 roadmapChartData: [],
 
-                tours:    [],
+                tours: [],
                 roadmaps: []
             }));
 
@@ -59,100 +55,106 @@ sap.ui.define([
 
         onAfterRendering: function () {
             this._applyChartDesign();
-            this._adjustLayoutHeight();
         },
 
-        /* ══════════════════════════════════════════════════════════
-           LAYOUT / SIDEBAR
-           ══════════════════════════════════════════════════════════ */
-        onToggleSidebar: function () {
-            const oModel = this.getView().getModel();
-            const bCollapsed = oModel.getProperty("/sidebarCollapsed");
-            oModel.setProperty("/sidebarCollapsed", !bCollapsed);
-        },
-
-        /**
-         * Ensure the page fills exactly one viewport height so users never
-         * need to scroll the browser window — only the main content area scrolls.
-         */
-        _adjustLayoutHeight: function () {
-            const oRoot = document.getElementById("layoutRoot");
-            if (oRoot && oRoot.getDomRef) {
-                const oDom = oRoot.getDomRef();
-                if (oDom) {
-                    oDom.style.height = "100vh";
-                    oDom.style.overflow = "hidden";
-                }
-            }
-        },
-
-        /* ══════════════════════════════════════════════════════════
-           CHART DESIGN
-           ══════════════════════════════════════════════════════════ */
         _applyChartDesign: function () {
-            const oTourChart    = this.byId("tourStatusChart");
+            const oTourChart = this.byId("tourStatusChart");
             const oRoadmapChart = this.byId("roadmapStatusChart");
 
             if (oTourChart) {
                 oTourChart.setVizProperties({
-                    title: { visible: false },
+                    title: {
+                        visible: false
+                    },
                     legend: {
                         visible: true,
                         position: "right",
-                        label: { style: { fontFamily: "'72', Arial" } }
+                        label: {
+                            style: {
+                                fontFamily: "'72', Arial"
+                            }
+                        }
                     },
                     plotArea: {
                         dataLabel: {
                             visible: true,
                             type: "percentage",
-                            style: { fontFamily: "'72', Arial", fontWeight: "bold" }
+                            style: {
+                                fontFamily: "'72', Arial",
+                                fontWeight: "bold"
+                            }
                         },
                         colorPalette: [
-                            "#e55221",   /* Créées  - orange */
-                            "#107E3E",   /* Validées - green */
-                            "#BB0000"    /* Rejetées - red   */
+                            "#E9730C",
+                            "#107E3E",
+                            "#BB0000"
                         ],
-                        background: { color: "transparent" }
+                        background: {
+                            color: "transparent"
+                        }
                     },
-                    general: { background: { color: "transparent" } }
+                    general: {
+                        background: {
+                            color: "transparent"
+                        }
+                    }
                 });
             }
 
             if (oRoadmapChart) {
                 oRoadmapChart.setVizProperties({
-                    title: { visible: false },
-                    legend: { visible: false },
+                    title: {
+                        visible: false
+                    },
+                    legend: {
+                        visible: false
+                    },
                     valueAxis: {
-                        title: { visible: true, text: "Nombre" }
+                        title: {
+                            visible: true,
+                            text: "Nombre"
+                        }
                     },
                     categoryAxis: {
-                        title: { visible: true, text: "Statut" }
+                        title: {
+                            visible: true,
+                            text: "Statut"
+                        }
                     },
                     plotArea: {
                         dataLabel: {
                             visible: true,
-                            style: { fontFamily: "'72', Arial", fontWeight: "bold" }
+                            style: {
+                                fontFamily: "'72', Arial",
+                                fontWeight: "bold"
+                            }
                         },
                         colorPalette: [
-                            "#0A6ED1",   /* Créées  */
-                            "#107E3E",   /* Validées */
-                            "#BB0000"    /* Rejetées */
+                            "#0A6ED1"
                         ],
-                        background: { color: "transparent" }
+                        background: {
+                            color: "transparent"
+                        }
                     },
-                    general: { background: { color: "transparent" } }
+                    general: {
+                        background: {
+                            color: "transparent"
+                        }
+                    }
                 });
             }
         },
 
-        /* ══════════════════════════════════════════════════════════
-           HELPERS
-           ══════════════════════════════════════════════════════════ */
         getInitials: function (sName) {
-            if (!sName) { return "PL"; }
+            if (!sName) {
+                return "PL";
+            }
+
             return sName
                 .split(" ")
-                .map(function (p) { return p.charAt(0); })
+                .map(function (p) {
+                    return p.charAt(0);
+                })
                 .join("")
                 .substring(0, 2)
                 .toUpperCase();
@@ -162,18 +164,18 @@ sap.ui.define([
             if (["DRAFT", "PENDING", "CREATED"].includes(sStatus)) {
                 return "CREATED";
             }
+
             if (["ACCEPTED", "VALIDATED", "ACTIVE", "COMPLETED"].includes(sStatus)) {
                 return "VALIDATED";
             }
+
             if (["REJECTED", "CANCELLED"].includes(sStatus)) {
                 return "REJECTED";
             }
+
             return "CREATED";
         },
 
-        /* ══════════════════════════════════════════════════════════
-           DATA LOADING
-           ══════════════════════════════════════════════════════════ */
         loadDashboardData: async function () {
             const oModel = this.getView().getModel();
             oModel.setProperty("/busy", true);
@@ -185,15 +187,20 @@ sap.ui.define([
                 ]);
 
                 this._calculateStatistics(aTours, aRoadmaps);
-                MessageToast.show("Données actualisées.", { duration: 1800 });
+
+                MessageToast.show("Données actualisées.", {
+                    duration: 1600
+                });
 
             } catch (e) {
                 console.error("[Dashboard] Erreur chargement:", e);
                 MessageBox.error("Impossible de charger les données du dashboard.\n\n" + (e.message || ""));
             } finally {
                 oModel.setProperty("/busy", false);
-                // Small delay to let charts render before applying properties
-                setTimeout(() => this._applyChartDesign(), 300);
+
+                setTimeout(function () {
+                    this._applyChartDesign();
+                }.bind(this), 300);
             }
         },
 
@@ -206,13 +213,16 @@ sap.ui.define([
                 "&$top=8";
 
             const response = await fetch(sUrl);
+
             if (!response.ok) {
                 throw new Error("Erreur HTTP " + response.status + " lors du chargement des tournées.");
             }
 
-            const data   = await response.json();
+            const data = await response.json();
             const aTours = data.value || [];
+
             oModel.setProperty("/tours", aTours);
+
             return aTours;
         },
 
@@ -225,59 +235,87 @@ sap.ui.define([
                 "&$top=8";
 
             const response = await fetch(sUrl);
+
             if (!response.ok) {
                 throw new Error("Erreur HTTP " + response.status + " lors du chargement des roadmaps.");
             }
 
-            const data     = await response.json();
+            const data = await response.json();
             const aRoadmaps = data.value || [];
+
             oModel.setProperty("/roadmaps", aRoadmaps);
+
             return aRoadmaps;
         },
 
         _calculateStatistics: function (aTours, aRoadmaps) {
             const oModel = this.getView().getModel();
 
-            const oTourStats    = { CREATED: 0, VALIDATED: 0, REJECTED: 0 };
-            const oRoadmapStats = { CREATED: 0, VALIDATED: 0, REJECTED: 0 };
+            const oTourStats = {
+                CREATED: 0,
+                VALIDATED: 0,
+                REJECTED: 0
+            };
 
-            aTours.forEach(oTour => {
+            const oRoadmapStats = {
+                CREATED: 0,
+                VALIDATED: 0,
+                REJECTED: 0
+            };
+
+            aTours.forEach(function (oTour) {
                 const s = this.normalizeStatus(oTour.status);
                 oTourStats[s] = (oTourStats[s] || 0) + 1;
-            });
+            }.bind(this));
 
-            aRoadmaps.forEach(oRoadmap => {
+            aRoadmaps.forEach(function (oRoadmap) {
                 const s = this.normalizeStatus(oRoadmap.status);
                 oRoadmapStats[s] = (oRoadmapStats[s] || 0) + 1;
-            });
+            }.bind(this));
 
             oModel.setProperty("/stats", {
-                totalTours:       aTours.length,
-                createdTours:     oTourStats.CREATED,
-                validatedTours:   oTourStats.VALIDATED,
-                rejectedTours:    oTourStats.REJECTED,
-                totalRoadmaps:    aRoadmaps.length,
-                createdRoadmaps:  oRoadmapStats.CREATED,
+                totalTours: aTours.length,
+                createdTours: oTourStats.CREATED,
+                validatedTours: oTourStats.VALIDATED,
+                rejectedTours: oTourStats.REJECTED,
+
+                totalRoadmaps: aRoadmaps.length,
+                createdRoadmaps: oRoadmapStats.CREATED,
                 validatedRoadmaps: oRoadmapStats.VALIDATED,
                 rejectedRoadmaps: oRoadmapStats.REJECTED
             });
 
             oModel.setProperty("/tourChartData", [
-                { status: "Créées",   total: oTourStats.CREATED    },
-                { status: "Validées", total: oTourStats.VALIDATED  },
-                { status: "Rejetées", total: oTourStats.REJECTED   }
+                {
+                    status: "Créées",
+                    total: oTourStats.CREATED
+                },
+                {
+                    status: "Validées",
+                    total: oTourStats.VALIDATED
+                },
+                {
+                    status: "Rejetées",
+                    total: oTourStats.REJECTED
+                }
             ]);
 
             oModel.setProperty("/roadmapChartData", [
-                { status: "Créées",   total: oRoadmapStats.CREATED    },
-                { status: "Validées", total: oRoadmapStats.VALIDATED  },
-                { status: "Rejetées", total: oRoadmapStats.REJECTED   }
+                {
+                    status: "Créées",
+                    total: oRoadmapStats.CREATED
+                },
+                {
+                    status: "Validées",
+                    total: oRoadmapStats.VALIDATED
+                },
+                {
+                    status: "Rejetées",
+                    total: oRoadmapStats.REJECTED
+                }
             ]);
         },
 
-        /* ══════════════════════════════════════════════════════════
-           NAVIGATION HANDLERS
-           ══════════════════════════════════════════════════════════ */
         onRefresh: function () {
             this.loadDashboardData();
         },
@@ -314,35 +352,47 @@ sap.ui.define([
             });
         },
 
-        /* ══════════════════════════════════════════════════════════
-           FORMATTERS
-           ══════════════════════════════════════════════════════════ */
         formatStatusState: function (sStatus) {
             switch (this.normalizeStatus(sStatus)) {
-                case "VALIDATED": return "Success";
-                case "REJECTED":  return "Error";
-                case "CREATED":   return "Warning";
-                default:          return "None";
+                case "VALIDATED":
+                    return "Success";
+                case "REJECTED":
+                    return "Error";
+                case "CREATED":
+                    return "Warning";
+                default:
+                    return "None";
             }
         },
 
         formatStatusText: function (sStatus) {
             switch (this.normalizeStatus(sStatus)) {
-                case "CREATED":   return "Créée";
-                case "VALIDATED": return "Validée";
-                case "REJECTED":  return "Rejetée";
-                default:          return sStatus || "";
+                case "CREATED":
+                    return "Créée";
+                case "VALIDATED":
+                    return "Validée";
+                case "REJECTED":
+                    return "Rejetée";
+                default:
+                    return sStatus || "";
             }
         },
 
         formatDate: function (sDate) {
-            if (!sDate) { return ""; }
+            if (!sDate) {
+                return "";
+            }
+
             const oDate = new Date(sDate);
-            if (isNaN(oDate.getTime())) { return sDate; }
+
+            if (isNaN(oDate.getTime())) {
+                return sDate;
+            }
+
             return oDate.toLocaleDateString("fr-FR", {
-                day:   "2-digit",
+                day: "2-digit",
                 month: "2-digit",
-                year:  "numeric"
+                year: "numeric"
             });
         }
     });
