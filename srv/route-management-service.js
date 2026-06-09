@@ -16,6 +16,31 @@ function reject(req, message, status = 400) {
   return req.reject(status, message);
 }
 
+
+async function nextCode(entityName, fieldName, prefix) {
+  const entities = cds.entities('route.management');
+  const target = entities[entityName];
+
+  const rows = await SELECT.from(target)
+    .columns(fieldName)
+    .orderBy(`${fieldName} desc`)
+    .limit(1);
+
+  let seq = 1;
+
+  if (rows.length && rows[0][fieldName]) {
+    const match = String(rows[0][fieldName]).match(/(\d+)$/);
+
+    if (match) {
+      seq = parseInt(match[1], 10) + 1;
+    }
+  }
+
+  const year = new Date().getFullYear();
+
+  return `${prefix}-${year}-${String(seq).padStart(4, '0')}`;
+}
+
 /* ===================================================== */
 /* STATUS HELPERS                                        */
 /* ===================================================== */
@@ -102,6 +127,99 @@ async function nextCode(entityName, fieldName, prefix) {
   return `${prefix}-${year}-${String(seq).padStart(4, '0')}`;
 }
 
+/* ===================================================== */
+/* FIELD COMPATIBILITY HELPERS                           */
+/* ===================================================== */
+
+function syncTourPayload(data) {
+  if (!data) {
+    return;
+  }
+
+  if (data.tourNumber && !data.tourCode) {
+    data.tourCode = data.tourNumber;
+  }
+
+  if (data.tourCode && !data.tourNumber) {
+    data.tourNumber = data.tourCode;
+  }
+
+  if (data.collectionDate && !data.tourDate) {
+    data.tourDate = data.collectionDate;
+  }
+
+  if (data.tourDate && !data.collectionDate) {
+    data.collectionDate = data.tourDate;
+  }
+
+  if (data.remarks && !data.description) {
+    data.description = data.remarks;
+  }
+
+  if (data.description && !data.remarks) {
+    data.remarks = data.description;
+  }
+}
+
+function syncRoadmapPayload(data) {
+  if (!data) {
+    return;
+  }
+
+  if (data.roadmapNumber && !data.roadmapCode) {
+    data.roadmapCode = data.roadmapNumber;
+  }
+
+  if (data.roadmapCode && !data.roadmapNumber) {
+    data.roadmapNumber = data.roadmapCode;
+  }
+
+  if (data.startDate && (!data.month || !data.year)) {
+    const d = new Date(data.startDate);
+    if (!Number.isNaN(d.getTime())) {
+      data.month = data.month || d.getMonth() + 1;
+      data.year = data.year || d.getFullYear();
+    }
+  }
+
+  if (data.month && data.year && !data.startDate) {
+    const month = String(data.month).padStart(2, '0');
+    data.startDate = `${data.year}-${month}-01`;
+  }
+}
+
+function enrichTourAliases(tour) {
+  if (!tour) {
+    return;
+  }
+
+  tour.tourNumber = tour.tourNumber || tour.tourCode;
+  tour.tourCode = tour.tourCode || tour.tourNumber;
+
+  tour.collectionDate = tour.collectionDate || tour.tourDate;
+  tour.tourDate = tour.tourDate || tour.collectionDate;
+
+  tour.remarks = tour.remarks || tour.description;
+  tour.description = tour.description || tour.remarks;
+}
+
+function enrichRoadmapAliases(roadmap) {
+  if (!roadmap) {
+    return;
+  }
+
+  roadmap.roadmapNumber = roadmap.roadmapNumber || roadmap.roadmapCode;
+  roadmap.roadmapCode = roadmap.roadmapCode || roadmap.roadmapNumber;
+
+  if (roadmap.startDate && (!roadmap.month || !roadmap.year)) {
+    const d = new Date(roadmap.startDate);
+    if (!Number.isNaN(d.getTime())) {
+      roadmap.month = roadmap.month || d.getMonth() + 1;
+      roadmap.year = roadmap.year || d.getFullYear();
+    }
+  }
+}
+
 module.exports = class RouteManagementService extends cds.ApplicationService {
   init() {
     const {
@@ -129,6 +247,9 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         if (!tour) {
           continue;
         }
+
+         enrichTourAliases(tour);
+
 
         const normalizedStatus = normalizeTourStatus(tour.status);
         tour.status = normalizedStatus;
@@ -160,6 +281,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         if (!roadmap) {
           continue;
         }
+            enrichRoadmapAliases(roadmap);
 
         const normalizedStatus = normalizeRoadmapStatus(roadmap.status);
         roadmap.status = normalizedStatus;
@@ -227,129 +349,205 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.before('CREATE', 'Tours', async (req) => {
-      if (!req.data.tourCode) {
-        req.data.tourCode = await nextCode('Tours', 'tourCode', 'TOUR');
-      }
+  syncTourPayload(req.data);
 
-      if (!req.data.status) {
-        req.data.status = TOUR_STATUS.CREATED;
-      }
+  if (!req.data.tourCode) {
+    req.data.tourCode = await nextCode('Tours', 'tourCode', 'TOUR');
+  }
+
+  if (!req.data.tourNumber) {
+    req.data.tourNumber = req.data.tourCode;
+  }
+
+  if (!req.data.status) {
+    req.data.status = TOUR_STATUS.CREATED;
+  }
+
+  if (req.data.quantity !== undefined && req.data.quantity !== null) {
+    const quantity = Number(req.data.quantity);
+
+    if (Number.isNaN(quantity) || quantity <= 0) {
+      return reject(req, 'La quantité doit être supérieure à zéro.');
+    }
+  }
+});
+    
+
+      this.before('UPDATE', 'Tours', async (req) => {
+  syncTourPayload(req.data);
+
+  if (req.data.quantity !== undefined && req.data.quantity !== null) {
+    const quantity = Number(req.data.quantity);
+
+    if (Number.isNaN(quantity) || quantity <= 0) {
+      return reject(req, 'La quantité doit être supérieure à zéro.');
+    }
+  }
+
+  const id = req.data.ID || req.params?.[0]?.ID;
+
+  if (!id) {
+    return;
+  }
+
+  const tour = await SELECT.one.from(Tours).where({ ID: id });
+
+  if (!tour) {
+    return;
+  }
+
+  const normalizedStatus = normalizeTourStatus(tour.status);
+
+  const technicalFields = new Set([
+    'ID',
+    'IsActiveEntity',
+    'HasActiveEntity',
+    'HasDraftEntity',
+    'DraftAdministrativeData',
+    'DraftAdministrativeData_DraftUUID',
+    'SiblingEntity',
+    'statusCriticality',
+    'canValidate',
+    'canReject',
+    'clientName',
+    'driverFirstName',
+    'driverLastName',
+    'vehicleRegistration',
+    'createdByName',
+    'tourPoints',
+    'decisions',
+    'roadmap',
+    'humanResources',
+    'materialResources',
+    'createdAt',
+    'createdBy',
+    'modifiedAt',
+    'modifiedBy'
+  ]);
+
+  const keys = Object.keys(req.data).filter((key) => {
+    return !key.startsWith('_') && !technicalFields.has(key);
+  });
+
+  const allowedFields = new Set([
+    'tourCode',
+    'tourNumber',
+    'tourDate',
+    'collectionDate',
+    'zone',
+    'collectionType',
+    'description',
+    'remarks',
+    'quantity',
+    'unitOfMeasure',
+    'status',
+    'rejectionReason',
+
+    'client_ID',
+    'client',
+
+    'material_ID',
+    'material',
+
+    'vehicle_ID',
+    'vehicle',
+    'driver_ID',
+    'driver',
+
+    'assignedHumanResource_ID',
+    'assignedHumanResource',
+    'assignedMaterialResource_ID',
+    'assignedMaterialResource',
+
+    'roadmap_ID',
+    'roadmap',
+    'createdByUser_ID',
+    'createdByUser',
+    'updatedAt'
+  ]);
+
+  const forbidden = keys.filter((key) => !allowedFields.has(key));
+
+  if (forbidden.length) {
+    return reject(
+      req,
+      `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
+    );
+  }
+
+  if (normalizedStatus === TOUR_STATUS.REJECTED) {
+    const businessFields = [
+      'tourCode',
+      'tourNumber',
+      'tourDate',
+      'collectionDate',
+      'zone',
+      'collectionType',
+      'description',
+      'remarks',
+      'quantity',
+      'unitOfMeasure',
+
+      'client_ID',
+      'client',
+
+      'material_ID',
+      'material',
+
+      'vehicle_ID',
+      'vehicle',
+      'driver_ID',
+      'driver',
+
+      'assignedHumanResource_ID',
+      'assignedHumanResource',
+      'assignedMaterialResource_ID',
+      'assignedMaterialResource'
+    ];
+
+    const hasBusinessModification = keys.some((key) => {
+      return businessFields.includes(key);
     });
 
-    this.before('UPDATE', 'Tours', async (req) => {
-      const id = req.data.ID || req.params?.[0]?.ID;
-
-      if (!id) {
-        return;
-      }
-
-      const tour = await SELECT.one.from(Tours).where({ ID: id });
-
-      if (!tour) {
-        return;
-      }
-
-      const normalizedStatus = normalizeTourStatus(tour.status);
-
-      const technicalFields = new Set([
-        'ID',
-        'IsActiveEntity',
-        'HasActiveEntity',
-        'HasDraftEntity',
-        'DraftAdministrativeData',
-        'DraftAdministrativeData_DraftUUID',
-        'SiblingEntity',
-        'statusCriticality',
-        'canValidate',
-        'canReject',
-        'clientName',
-        'driverFirstName',
-        'driverLastName',
-        'vehicleRegistration',
-        'createdByName',
-        'tourPoints',
-        'decisions',
-        'roadmap',
-        'humanResources',
-        'materialResources',
-        'createdAt',
-        'createdBy',
-        'modifiedAt',
-        'modifiedBy'
-      ]);
-
-      const keys = Object.keys(req.data).filter((key) => {
-        return !key.startsWith('_') && !technicalFields.has(key);
-      });
-
-      const allowedFields = new Set([
-        'tourCode',
-        'tourDate',
-        'zone',
-        'collectionType',
-        'description',
-        'status',
-        'rejectionReason',
-        'client_ID',
-        'client',
-        'vehicle_ID',
-        'vehicle',
-        'driver_ID',
-        'driver',
-        'roadmap_ID',
-        'roadmap',
-        'createdByUser_ID',
-        'createdByUser',
-        'updatedAt'
-      ]);
-
-      const forbidden = keys.filter((key) => !allowedFields.has(key));
-
-      if (forbidden.length) {
-        return reject(
-          req,
-          `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
-        );
-      }
-
-      if (normalizedStatus === TOUR_STATUS.REJECTED) {
-        const businessFields = [
-          'tourDate',
-          'zone',
-          'collectionType',
-          'description',
-          'client_ID',
-          'client',
-          'vehicle_ID',
-          'vehicle',
-          'driver_ID',
-          'driver'
-        ];
-
-        const hasBusinessModification = keys.some((key) => businessFields.includes(key));
-
-        if (hasBusinessModification) {
-          req.data.status = TOUR_STATUS.CREATED;
-          req.data.rejectionReason = null;
-        }
-      }
-    });
+    if (hasBusinessModification) {
+      req.data.status = TOUR_STATUS.CREATED;
+      req.data.rejectionReason = null;
+    }
+  }
+});
 
     /* ===================================================== */
     /* ROADMAPS — BEFORE CREATE / UPDATE                     */
     /* ===================================================== */
 
     this.before('CREATE', 'Roadmaps', async (req) => {
-      if (!req.data.roadmapCode) {
-        req.data.roadmapCode = await nextCode('Roadmaps', 'roadmapCode', 'RM');
-      }
+  syncRoadmapPayload(req.data);
 
-      if (!req.data.status) {
-        req.data.status = ROADMAP_STATUS.CREATED;
-      }
-    });
+  if (!req.data.roadmapNumber && !req.data.roadmapCode) {
+    const code = await nextCode('Roadmaps', 'roadmapNumber', 'RM');
+    req.data.roadmapNumber = code;
+    req.data.roadmapCode = code;
+  }
+
+  if (req.data.roadmapNumber && !req.data.roadmapCode) {
+    req.data.roadmapCode = req.data.roadmapNumber;
+  }
+
+  if (req.data.roadmapCode && !req.data.roadmapNumber) {
+    req.data.roadmapNumber = req.data.roadmapCode;
+  }
+
+  if (!req.data.status) {
+    req.data.status = ROADMAP_STATUS.CREATED;
+  }
+
+  if (!req.data.integrationStatus) {
+    req.data.integrationStatus = 'PENDING';
+  }
+});
 
     this.before('UPDATE', 'Roadmaps', async (req) => {
+      syncRoadmapPayload(req.data);
       const id = req.data.ID || req.params?.[0]?.ID;
 
       if (!id) {
@@ -394,15 +592,26 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       });
 
       const allowedFields = new Set([
-        'roadmapCode',
-        'startDate',
-        'endDate',
-        'status',
-        'rejectionReason',
-        'tour_ID',
-        'tour',
-        'updatedAt'
-      ]);
+  'roadmapCode',
+  'roadmapNumber',
+  'startDate',
+  'endDate',
+  'status',
+  'rejectionReason',
+
+  'client_ID',
+  'client',
+  'month',
+  'year',
+  'integrationStatus',
+  'sapSalesOrder',
+  'integrationDate',
+  'integrationMessage',
+
+  'tour_ID',
+  'tour',
+  'updatedAt'
+]);
 
       const forbidden = keys.filter((key) => !allowedFields.has(key));
 

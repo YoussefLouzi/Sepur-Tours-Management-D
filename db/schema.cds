@@ -1,6 +1,9 @@
 namespace route.management;
 
-using { cuid, managed } from '@sap/cds/common';
+using {
+    cuid,
+    managed
+} from '@sap/cds/common';
 
 /* ===================================================== */
 /* USERS                                                 */
@@ -16,19 +19,96 @@ entity Users : cuid {
 }
 
 /* ===================================================== */
+/* ENUMS                                                 */
+/* ===================================================== */
+
+type CategoryType : String enum {
+    HUMAN;
+    MATERIAL;
+}
+
+type AvailabilityStatus : String enum {
+    AVAILABLE;
+    RESERVED;
+    UNAVAILABLE;
+}
+
+type TourStatus : String enum {
+    CREATED;
+    VALIDATED;
+    ASSIGNED;
+    COMPLETED;
+    CANCELLED;
+    REJECTED;
+}
+
+type RoadmapStatus : String enum {
+    CREATED;
+    VALIDATED;
+    COMPLETED;
+    CANCELLED;
+    REJECTED;
+}
+
+type IntegrationStatus : String enum {
+    PENDING;
+    INTEGRATED;
+    FAILED;
+}
+
+/* ===================================================== */
 /* MASTER DATA                                           */
 /* ===================================================== */
 
-entity Clients : cuid {
-    code    : String(30);
-    name    : String(150);
+entity Clients : cuid, managed {
+    @title: 'Code client'
+    customerCode : String(20);
+
+    /*
+       Ancien champ gardé pour compatibilité avec ton projet actuel.
+       Tu peux le supprimer plus tard après migration complète.
+    */
+    code : String(30);
+
+    @title: 'Nom du client'
+    name : String(150);
+
+    @title: 'Adresse'
     address : String(255);
-    city    : String(100);
-    phone   : String(30);
-    email   : String(100);
+
+    @title: 'Ville'
+    city : String(100);
+
+    @title: 'Téléphone'
+    phone : String(30);
+
+    @title: 'E-mail'
+    email : String(100);
 
     collectionPoints : Composition of many CollectionPoints
         on collectionPoints.client = $self;
+}
+
+entity Materials : cuid, managed {
+    @title: 'Code matériau'
+    materialCode : String(40);
+
+    @title: 'Description'
+    description : String(255);
+
+    @title: 'Unité'
+    unitOfMeasure : String(10);
+}
+
+entity Categories : cuid, managed {
+    @title: 'Nom de la catégorie'
+    name : String(100);
+
+    @title: 'Type'
+    type : CategoryType;
+
+    @title: 'Description'
+    description : String(255);
 }
 
 entity Vehicles : cuid {
@@ -57,23 +137,86 @@ entity CollectionPoints : cuid {
 }
 
 /* ===================================================== */
+/* RESOURCES                                             */
+/* ===================================================== */
+
+entity HumanResources : cuid, managed {
+    @title: 'Matricule'
+    employeeCode : String(30);
+
+    @title: 'Nom complet'
+    fullName : String(150);
+
+    @title: 'Catégorie'
+    category : Association to Categories;
+
+    @title: 'Disponibilité'
+    status : AvailabilityStatus;
+}
+
+entity MaterialResources : cuid, managed {
+    @title: 'Code équipement'
+    equipmentCode : String(30);
+
+    @title: 'Équipement'
+    name : String(150);
+
+    @title: 'Catégorie'
+    category : Association to Categories;
+
+    @title: 'Disponibilité'
+    status : AvailabilityStatus;
+}
+
+/* ===================================================== */
 /* TOURS                                                 */
 /* ===================================================== */
 
 entity Tours : cuid, managed {
+    /* Nouveaux champs selon le schéma de ton ami */
+
+    @title: 'N° tournée'
+    tourNumber : String(30);
+
+    @title: 'Date de collecte'
+    collectionDate : Date;
+
+    @title: 'Client'
+    client : Association to Clients;
+
+    @title: 'Matériau'
+    material : Association to Materials;
+
+    @title: 'Quantité'
+    quantity : Decimal(15, 3);
+
+    @title: 'Unité'
+    unitOfMeasure : String(10);
+
+    @title: 'Ressource humaine'
+    assignedHumanResource : Association to HumanResources;
+
+    @title: 'Ressource matérielle'
+    assignedMaterialResource : Association to MaterialResources;
+
+    @title: 'Statut'
+    status : TourStatus default 'CREATED';
+
+    @title: 'Remarques'
+    remarks : String(500);
+
+    /* Anciens champs gardés pour ne pas casser ton projet actuel */
+
     tourCode        : String(30);
     tourDate        : Date;
     zone            : String(100);
     collectionType  : String(50);
     description     : LargeString;
-
-    status          : String(20) default 'CREATED';
     rejectionReason : LargeString;
 
     updatedAt       : Timestamp @cds.on.insert: $now @cds.on.update: $now;
 
     createdByUser : Association to Users;
-    client        : Association to Clients;
     vehicle       : Association to Vehicles;
     driver        : Association to Drivers;
 
@@ -124,8 +267,38 @@ entity TourCollectionPoints : cuid {
 /* ===================================================== */
 
 entity Roadmaps : cuid, managed {
+    /* Nouveaux champs selon le schéma de ton ami */
+
+    @title: 'N° feuille de route'
+    roadmapNumber : String(30);
+
+    @title: 'Client'
+    client : Association to Clients;
+
+    @title: 'Mois'
+    month : Integer;
+
+    @title: 'Année'
+    year : Integer;
+
+    @title: 'Statut'
+    status : RoadmapStatus default 'CREATED';
+
+    @title: 'Statut d’intégration'
+    integrationStatus : IntegrationStatus default 'PENDING';
+
+    @title: 'Commande SAP'
+    sapSalesOrder : String(20);
+
+    @title: 'Date d’intégration'
+    integrationDate : Timestamp;
+
+    @title: 'Message d’intégration'
+    integrationMessage : String(500);
+
+    /* Anciens champs gardés pour compatibilité */
+
     roadmapCode     : String(30);
-    status          : String(20) default 'CREATED';
     startDate       : Date;
     endDate         : Date;
     rejectionReason : LargeString;
@@ -159,12 +332,17 @@ entity RoadmapSteps : cuid, managed {
     collectionPoint : Association to CollectionPoints;
 }
 
+entity RoadMapTourAssignments : managed {
+    key roadMap : Association to Roadmaps;
+    key tour    : Association to Tours;
+}
+
 /* ===================================================== */
 /* DECISION HISTORY                                      */
 /* ===================================================== */
 
 entity DecisionHistories : cuid, managed {
-    decision     : String(20);
+    decision     : String(20); // ACCEPTED | REJECTED | VALIDATED
     reason       : LargeString;
     decisionDate : Timestamp @cds.on.insert: $now;
 
@@ -181,7 +359,7 @@ entity TourStatusAnalytics as select from Tours {
         count(1) as total : Integer,
         case
             when status = 'VALIDATED' then 3
-            when status = 'ACCEPTED' then 3
+            when status = 'ASSIGNED' then 3
             when status = 'COMPLETED' then 3
             when status = 'REJECTED' then 1
             when status = 'CANCELLED' then 1
@@ -195,7 +373,6 @@ entity RoadmapStatusAnalytics as select from Roadmaps {
         count(1) as total : Integer,
         case
             when status = 'VALIDATED' then 3
-            when status = 'ACTIVE' then 3
             when status = 'COMPLETED' then 3
             when status = 'REJECTED' then 1
             when status = 'CANCELLED' then 1

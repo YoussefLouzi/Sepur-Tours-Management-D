@@ -1,8 +1,37 @@
-using SepurService as service from '../../srv/route-management-service';
-
+using RouteManagementService as service from '../../srv/route-management-service';
 
 /* ===================================================== */
-/* VALUE HELPS - TOURS */
+/* ANNOTATIONS - APPLICATION TOURS                       */
+/* Version stable basée sur les champs existants          */
+/* ===================================================== */
+
+/* ===================================================== */
+/* LABELS POUR LES FILTRES ET LES CHAMPS                 */
+/* ===================================================== */
+
+annotate service.Tours with {
+    tourCode        @title : 'N° tournée';
+    tourDate        @title : 'Date de collecte';
+    zone            @title : 'Zone de collecte';
+    collectionType  @title : 'Matériau / Type de déchet';
+    client_ID       @title : 'Client';
+    status          @title : 'Statut';
+    quantity        @title : 'Quantité à collecter';
+    unitOfMeasure   @title : 'Unité';
+
+    driver_ID       @title : 'Ressource humaine';
+    vehicle_ID      @title : 'Ressource matérielle';
+
+    driver          @title : 'Ressource humaine';
+    vehicle         @title : 'Ressource matérielle';
+
+    description     @title : 'Remarques';
+    rejectionReason @title : 'Motif de rejet';
+    createdBy       @title : 'Créé par';
+};
+
+/* ===================================================== */
+/* VALUE HELPS                                           */
 /* ===================================================== */
 
 annotate service.Tours with {
@@ -34,44 +63,21 @@ annotate service.Tours with {
         ]
     };
 
-    material @Common.ValueList : {
-        CollectionPath : 'Materials',
+    vehicle @Common.ValueList : {
+        CollectionPath : 'Vehicles',
         Parameters : [
             {
                 $Type : 'Common.ValueListParameterInOut',
-                LocalDataProperty : material_ID,
+                LocalDataProperty : vehicle_ID,
                 ValueListProperty : 'ID'
             },
             {
                 $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'materialCode'
+                ValueListProperty : 'registrationNumber'
             },
             {
                 $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'description'
-            },
-            {
-                $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'unitOfMeasure'
-            }
-        ]
-    };
-
-    assignedHumanResource @Common.ValueList : {
-        CollectionPath : 'AvailableHumanResources',
-        Parameters : [
-            {
-                $Type : 'Common.ValueListParameterInOut',
-                LocalDataProperty : assignedHumanResource_ID,
-                ValueListProperty : 'ID'
-            },
-            {
-                $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'employeeCode'
-            },
-            {
-                $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'fullName'
+                ValueListProperty : 'type'
             },
             {
                 $Type : 'Common.ValueListParameterDisplayOnly',
@@ -80,42 +86,41 @@ annotate service.Tours with {
         ]
     };
 
-    assignedMaterialResource @Common.ValueList : {
-        CollectionPath : 'AvailableMaterialResources',
+    driver @Common.ValueList : {
+        CollectionPath : 'Drivers',
         Parameters : [
             {
                 $Type : 'Common.ValueListParameterInOut',
-                LocalDataProperty : assignedMaterialResource_ID,
+                LocalDataProperty : driver_ID,
                 ValueListProperty : 'ID'
             },
             {
                 $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'equipmentCode'
+                ValueListProperty : 'firstName'
             },
             {
                 $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'name'
+                ValueListProperty : 'lastName'
             },
             {
                 $Type : 'Common.ValueListParameterDisplayOnly',
-                ValueListProperty : 'status'
+                ValueListProperty : 'phone'
             }
         ]
     };
 };
 
-
 /* ===================================================== */
-/* TOURS - MAIN PLANNING APPLICATION */
+/* TOURS                                                 */
 /* ===================================================== */
 
 annotate service.Tours with @(
 
     UI.HeaderInfo : {
         TypeName       : 'Tournée',
-        TypeNamePlural : 'Tournées de collecte',
+        TypeNamePlural : 'Management des tournées',
         Title          : {
-            Value : tourNumber
+            Value : tourCode
         },
         Description    : {
             Value : status
@@ -123,43 +128,111 @@ annotate service.Tours with @(
     },
 
     UI.SelectionFields : [
-        tourNumber,
-        collectionDate,
-        client_ID,
-        material_ID,
-        status,
-        assignedHumanResource_ID,
-        assignedMaterialResource_ID
+        tourCode,
+    tourDate,
+    zone,
+    collectionType,
+    client_ID,
+    status,
+    quantity,
+    unitOfMeasure,
+    driver_ID,
+    vehicle_ID
     ],
 
     UI.LineItem : [
         {
             $Type : 'UI.DataField',
             Label : 'N° tournée',
-            Value : tourNumber,
+            Value : tourCode,
             ![@UI.Importance] : #High
         },
         {
             $Type : 'UI.DataField',
             Label : 'Date de collecte',
-            Value : collectionDate,
+            Value : tourDate,
+            ![@UI.Importance] : #High
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Zone de collecte',
+            Value : zone
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Matériau / Type de déchet',
+            Value : collectionType,
             ![@UI.Importance] : #High
         },
         {
             $Type : 'UI.DataField',
             Label : 'Client',
-            Value : client.name,
+            Value : clientName,
             ![@UI.Importance] : #High
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Matériau',
-            Value : material.description,
+            Label : 'Statut',
+            Value : status,
+            Criticality : statusCriticality,
+            CriticalityRepresentation : #WithIcon,
             ![@UI.Importance] : #High
         },
         {
+    $Type : 'UI.DataField',
+    Label : 'Quantité à collecter',
+    Value : quantity
+},
+{
+    $Type : 'UI.DataField',
+    Label : 'Unité',
+    Value : unitOfMeasure
+}
+    ],
+
+    UI.Facets : [
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Informations générales',
+            Target : '@UI.FieldGroup#General'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Ressources',
+            Target : '@UI.FieldGroup#Resources'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Suivi',
+            Target : '@UI.FieldGroup#Tracking'
+        }
+    ],
+
+    UI.FieldGroup #General : {
+    Data : [
+        {
             $Type : 'UI.DataField',
-            Label : 'Quantité',
+            Label : 'N° tournée',
+            Value : tourCode
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Date de collecte',
+            Value : tourDate
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Zone de collecte',
+            Value : zone
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Matériau / Type de déchet',
+            Value : collectionType
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Quantité à collecter',
             Value : quantity
         },
         {
@@ -169,143 +242,28 @@ annotate service.Tours with @(
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Ressource humaine',
-            Value : assignedHumanResource.fullName
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Ressource matérielle',
-            Value : assignedMaterialResource.name
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Statut',
-            Value : status,
-            Criticality : statusCriticality,
-            CriticalityRepresentation : #WithIcon,
-            ![@UI.Importance] : #High
-        }
-    ],
-
-    UI.Identification : [
-        {
-            $Type : 'UI.DataField',
-            Label : 'N° tournée',
-            Value : tourNumber
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Date de collecte',
-            Value : collectionDate
-        },
-        {
-            $Type : 'UI.DataField',
             Label : 'Client',
             Value : client_ID
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Matériau',
-            Value : material_ID
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Quantité',
-            Value : quantity
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Unité de mesure',
-            Value : unitOfMeasure
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Ressource humaine',
-            Value : assignedHumanResource_ID
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Ressource matérielle',
-            Value : assignedMaterialResource_ID
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Statut',
-            Value : status,
-            Criticality : statusCriticality,
-            CriticalityRepresentation : #WithIcon
-        },
-        {
-            $Type : 'UI.DataField',
             Label : 'Remarques',
-            Value : remarks
+            Value : description
         }
-    ],
-
-    UI.Facets : [
-        {
-            $Type  : 'UI.ReferenceFacet',
-            Label  : 'Création de la tournée',
-            Target : '@UI.FieldGroup#CreateTour'
-        },
-        {
-            $Type  : 'UI.ReferenceFacet',
-            Label  : 'Affectation des ressources',
-            Target : '@UI.FieldGroup#Resources'
-        },
-        {
-            $Type  : 'UI.ReferenceFacet',
-            Label  : 'Suivi de la tournée',
-            Target : '@UI.FieldGroup#Tracking'
-        }
-    ],
-
-    UI.FieldGroup #CreateTour : {
-        Data : [
-            {
-                $Type : 'UI.DataField',
-                Label : 'Date de collecte',
-                Value : collectionDate
-            },
-            {
-                $Type : 'UI.DataField',
-                Label : 'Client',
-                Value : client_ID
-            },
-            {
-                $Type : 'UI.DataField',
-                Label : 'Matériau',
-                Value : material_ID
-            },
-            {
-                $Type : 'UI.DataField',
-                Label : 'Quantité',
-                Value : quantity
-            },
-            {
-                $Type : 'UI.DataField',
-                Label : 'Unité de mesure',
-                Value : unitOfMeasure
-            },
-            {
-                $Type : 'UI.DataField',
-                Label : 'Remarques',
-                Value : remarks
-            }
-        ]
-    },
+    ]
+},
 
     UI.FieldGroup #Resources : {
         Data : [
             {
                 $Type : 'UI.DataField',
-                Label : 'Ressource humaine disponible',
-                Value : assignedHumanResource_ID
+                Label : 'Ressource matérielle',
+                Value : vehicle_ID
             },
             {
                 $Type : 'UI.DataField',
-                Label : 'Ressource matérielle disponible',
-                Value : assignedMaterialResource_ID
+                Label : 'Ressource humaine',
+                Value : driver_ID
             }
         ]
     },
@@ -314,24 +272,42 @@ annotate service.Tours with @(
         Data : [
             {
                 $Type : 'UI.DataField',
-                Label : 'N° tournée',
-                Value : tourNumber
-            },
-            {
-                $Type : 'UI.DataField',
                 Label : 'Statut',
                 Value : status,
                 Criticality : statusCriticality,
                 CriticalityRepresentation : #WithIcon
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Motif de rejet',
+                Value : rejectionReason
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Créé par',
+                Value : createdBy
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Dernière modification',
+                Value : updatedAt
             }
         ]
     }
 );
 
+/* ===================================================== */
+/* CLIENTS                                               */
+/* ===================================================== */
 
-/* ===================================================== */
-/* CLIENTS */
-/* ===================================================== */
+annotate service.Clients with {
+    ID           @title : 'Identifiant client';
+    customerCode @title : 'Code client';
+    code         @title : 'Code client';
+    name         @title : 'Nom du client';
+    city         @title : 'Ville';
+    phone        @title : 'Téléphone';
+};
 
 annotate service.Clients with @(
 
@@ -376,273 +352,115 @@ annotate service.Clients with @(
     ]
 );
 
-
 /* ===================================================== */
-/* MATERIALS */
-/* ===================================================== */
-
-annotate service.Materials with @(
-
-    UI.HeaderInfo : {
-        TypeName       : 'Matériau',
-        TypeNamePlural : 'Matériaux',
-        Title          : {
-            Value : description
-        },
-        Description    : {
-            Value : materialCode
-        }
-    },
-
-    UI.SelectionFields : [
-        materialCode,
-        description,
-        unitOfMeasure
-    ],
-
-    UI.LineItem : [
-        {
-            $Type : 'UI.DataField',
-            Label : 'Code matériau',
-            Value : materialCode
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Description',
-            Value : description
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Unité',
-            Value : unitOfMeasure
-        }
-    ]
-);
-
-
-/* ===================================================== */
-/* HUMAN RESOURCES */
+/* VEHICLES                                             */
 /* ===================================================== */
 
-annotate service.HumanResources with @(
+annotate service.Vehicles with {
+    ID                 @title : 'Identifiant véhicule';
+    registrationNumber @title : 'Immatriculation';
+    type               @title : 'Type de véhicule';
+    capacity           @title : 'Capacité';
+    status             @title : 'Statut';
+    available          @title : 'Disponible';
+};
 
-    UI.HeaderInfo : {
-        TypeName       : 'Ressource humaine',
-        TypeNamePlural : 'Ressources humaines',
-        Title          : {
-            Value : fullName
-        },
-        Description    : {
-            Value : employeeCode
-        }
-    },
-
-    UI.SelectionFields : [
-        employeeCode,
-        fullName,
-        status
-    ],
-
-    UI.LineItem : [
-        {
-            $Type : 'UI.DataField',
-            Label : 'Matricule',
-            Value : employeeCode
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Nom complet',
-            Value : fullName
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Disponibilité',
-            Value : status
-        }
-    ]
-);
-
-
-/* ===================================================== */
-/* AVAILABLE HUMAN RESOURCES - VALUE HELP */
-/* ===================================================== */
-
-annotate service.AvailableHumanResources with @(
-
-    UI.HeaderInfo : {
-        TypeName       : 'Ressource humaine disponible',
-        TypeNamePlural : 'Ressources humaines disponibles',
-        Title          : {
-            Value : fullName
-        },
-        Description    : {
-            Value : employeeCode
-        }
-    },
-
-    UI.SelectionFields : [
-        employeeCode,
-        fullName,
-        status
-    ],
-
-    UI.LineItem : [
-        {
-            $Type : 'UI.DataField',
-            Label : 'Matricule',
-            Value : employeeCode
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Nom complet',
-            Value : fullName
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Disponibilité',
-            Value : status
-        }
-    ]
-);
-
-
-/* ===================================================== */
-/* MATERIAL RESOURCES */
-/* ===================================================== */
-
-annotate service.MaterialResources with @(
+annotate service.Vehicles with @(
 
     UI.HeaderInfo : {
         TypeName       : 'Ressource matérielle',
         TypeNamePlural : 'Ressources matérielles',
         Title          : {
-            Value : name
+            Value : registrationNumber
         },
         Description    : {
-            Value : equipmentCode
+            Value : type
         }
     },
 
     UI.SelectionFields : [
-        equipmentCode,
-        name,
-        status
+        registrationNumber,
+        type,
+        status,
+        available
     ],
 
     UI.LineItem : [
         {
             $Type : 'UI.DataField',
-            Label : 'Code équipement',
-            Value : equipmentCode
+            Label : 'Immatriculation',
+            Value : registrationNumber
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Équipement',
-            Value : name
+            Label : 'Type',
+            Value : type
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Disponibilité',
-            Value : status
-        }
-    ]
-);
-
-
-/* ===================================================== */
-/* AVAILABLE MATERIAL RESOURCES - VALUE HELP */
-/* ===================================================== */
-
-annotate service.AvailableMaterialResources with @(
-
-    UI.HeaderInfo : {
-        TypeName       : 'Ressource matérielle disponible',
-        TypeNamePlural : 'Ressources matérielles disponibles',
-        Title          : {
-            Value : name
+            Label : 'Capacité',
+            Value : capacity
         },
-        Description    : {
-            Value : equipmentCode
-        }
-    },
-
-    UI.SelectionFields : [
-        equipmentCode,
-        name,
-        status
-    ],
-
-    UI.LineItem : [
-        {
-            $Type : 'UI.DataField',
-            Label : 'Code équipement',
-            Value : equipmentCode
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Équipement',
-            Value : name
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Disponibilité',
-            Value : status
-        }
-    ]
-);
-
-
-/* ===================================================== */
-/* ANALYTICS */
-/* ===================================================== */
-
-annotate service.TourStatusAnalytics with @(
-
-    UI.HeaderInfo : {
-        TypeName       : 'Statistique',
-        TypeNamePlural : 'Statistiques des tournées',
-        Title          : {
-            Value : status
-        }
-    },
-
-    UI.SelectionFields : [
-        status
-    ],
-
-    UI.LineItem : [
         {
             $Type : 'UI.DataField',
             Label : 'Statut',
             Value : status
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Nombre de tournées',
-            Value : toursCount
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'Quantité totale',
-            Value : totalQuantity
         }
-    ],
+    ]
+);
 
-    UI.Chart #ToursByStatus : {
-        Title : 'Répartition des tournées par statut',
-        ChartType : #Column,
-        Dimensions : [
-            status
-        ],
-        Measures : [
-            toursCount
-        ]
+/* ===================================================== */
+/* DRIVERS                                              */
+/* ===================================================== */
+
+annotate service.Drivers with {
+    ID        @title : 'Identifiant chauffeur';
+    firstName @title : 'Prénom';
+    lastName  @title : 'Nom';
+    phone     @title : 'Téléphone';
+    available @title : 'Disponible';
+};
+
+annotate service.Drivers with @(
+
+    UI.HeaderInfo : {
+        TypeName       : 'Ressource humaine',
+        TypeNamePlural : 'Ressources humaines',
+        Title          : {
+            Value : lastName
+        },
+        Description    : {
+            Value : firstName
+        }
     },
 
-    UI.PresentationVariant #ToursByStatusPV : {
-        Text : 'Tournées par statut',
-        Visualizations : [
-            '@UI.Chart#ToursByStatus'
-        ]
-    }
+    UI.SelectionFields : [
+        firstName,
+        lastName,
+        phone,
+        available
+    ],
+
+    UI.LineItem : [
+        {
+            $Type : 'UI.DataField',
+            Label : 'Prénom',
+            Value : firstName
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Nom',
+            Value : lastName
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Téléphone',
+            Value : phone
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Disponible',
+            Value : available
+        }
+    ]
 );
