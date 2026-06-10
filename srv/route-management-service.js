@@ -220,6 +220,32 @@ function enrichRoadmapAliases(roadmap) {
   }
 }
 
+function pad2(value) {
+  return String(value).padStart(2, '0');
+}
+
+function monthRange(year, month) {
+  const y = Number(year);
+  const m = Number(month);
+
+  const startDate = `${y}-${pad2(m)}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const endDate = `${y}-${pad2(m)}-${pad2(lastDay)}`;
+
+  return {
+    startDate,
+    endDate
+  };
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 module.exports = class RouteManagementService extends cds.ApplicationService {
   init() {
     const {
@@ -913,6 +939,317 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
     /* ROADMAPS — BOUND ACTIONS FOR FIORI                    */
     /* ===================================================== */
+        this.on('autoAssignTours', 'Roadmaps', async (req) => {
+      const roadmapID = req.params?.[0]?.ID;
+
+      if (!roadmapID) {
+        return reject(req, 'Identifiant de feuille de route manquant.');
+      }
+
+      const roadmap = await SELECT.one.from(Roadmaps).where({ ID: roadmapID });
+
+      if (!roadmap) {
+        return reject(req, 'Feuille de route introuvable.');
+      }
+
+      if (!roadmap.client_ID) {
+        return reject(req, 'Veuillez sélectionner un client avant d’affecter les tournées.');
+      }
+
+      if (!roadmap.month || !roadmap.year) {
+        return reject(req, 'Veuillez saisir le mois et l’année avant d’affecter les tournées.');
+      }
+
+      const range = monthRange(roadmap.year, roadmap.month);
+
+      await UPDATE(Roadmaps)
+        .set({
+          startDate: range.startDate,
+          endDate: range.endDate,
+          updatedAt: new Date().toISOString()
+        })
+        .where({ ID: roadmapID });
+
+      const existingAssignments = await SELECT.from(RoadmapTours)
+        .columns('tour_ID', 'roadmap_ID');
+
+      const assignedToOtherRoadmap = new Set(
+        existingAssignments
+          .filter((assignment) => assignment.roadmap_ID !== roadmapID)
+          .map((assignment) => assignment.tour_ID)
+      );
+
+      const allTours = await SELECT.from(Tours);
+
+      const matchingTours = allTours.filter((tour) => {
+        const date = tour.tourDate || tour.collectionDate;
+
+        if (!date) {
+          return false;
+        }
+
+        const d = new Date(date);
+
+        if (Number.isNaN(d.getTime())) {
+          return false;
+        }
+
+        const sameClient = tour.client_ID === roadmap.client_ID;
+        const sameMonth = d.getMonth() + 1 === Number(roadmap.month);
+        const sameYear = d.getFullYear() === Number(roadmap.year);
+        const validStatus = normalizeTourStatus(tour.status) === TOUR_STATUS.VALIDATED;
+        const notAssignedElsewhere = !assignedToOtherRoadmap.has(tour.ID);
+
+        return sameClient && sameMonth && sameYear && validStatus && notAssignedElsewhere;
+      });
+
+      await DELETE.from(RoadmapTours).where({ roadmap_ID: roadmapID });
+
+      let sequence = 1;
+
+      for (const tour of matchingTours) {
+        await INSERT.into(RoadmapTours).entries({
+          ID: cds.utils.uuid(),
+          sequence,
+          note: `Tournée affectée automatiquement`,
+          roadmap_ID: roadmapID,
+          tour_ID: tour.ID
+        });
+
+        sequence += 1;
+      }
+
+      return SELECT.one.from(Roadmaps).where({ ID: roadmapID });
+    });
+
+    this.on('generateRoadmapSheetHtml', 'Roadmaps', async (req) => {
+      const roadmapID = req.params?.[0]?.ID;
+
+      if (!roadmapID) {
+        return reject(req, 'Identifiant de feuille de route manquant.');
+      }
+
+      const roadmap = await SELECT.one.from(Roadmaps).where({ ID: roadmapID });
+
+      if (!roadmap) {
+        return reject(req, 'Feuille de route introuvable.');
+      }
+
+      const client = roadmap.client_ID
+        ? await SELECT.one.from(Clients).where({ ID: roadmap.client_ID })
+        : null;
+
+      const assignments = await SELECT.from(RoadmapTours)
+        .where({ roadmap_ID: roadmapID })
+        .orderBy('sequence');
+
+      if (!assignments.length) {
+        return reject(req, 'Aucune tournée affectée à cette feuille de route.');
+      }
+
+      const tourIDs = assignments.map((assignment) => assignment.tour_ID);
+      const tours = await SELECT.from(Tours).where({ ID: { in: tourIDs } });
+
+      const toursByID = new Map(tours.map((tour) => [tour.ID, tour]));
+
+      const groups = new Map();
+
+      for (const assignment of assignments) {
+        const tour = toursByID.get(assignment.tour_ID);
+
+        if (!tour) {
+          continue;
+        }
+
+        const material = tour.collectionType || 'Non renseigné';
+        const unit = tour.unitOfMeasure || 'KG';
+        const key = `${material}__${unit}`;
+
+        if (!groups.has(key)) {
+          groups.set(key, {
+            material,
+            unit,
+            totalQuantity: 0,
+            tourCodes: []
+          });
+        }
+
+        const group = groups.get(key);
+
+        group.totalQuantity += Number(tour.quantity || 0);
+        group.tourCodes.push(tour.tourCode || tour.tourNumber || tour.ID);
+      }
+
+      const groupRows = Array.from(groups.values()).map((group) => {
+        return `
+          <tr>
+            <td>${escapeHtml(group.material)}</td>
+            <td>${escapeHtml(group.tourCodes.join(' / '))}</td>
+            <td class="right">${group.totalQuantity.toFixed(3)}</td>
+            <td>${escapeHtml(group.unit)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const detailRows = assignments.map((assignment) => {
+        const tour = toursByID.get(assignment.tour_ID);
+
+        if (!tour) {
+          return '';
+        }
+
+        return `
+          <tr>
+            <td>${assignment.sequence || ''}</td>
+            <td>${escapeHtml(tour.tourCode || tour.tourNumber)}</td>
+            <td>${escapeHtml(tour.tourDate || tour.collectionDate)}</td>
+            <td>${escapeHtml(tour.zone)}</td>
+            <td>${escapeHtml(tour.collectionType)}</td>
+            <td class="right">${Number(tour.quantity || 0).toFixed(3)}</td>
+            <td>${escapeHtml(tour.unitOfMeasure || 'KG')}</td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Feuille de route ${escapeHtml(roadmap.roadmapCode || roadmap.roadmapNumber)}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 32px;
+              color: #1d2d3e;
+            }
+
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 2px solid #0a6ed1;
+              padding-bottom: 16px;
+              margin-bottom: 24px;
+            }
+
+            h1 {
+              margin: 0;
+              color: #0a6ed1;
+              font-size: 24px;
+            }
+
+            h2 {
+              margin-top: 28px;
+              color: #1d2d3e;
+              font-size: 18px;
+            }
+
+            .meta {
+              line-height: 1.8;
+              font-size: 14px;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 12px;
+              font-size: 13px;
+            }
+
+            th {
+              background: #eaf4ff;
+              color: #1d2d3e;
+              text-align: left;
+            }
+
+            th, td {
+              border: 1px solid #d0d7de;
+              padding: 8px;
+            }
+
+            .right {
+              text-align: right;
+            }
+
+            .actions {
+              margin-bottom: 20px;
+            }
+
+            .print {
+              background: #0a6ed1;
+              color: white;
+              border: none;
+              padding: 8px 14px;
+              border-radius: 8px;
+              font-weight: bold;
+              cursor: pointer;
+            }
+
+            @media print {
+              .actions {
+                display: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="actions">
+            <button class="print" onclick="window.print()">Télécharger / Imprimer en PDF</button>
+          </div>
+
+          <div class="header">
+            <div>
+              <h1>Feuille de route</h1>
+              <div class="meta">
+                <strong>N° :</strong> ${escapeHtml(roadmap.roadmapCode || roadmap.roadmapNumber)}<br>
+                <strong>Client :</strong> ${escapeHtml(client?.name || '')}<br>
+                <strong>Période :</strong> ${escapeHtml(roadmap.month)}/${escapeHtml(roadmap.year)}
+              </div>
+            </div>
+            <div class="meta">
+              <strong>Statut :</strong> ${escapeHtml(roadmap.status)}<br>
+              <strong>Générée le :</strong> ${new Date().toLocaleDateString('fr-FR')}
+            </div>
+          </div>
+
+          <h2>Résumé par matériau / type de déchet</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Matériau / Type de déchet</th>
+                <th>Tournées regroupées</th>
+                <th>Quantité totale</th>
+                <th>Unité</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${groupRows}
+            </tbody>
+          </table>
+
+          <h2>Détail des tournées affectées</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Séquence</th>
+                <th>N° tournée</th>
+                <th>Date de collecte</th>
+                <th>Zone</th>
+                <th>Matériau / Type de déchet</th>
+                <th>Quantité</th>
+                <th>Unité</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${detailRows}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+    });
+
 
     this.on('validateRoadmap', 'Roadmaps', async (req) => {
       const roadmapID = req.params?.[0]?.ID;
@@ -1195,6 +1532,8 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         tourPointsCount: tourPoints.length
       };
     });
+
+    
 
     return super.init();
   }

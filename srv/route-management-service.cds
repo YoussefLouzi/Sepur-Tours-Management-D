@@ -56,7 +56,9 @@ service RouteManagementService {
     }
     actions {
         action validateRoadmap() returns Roadmaps;
-        action rejectRoadmap(reason : String) returns Roadmaps;
+    action rejectRoadmap(reason : String) returns Roadmaps;
+    action autoAssignTours() returns Roadmaps;
+    action generateRoadmapSheetHtml() returns LargeString;
     };
 
     entity RoadmapTours as projection on db.RoadmapTours {
@@ -529,10 +531,36 @@ annotate RouteManagementService.Tours with @(
 /* ROADMAPS ANNOTATIONS                                  */
 /* ===================================================== */
 
+annotate RouteManagementService.Roadmaps with {
+
+    client @Common.ValueList : {
+        CollectionPath : 'Clients',
+        Parameters : [
+            {
+                $Type : 'Common.ValueListParameterInOut',
+                LocalDataProperty : client_ID,
+                ValueListProperty : 'ID'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'customerCode'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'name'
+            },
+            {
+                $Type : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'city'
+            }
+        ]
+    };
+};
+
 annotate RouteManagementService.Roadmaps with @(
     UI.HeaderInfo : {
-        TypeName       : 'Roadmap',
-        TypeNamePlural : 'Roadmaps',
+        TypeName       : 'Feuille de route',
+        TypeNamePlural : 'Management des feuilles de route',
         Title          : {
             Value : roadmapCode
         },
@@ -541,33 +569,155 @@ annotate RouteManagementService.Roadmaps with @(
         }
     },
 
+    UI.SelectionFields : [
+        roadmapCode,
+        client_ID,
+        month,
+        year,
+        status,
+        integrationStatus
+    ],
+
     UI.LineItem : [
         {
             $Type : 'UI.DataField',
-            Label : 'Code roadmap',
-            Value : roadmapCode
+            Label : 'N° feuille de route',
+            Value : roadmapCode,
+            ![@UI.Importance] : #High
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Date début',
-            Value : startDate
+            Label : 'Client',
+            Value : client.name,
+            ![@UI.Importance] : #High
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Date fin',
-            Value : endDate
+            Label : 'Mois',
+            Value : month
         },
         {
             $Type : 'UI.DataField',
-            Label : 'Tournée',
-            Value : tourCode
+            Label : 'Année',
+            Value : year
         },
         {
             $Type : 'UI.DataField',
             Label : 'Statut',
             Value : status,
             Criticality : statusCriticality,
-            CriticalityRepresentation : #WithIcon
+            CriticalityRepresentation : #WithIcon,
+            ![@UI.Importance] : #High
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Statut intégration',
+            Value : integrationStatus
+        }
+    ],
+
+    UI.Facets : [
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Informations générales',
+            Target : '@UI.FieldGroup#General'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Tournées affectées',
+            Target : 'assignedTours/@UI.LineItem'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Suivi',
+            Target : '@UI.FieldGroup#Tracking'
+        }
+    ],
+
+    UI.FieldGroup #General : {
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Label : 'N° feuille de route',
+                Value : roadmapCode
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Client',
+                Value : client_ID
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Mois',
+                Value : month
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Année',
+                Value : year
+            }
+        ]
+    },
+
+    UI.FieldGroup #Tracking : {
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Label : 'Statut',
+                Value : status,
+                Criticality : statusCriticality,
+                CriticalityRepresentation : #WithIcon
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Statut intégration',
+                Value : integrationStatus
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Commande SAP',
+                Value : sapSalesOrder
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'Motif de rejet',
+                Value : rejectionReason
+            }
+        ]
+    }
+);
+
+annotate RouteManagementService.RoadmapTours with @(
+    UI.LineItem : [
+        {
+            $Type : 'UI.DataField',
+            Label : 'Séquence',
+            Value : sequence
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'N° tournée',
+            Value : tourCode
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Date de collecte',
+            Value : tourDate
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Matériau / Type de déchet',
+            Value : tourCollectionType
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Client',
+            Value : clientName
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Remarque',
+            Value : note
         }
     ]
 );
