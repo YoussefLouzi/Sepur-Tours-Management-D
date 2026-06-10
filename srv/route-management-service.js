@@ -61,16 +61,36 @@ function normalizeTourStatus(status) {
   return TOUR_STATUS.CREATED;
 }
 
+// function normalizeRoadmapStatus(status) {
+//   if (['DRAFT', 'PENDING', 'CREATED'].includes(status)) {
+//     return ROADMAP_STATUS.CREATED;
+//   }
+
+//   if (['ACTIVE', 'VALIDATED', 'COMPLETED'].includes(status)) {
+//     return ROADMAP_STATUS.VALIDATED;
+//   }
+
+//   if (['REJECTED', 'CANCELLED'].includes(status)) {
+//     return ROADMAP_STATUS.REJECTED;
+//   }
+
+//   return ROADMAP_STATUS.CREATED;
+// }
+
 function normalizeRoadmapStatus(status) {
-  if (['DRAFT', 'PENDING', 'CREATED'].includes(status)) {
+  const normalized = String(status || '')
+    .trim()
+    .toUpperCase();
+
+  if (['DRAFT', 'PENDING', 'CREATED'].includes(normalized)) {
     return ROADMAP_STATUS.CREATED;
   }
 
-  if (['ACTIVE', 'VALIDATED', 'COMPLETED'].includes(status)) {
+  if (['ACTIVE', 'VALIDATED', 'COMPLETED'].includes(normalized)) {
     return ROADMAP_STATUS.VALIDATED;
   }
 
-  if (['REJECTED', 'CANCELLED'].includes(status)) {
+  if (['REJECTED', 'CANCELLED'].includes(normalized)) {
     return ROADMAP_STATUS.REJECTED;
   }
 
