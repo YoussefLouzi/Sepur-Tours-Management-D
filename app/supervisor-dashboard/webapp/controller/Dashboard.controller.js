@@ -77,6 +77,12 @@ sap.ui.define([
             }
         },
 
+        _normalizeStatus: function (sStatus) {
+            return String(sStatus || "")
+                .trim()
+                .toUpperCase();
+        },
+
         _prepareOverviewCharts: function () {
             const viewModel = this.getOwnerComponent().getModel("view");
 
@@ -85,11 +91,11 @@ sap.ui.define([
 
             viewModel.setProperty("/tourDonutData", [
                 {
-                    label: "En attente",
+                    label: "Créées",
                     value: t.pendingTours || 0
                 },
                 {
-                    label: "Acceptées",
+                    label: "Validées",
                     value: t.acceptedTours || 0
                 },
                 {
@@ -100,22 +106,26 @@ sap.ui.define([
 
             viewModel.setProperty("/roadmapBarData", [
                 {
-                    label: "Brouillon",
-                    value: r.draftRoadmaps || 0
+                    label: "Créées",
+                    value: r.createdRoadmaps || 0
                 },
                 {
-                    label: "Active",
-                    value: r.activeRoadmaps || 0
+                    label: "Validées",
+                    value: r.validatedRoadmaps || 0
                 },
                 {
-                    label: "Terminée",
-                    value: r.completedRoadmaps || 0
+                    label: "Rejetées",
+                    value: r.rejectedRoadmaps || 0
                 },
                 {
-                    label: "Annulée",
-                    value: r.cancelledRoadmaps || 0
+                    label: "Intégrées",
+                    value: r.integratedRoadmaps || 0
                 }
             ]);
+
+            if (viewModel.updateBindings) {
+                viewModel.updateBindings(true);
+            }
         },
 
         _applyOverviewChartDesign: function () {
@@ -236,40 +246,131 @@ sap.ui.define([
                 const data = await response.json();
                 const roadmaps = data.value || [];
 
-                const draft = roadmaps.filter(function (r) {
-                    return r.status === "DRAFT" || r.status === "PENDING" || !r.status;
-                }).length;
+                let created = 0;
+                let validated = 0;
+                let rejected = 0;
+                let integrated = 0;
 
-                const active = roadmaps.filter(function (r) {
-                    return r.status === "ACTIVE";
-                }).length;
+                roadmaps.forEach(function (roadmap) {
+                    const status = String(roadmap.status || "")
+                        .trim()
+                        .toUpperCase();
 
-                const completed = roadmaps.filter(function (r) {
-                    return r.status === "COMPLETED";
-                }).length;
+                    const integrationStatus = String(roadmap.integrationStatus || "")
+                        .trim()
+                        .toUpperCase();
 
-                const cancelled = roadmaps.filter(function (r) {
-                    return r.status === "CANCELLED" || r.status === "REJECTED";
-                }).length;
+                    if (integrationStatus === "INTEGRATED") {
+                        integrated += 1;
+                        return;
+                    }
+
+                    if (
+                        status === "CREATED" ||
+                        status === "DRAFT" ||
+                        status === "PENDING" ||
+                        !status
+                    ) {
+                        created += 1;
+                        return;
+                    }
+
+                    if (
+                        status === "VALIDATED" ||
+                        status === "ACTIVE" ||
+                        status === "COMPLETED"
+                    ) {
+                        validated += 1;
+                        return;
+                    }
+
+                    if (
+                        status === "REJECTED" ||
+                        status === "CANCELLED"
+                    ) {
+                        rejected += 1;
+                        return;
+                    }
+
+                    created += 1;
+                });
 
                 viewModel.setProperty("/roadmapStats", {
                     totalRoadmaps: roadmaps.length,
-                    draftRoadmaps: draft,
-                    activeRoadmaps: active,
-                    completedRoadmaps: completed,
-                    cancelledRoadmaps: cancelled
+
+                    createdRoadmaps: created,
+                    validatedRoadmaps: validated,
+                    rejectedRoadmaps: rejected,
+                    integratedRoadmaps: integrated,
+
+                    draftRoadmaps: created,
+                    activeRoadmaps: validated,
+                    completedRoadmaps: integrated,
+                    cancelledRoadmaps: rejected
                 });
+
+                viewModel.setProperty("/roadmapBarData", [
+                    {
+                        label: "Créées",
+                        value: created
+                    },
+                    {
+                        label: "Validées",
+                        value: validated
+                    },
+                    {
+                        label: "Rejetées",
+                        value: rejected
+                    },
+                    {
+                        label: "Intégrées",
+                        value: integrated
+                    }
+                ]);
+
+                if (viewModel.updateBindings) {
+                    viewModel.updateBindings(true);
+                }
 
             } catch (e) {
                 console.error(e);
 
                 viewModel.setProperty("/roadmapStats", {
                     totalRoadmaps: 0,
+
+                    createdRoadmaps: 0,
+                    validatedRoadmaps: 0,
+                    rejectedRoadmaps: 0,
+                    integratedRoadmaps: 0,
+
                     draftRoadmaps: 0,
                     activeRoadmaps: 0,
                     completedRoadmaps: 0,
                     cancelledRoadmaps: 0
                 });
+
+                viewModel.setProperty("/roadmapBarData", [
+                    {
+                        label: "Créées",
+                        value: 0
+                    },
+                    {
+                        label: "Validées",
+                        value: 0
+                    },
+                    {
+                        label: "Rejetées",
+                        value: 0
+                    },
+                    {
+                        label: "Intégrées",
+                        value: 0
+                    }
+                ]);
+
+                if (viewModel.updateBindings) {
+                    viewModel.updateBindings(true);
+                }
             }
         },
 
@@ -317,10 +418,18 @@ sap.ui.define([
                 viewModel.setProperty("/historyStats", {
                     totalDecisions: rows.length,
                     acceptedDecisions: rows.filter(function (d) {
-                        return d.decision === "ACCEPTED";
+                        const decision = String(d.decision || "")
+                            .trim()
+                            .toUpperCase();
+
+                        return decision === "ACCEPTED" || decision === "VALIDATED";
                     }).length,
                     rejectedDecisions: rows.filter(function (d) {
-                        return d.decision === "REJECTED";
+                        const decision = String(d.decision || "")
+                            .trim()
+                            .toUpperCase();
+
+                        return decision === "REJECTED";
                     }).length
                 });
 
@@ -340,23 +449,34 @@ sap.ui.define([
             const notifications = [];
 
             try {
-                const pendingToursResponse = await fetch(
-                    "/odata/v4/route-management/Tours?$filter=status eq 'PENDING'&$orderby=createdAt desc&$top=100"
+                const toursResponse = await fetch(
+                    "/odata/v4/route-management/Tours?$orderby=createdAt desc&$top=100"
                 );
 
-                if (pendingToursResponse.ok) {
-                    const pendingToursData = await pendingToursResponse.json();
-                    const pendingTours = pendingToursData.value || [];
+                if (toursResponse.ok) {
+                    const toursData = await toursResponse.json();
+                    const tours = toursData.value || [];
 
-                    if (pendingTours.length > 0) {
+                    const toursToValidate = tours.filter(function (tour) {
+                        const status = String(tour.status || "")
+                            .trim()
+                            .toUpperCase();
+
+                        return status === "CREATED" ||
+                            status === "DRAFT" ||
+                            status === "PENDING" ||
+                            !status;
+                    });
+
+                    if (toursToValidate.length > 0) {
                         notifications.push({
                             type: "Warning",
-                            title: pendingTours.length + " tournée(s) en attente de validation",
-                            description: "Des tournées créées ou soumises par le planificateur attendent une décision."
+                            title: toursToValidate.length + " tournée(s) en attente de validation",
+                            description: "Des tournées créées par le planificateur attendent une décision."
                         });
                     }
 
-                    pendingTours.slice(0, 3).forEach(function (tour) {
+                    toursToValidate.slice(0, 3).forEach(function (tour) {
                         notifications.push({
                             type: "Warning",
                             title: "Tournée à valider : " + (tour.tourCode || "-"),
@@ -365,7 +485,7 @@ sap.ui.define([
                     });
                 }
             } catch (e) {
-                console.error("Erreur notifications tournées PENDING", e);
+                console.error("Erreur notifications tournées", e);
             }
 
             try {
@@ -378,16 +498,21 @@ sap.ui.define([
                     const roadmaps = roadmapsData.value || [];
 
                     const roadmapsToValidate = roadmaps.filter(function (roadmap) {
-                        return roadmap.status === "DRAFT" ||
-                            roadmap.status === "PENDING" ||
-                            !roadmap.status;
+                        const status = String(roadmap.status || "")
+                            .trim()
+                            .toUpperCase();
+
+                        return status === "CREATED" ||
+                            status === "DRAFT" ||
+                            status === "PENDING" ||
+                            !status;
                     });
 
                     if (roadmapsToValidate.length > 0) {
                         notifications.push({
                             type: "Information",
-                            title: roadmapsToValidate.length + " roadmap(s) à vérifier",
-                            description: "Des roadmaps sont en brouillon ou en attente de validation."
+                            title: roadmapsToValidate.length + " feuille(s) de route à vérifier",
+                            description: "Des roadmaps créées par le planificateur attendent une décision."
                         });
                     }
 
@@ -395,7 +520,7 @@ sap.ui.define([
                         notifications.push({
                             type: "Information",
                             title: "Roadmap à vérifier : " + (roadmap.roadmapCode || "-"),
-                            description: "Statut actuel : " + (roadmap.status || "DRAFT")
+                            description: "Statut actuel : " + (roadmap.status || "CREATED")
                         });
                     });
                 }
@@ -473,12 +598,23 @@ sap.ui.define([
         },
 
         onSelectSalesOrders: function () {
-            MessageToast.show("Total Sales Orders : " + (this.getOwnerComponent().getModel("view").getProperty("/salesOrderStats/totalSalesOrders") || 0));
+            MessageToast.show(
+                "Total Sales Orders : " +
+                (this.getOwnerComponent().getModel("view").getProperty("/salesOrderStats/totalSalesOrders") || 0)
+            );
         },
 
         onSelectHistory: function () {
             const s = this.getOwnerComponent().getModel("view").getProperty("/historyStats") || {};
-            MessageToast.show("Décisions : " + (s.totalDecisions || 0) + " | Acceptées : " + (s.acceptedDecisions || 0) + " | Rejetées : " + (s.rejectedDecisions || 0));
+
+            MessageToast.show(
+                "Décisions : " +
+                (s.totalDecisions || 0) +
+                " | Acceptées : " +
+                (s.acceptedDecisions || 0) +
+                " | Rejetées : " +
+                (s.rejectedDecisions || 0)
+            );
         },
 
         onDashboard: function () {
@@ -500,6 +636,11 @@ sap.ui.define([
 
         onLogout: function () {
             localStorage.removeItem("sepur.user");
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("sepurUser");
+            sessionStorage.removeItem("currentUser");
+            sessionStorage.removeItem("sepurUser");
+
             window.location.href = "/login/webapp/index.html";
         }
     });
