@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Unit Tests - Home Page</title>
+    <title>Unit Tests - Supervisor Roadmaps</title>
 
     <script
         id="sap-ui-bootstrap"
@@ -12,7 +12,7 @@
         data-sap-ui-async="true"
         data-sap-ui-compatVersion="edge"
         data-sap-ui-resourceroots='{
-            "home": "../../"
+            "sepur.supervisor.supervisorroadmaps": "../../"
         }'>
     </script>
 
@@ -26,7 +26,7 @@
 
         sap.ui.getCore().attachInit(function () {
             sap.ui.require([
-                "home/test/unit/allTests"
+                "sepur/supervisor/supervisorroadmaps/test/unit/allTests"
             ], function () {
                 QUnit.start();
             }, function (oError) {
@@ -34,7 +34,7 @@
                 QUnit.start();
 
                 QUnit.module("Erreur de chargement");
-                QUnit.test("Les tests Home n'ont pas pu être chargés", function (assert) {
+                QUnit.test("Les tests Supervisor Roadmaps n'ont pas pu être chargés", function (assert) {
                     assert.ok(false, oError && oError.message ? oError.message : "Erreur inconnue");
                 });
             });

@@ -1,5 +1,6 @@
 sap.ui.define([
-	"sepur/home/test/unit/controller/home.controller"
+    "home/test/unit/controller/home.controller.qunit",
+    "home/test/unit/controller/App.controller.qunit"
 ], function () {
-	"use strict";
+    "use strict";
 });
