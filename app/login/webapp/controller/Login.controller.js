@@ -14,9 +14,66 @@ sap.ui.define([
             }));
         },
 
+        _normalizeRole: function (sRole) {
+            return String(sRole || "").trim().toUpperCase();
+        },
+
+        _getDefaultUrlForRole: function (sRole) {
+            const sNormalizedRole = this._normalizeRole(sRole);
+
+            if (sNormalizedRole === "PLANIFICATEUR" || sNormalizedRole === "PLANNER") {
+                return "/planner-dashboard/webapp/index.html";
+            }
+
+            if (sNormalizedRole === "SUPERVISEUR" || sNormalizedRole === "SUPERVISOR") {
+                return "/supervisor-dashboard/webapp/index.html";
+            }
+
+            if (sNormalizedRole === "ADMIN") {
+                return "/home/webapp/index.html";
+            }
+
+            return "";
+        },
+
+        _getRedirectUrl: function (sRole) {
+            const oParams = new URLSearchParams(window.location.search || "");
+            const sRedirect = oParams.get("redirect");
+
+            if (sRedirect) {
+                try {
+                    const sDecoded = decodeURIComponent(sRedirect);
+
+                    if (sDecoded && sDecoded.charAt(0) === "/") {
+                        return sDecoded;
+                    }
+                } catch (e) {
+                    return this._getDefaultUrlForRole(sRole);
+                }
+            }
+
+            return this._getDefaultUrlForRole(sRole);
+        },
+
+        _saveSession: function (oUser) {
+            const bRemember = !!(this.byId("chkRemember") && this.byId("chkRemember").getSelected());
+            const sValue = JSON.stringify(oUser);
+            const oStorage = bRemember ? localStorage : sessionStorage;
+
+            ["sepur.user", "currentUser", "sepurUser"].forEach(function (sKey) {
+                localStorage.removeItem(sKey);
+                sessionStorage.removeItem(sKey);
+                oStorage.setItem(sKey, sValue);
+            });
+        },
+
+        _getErrorMessage: function (oError) {
+            return (oError && oError.message) ||
+                "Échec de la connexion. Vérifiez vos identifiants.";
+        },
+
         onLogin: async function () {
             const oData = this.getView().getModel().getData();
-            // const sUser = (oData.username || "").trim();
             const sUser = (oData.username || "").trim().toLowerCase();
             const sPass = oData.password || "";
             const oStrip = this.byId("msgError");
@@ -44,26 +101,21 @@ sap.ui.define([
                     throw new Error("Utilisateur inactif ou introuvable.");
                 }
 
-                localStorage.setItem("sepur.user", JSON.stringify(oResult));
-                localStorage.setItem("currentUser", JSON.stringify(oResult));
-                localStorage.setItem("sepurUser", JSON.stringify(oResult));
-                
-                MessageToast.show("Bienvenue " + oResult.fullName);
+                oResult.role = this._normalizeRole(oResult.role);
+                this._saveSession(oResult);
 
-                if (oResult.role === "PLANIFICATEUR") {
-                    window.location.href = "/planner-dashboard/webapp/index.html";
-                    return;
+                MessageToast.show("Bienvenue " + (oResult.fullName || oResult.username || ""));
+
+                const sTargetUrl = this._getRedirectUrl(oResult.role);
+
+                if (!sTargetUrl) {
+                    throw new Error("Rôle utilisateur non reconnu.");
                 }
 
-                if (oResult.role === "SUPERVISEUR") {
-                    window.location.href = "/supervisor-dashboard/webapp/index.html";
-                    return;
-                }
-
-                throw new Error("Rôle utilisateur non reconnu.");
+                window.location.href = sTargetUrl;
 
             } catch (e) {
-                oStrip.setText(e.message || "Échec de la connexion. Vérifiez vos identifiants.");
+                oStrip.setText(this._getErrorMessage(e));
                 oStrip.setVisible(true);
             }
         },

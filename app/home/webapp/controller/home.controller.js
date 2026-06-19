@@ -55,6 +55,7 @@ sap.ui.define([
 
     _getCurrentUser: function () {
       var aKeys = [
+        "sepur.user",
         "currentUser",
         "sepurUser"
       ];
@@ -173,8 +174,10 @@ sap.ui.define([
     onLogout: function () {
       localStorage.removeItem("currentUser");
       localStorage.removeItem("sepurUser");
+      localStorage.removeItem("sepur.user");
       sessionStorage.removeItem("currentUser");
       sessionStorage.removeItem("sepurUser");
+      sessionStorage.removeItem("sepur.user");
 
       MessageToast.show("Déconnexion effectuée.");
 

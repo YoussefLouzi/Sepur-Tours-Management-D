@@ -163,7 +163,7 @@ sap.ui.define([
             }
 
             try {
-              await executeBoundAction(oContext, "reject", {
+              await executeBoundAction(oContext, "rejectTourDecision", {
                 reason: sReason.trim()
               });
 

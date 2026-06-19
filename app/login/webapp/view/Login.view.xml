@@ -67,6 +67,7 @@
                                 class="loginOptions">
 
                                 <CheckBox
+                                    id="chkRemember"
                                     text="Rester connecté"
                                     selected="false"
                                     class="rememberCheck" />

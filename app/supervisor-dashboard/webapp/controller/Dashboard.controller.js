@@ -237,66 +237,19 @@ sap.ui.define([
             const viewModel = this.getOwnerComponent().getModel("view");
 
             try {
-                const response = await fetch("/odata/v4/route-management/Roadmaps?$top=500");
+                const oModel = this.getView().getModel();
+                const oCtx = oModel.bindContext("/getSupervisorStats(...)");
 
-                if (!response.ok) {
-                    throw new Error("Erreur chargement roadmaps");
-                }
+                await oCtx.execute();
 
-                const data = await response.json();
-                const roadmaps = data.value || [];
-
-                let created = 0;
-                let validated = 0;
-                let rejected = 0;
-                let integrated = 0;
-
-                roadmaps.forEach(function (roadmap) {
-                    const status = String(roadmap.status || "")
-                        .trim()
-                        .toUpperCase();
-
-                    const integrationStatus = String(roadmap.integrationStatus || "")
-                        .trim()
-                        .toUpperCase();
-
-                    if (integrationStatus === "INTEGRATED") {
-                        integrated += 1;
-                        return;
-                    }
-
-                    if (
-                        status === "CREATED" ||
-                        status === "DRAFT" ||
-                        status === "PENDING" ||
-                        !status
-                    ) {
-                        created += 1;
-                        return;
-                    }
-
-                    if (
-                        status === "VALIDATED" ||
-                        status === "ACTIVE" ||
-                        status === "COMPLETED"
-                    ) {
-                        validated += 1;
-                        return;
-                    }
-
-                    if (
-                        status === "REJECTED" ||
-                        status === "CANCELLED"
-                    ) {
-                        rejected += 1;
-                        return;
-                    }
-
-                    created += 1;
-                });
+                const stats = oCtx.getBoundContext().getObject() || {};
+                const created = stats.createdRoadmaps || 0;
+                const validated = stats.validatedRoadmaps || 0;
+                const rejected = stats.rejectedRoadmaps || 0;
+                const integrated = stats.integratedRoadmaps || 0;
 
                 viewModel.setProperty("/roadmapStats", {
-                    totalRoadmaps: roadmaps.length,
+                    totalRoadmaps: stats.totalRoadmaps || 0,
 
                     createdRoadmaps: created,
                     validatedRoadmaps: validated,
@@ -377,29 +330,9 @@ sap.ui.define([
         _loadSalesOrderStats: async function () {
             const viewModel = this.getOwnerComponent().getModel("view");
 
-            try {
-                const response = await fetch("/odata/v4/route-management/SalesOrders?$top=1&$count=true");
-
-                if (!response.ok) {
-                    viewModel.setProperty("/salesOrderStats", {
-                        totalSalesOrders: 0
-                    });
-                    return;
-                }
-
-                const data = await response.json();
-
-                viewModel.setProperty("/salesOrderStats", {
-                    totalSalesOrders: data["@odata.count"] || 0
-                });
-
-            } catch (e) {
-                console.error(e);
-
-                viewModel.setProperty("/salesOrderStats", {
-                    totalSalesOrders: 0
-                });
-            }
+            viewModel.setProperty("/salesOrderStats", {
+                totalSalesOrders: 0
+            });
         },
 
         _loadHistoryStats: async function () {
@@ -638,6 +571,7 @@ sap.ui.define([
             localStorage.removeItem("sepur.user");
             localStorage.removeItem("currentUser");
             localStorage.removeItem("sepurUser");
+            sessionStorage.removeItem("sepur.user");
             sessionStorage.removeItem("currentUser");
             sessionStorage.removeItem("sepurUser");
 

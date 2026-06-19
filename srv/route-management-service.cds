@@ -34,7 +34,7 @@ service RouteManagementService {
     }
     actions {
         action validate() returns Tours;
-        action reject(reason : String) returns Tours;
+        action rejectTourDecision(reason : String) returns Tours;
     };
 
     @odata.draft.enabled
@@ -150,8 +150,12 @@ service RouteManagementService {
         pendingValidation  : Integer;
         acceptedTours      : Integer;
         rejectedTours      : Integer;
-        activeRoadmaps     : Integer;
         totalRoadmaps      : Integer;
+        createdRoadmaps    : Integer;
+        validatedRoadmaps  : Integer;
+        rejectedRoadmaps   : Integer;
+        integratedRoadmaps : Integer;
+        activeRoadmaps     : Integer;
     }
 
     type TourDetails {

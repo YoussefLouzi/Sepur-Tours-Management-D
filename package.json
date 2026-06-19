@@ -16,6 +16,7 @@
   "scripts": {
     "start": "cds-serve",
     "watch": "cds watch",
+    "watch-home": "cds watch --open home/webapp/index.html?sap-ui-xx-viewCache=false --livereload false",
     "generate:unit-tests": "node tools/generate-ui5-unit-tests.js",
     "watch-login": "cds watch --open sepur.login/index.html?sap-ui-xx-viewCache=false --livereload false",
     "watch-tours": "cds watch --open ns.tours/index.html?sap-ui-xx-viewCache=false --livereload false",

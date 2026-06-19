@@ -34,7 +34,7 @@ sap.ui.define([
     return Controller.extend("sepur.planner.controller.Dashboard", {
 
         onInit: function () {
-            const sUser = localStorage.getItem("sepur.user");
+            const sUser = localStorage.getItem("sepur.user") || sessionStorage.getItem("sepur.user");
 
             if (!sUser) {
                 window.location.href = "/login/webapp/index.html";
@@ -43,7 +43,9 @@ sap.ui.define([
 
             const oUser = JSON.parse(sUser);
 
-            if (oUser.role !== "PLANIFICATEUR") {
+            const sRole = String(oUser.role || "").trim().toUpperCase();
+
+            if (sRole !== "PLANIFICATEUR" && sRole !== "PLANNER" && sRole !== "ADMIN") {
                 MessageBox.error("Accès refusé. Ce dashboard est réservé au planificateur.", {
                     onClose: function () {
                         window.location.href = "/login/webapp/index.html";
@@ -51,6 +53,8 @@ sap.ui.define([
                 });
                 return;
             }
+
+            oUser.role = sRole;
 
             this.getView().setModel(new JSONModel({
                 busy: false,
@@ -603,6 +607,11 @@ sap.ui.define([
                 onClose: function (sAction) {
                     if (sAction === MessageBox.Action.OK) {
                         localStorage.removeItem("sepur.user");
+                        localStorage.removeItem("currentUser");
+                        localStorage.removeItem("sepurUser");
+                        sessionStorage.removeItem("sepur.user");
+                        sessionStorage.removeItem("currentUser");
+                        sessionStorage.removeItem("sepurUser");
                         window.location.href = "/login/webapp/index.html";
                     }
                 }

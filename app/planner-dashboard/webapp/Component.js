@@ -12,7 +12,7 @@ sap.ui.define([
         init: function () {
             UIComponent.prototype.init.apply(this, arguments);
 
-            const sUser = localStorage.getItem("sepur.user");
+            const sUser = localStorage.getItem("sepur.user") || sessionStorage.getItem("sepur.user");
 
             if (!sUser) {
                 window.location.href = "/login/webapp/index.html";
@@ -22,10 +22,14 @@ sap.ui.define([
             try {
                 const oUser = JSON.parse(sUser);
 
-                if (!oUser.role || oUser.role !== "PLANIFICATEUR") {
+                const sRole = String(oUser.role || "").trim().toUpperCase();
+
+                if (sRole !== "PLANIFICATEUR" && sRole !== "PLANNER" && sRole !== "ADMIN") {
                     window.location.href = "/login/webapp/index.html";
                     return;
                 }
+
+                oUser.role = sRole;
 
                 this.setModel(new JSONModel({
                     user: oUser

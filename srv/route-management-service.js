@@ -1,4 +1,5 @@
 const cds = require('@sap/cds');
+const registerLoginHandler = require('./handlers/login-handler');
 
 const TOUR_STATUS = {
   CREATED: 'CREATED',
@@ -16,30 +17,6 @@ function reject(req, message, status = 400) {
   return req.reject(status, message);
 }
 
-
-async function nextCode(entityName, fieldName, prefix) {
-  const entities = cds.entities('route.management');
-  const target = entities[entityName];
-
-  const rows = await SELECT.from(target)
-    .columns(fieldName)
-    .orderBy(`${fieldName} desc`)
-    .limit(1);
-
-  let seq = 1;
-
-  if (rows.length && rows[0][fieldName]) {
-    const match = String(rows[0][fieldName]).match(/(\d+)$/);
-
-    if (match) {
-      seq = parseInt(match[1], 10) + 1;
-    }
-  }
-
-  const year = new Date().getFullYear();
-
-  return `${prefix}-${year}-${String(seq).padStart(4, '0')}`;
-}
 
 /* ===================================================== */
 /* STATUS HELPERS                                        */
@@ -348,47 +325,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       }
     });
 
-    /* ===================================================== */
-    /* AUTHENTICATION                                        */
-    /* ===================================================== */
-
-    this.on('login', async (req) => {
-      const email = req.data.email || req.data.username;
-      const { password } = req.data;
-
-      if (!email || !password) {
-        return reject(req, 'E-mail et mot de passe requis.');
-      }
-
-      let user = await SELECT.one.from(Users).where({
-        email,
-        password
-      });
-
-      if (!user) {
-        user = await SELECT.one.from(Users).where({
-          username: email,
-          password
-        });
-      }
-
-      if (!user) {
-        return reject(req, 'Identifiants incorrects.', 401);
-      }
-
-      if (!user.active) {
-        return reject(req, 'Utilisateur inactif.', 403);
-      }
-
-      return {
-        ID: user.ID,
-        email: user.email,
-        username: user.username,
-        fullName: user.fullName,
-        role: user.role,
-        active: user.active
-      };
-    });
+    registerLoginHandler(this, { Users }, { reject });
 
     /* ===================================================== */
     /* TOURS — BEFORE CREATE / UPDATE                        */
@@ -914,7 +851,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       return SELECT.one.from(Tours).where({ ID: tourID });
     });
 
-    this.on('reject', 'Tours', async (req) => {
+    this.on('rejectTourDecision', 'Tours', async (req) => {
       const tourID = req.params?.[0]?.ID;
       const reason = req.data.reason;
 
@@ -1491,15 +1428,25 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
     this.on('getSupervisorStats', async () => {
       const tours = await SELECT.from(Tours).columns('status');
-      const roadmaps = await SELECT.from(Roadmaps).columns('status');
+      const roadmaps = await SELECT.from(Roadmaps).columns('status', 'integrationStatus');
+      const createdRoadmaps = roadmaps.filter((roadmap) => isCreatedRoadmapStatus(roadmap.status)).length;
+      const validatedRoadmaps = roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length;
+      const rejectedRoadmaps = roadmaps.filter((roadmap) => isRejectedRoadmapStatus(roadmap.status)).length;
+      const integratedRoadmaps = roadmaps.filter((roadmap) => {
+        return String(roadmap.integrationStatus || '').trim().toUpperCase() === 'INTEGRATED';
+      }).length;
 
       return {
         totalTours: tours.length,
         pendingValidation: tours.filter((tour) => isCreatedStatus(tour.status)).length,
         acceptedTours: tours.filter((tour) => isValidatedStatus(tour.status)).length,
         rejectedTours: tours.filter((tour) => isRejectedStatus(tour.status)).length,
-        activeRoadmaps: roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length,
-        totalRoadmaps: roadmaps.length
+        totalRoadmaps: roadmaps.length,
+        createdRoadmaps,
+        validatedRoadmaps,
+        rejectedRoadmaps,
+        integratedRoadmaps,
+        activeRoadmaps: validatedRoadmaps
       };
     });
 

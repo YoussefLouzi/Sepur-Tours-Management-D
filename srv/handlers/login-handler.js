@@ -10,8 +10,8 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
     const { reject } = helpers;
 
     srv.on("login", async (req) => {
-        const email = req.data.email || req.data.username;
-        const { password } = req.data;
+        const email = String(req.data.email || req.data.username || "").trim().toLowerCase();
+        const password = String(req.data.password || "");
 
         if (!email || !password) {
             return reject(req, "E-mail et mot de passe requis.");
@@ -20,8 +20,8 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
         let user = await SELECT.one
             .from(Users)
             .where({
-                email: email,
-                password: password
+                email,
+                password
             });
 
         if (!user) {
@@ -29,7 +29,7 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
                 .from(Users)
                 .where({
                     username: email,
-                    password: password
+                    password
                 });
         }
 
@@ -46,7 +46,7 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
             email: user.email,
             username: user.username,
             fullName: user.fullName,
-            role: user.role,
+            role: String(user.role || "").trim().toUpperCase(),
             active: user.active
         };
     });
