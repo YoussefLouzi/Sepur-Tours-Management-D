@@ -6,8 +6,6 @@ service RouteManagementService {
     /* ENTITIES                                              */
     /* ===================================================== */
 
-    entity Users as projection on db.Users;
-
     entity Clients as projection on db.Clients;
 
     entity Vehicles as projection on db.Vehicles;

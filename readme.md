@@ -1,69 +1,73 @@
-# SEPUR — Gestion des tournées de collecte et roadmaps
+# SEPUR - Gestion des tournees et feuilles de route
 
-Application **SAP CAP / Fiori** pour la digitalisation des tournées de collecte et la gestion des roadmaps (PFE I59).
+Application SAP CAP / Fiori pour la digitalisation des tournees de collecte et
+la gestion des feuilles de route.
 
-## Prérequis
+## Demarrage local
 
-- Node.js 18+
-- `@sap/cds-dk` (installé via `npm install`)
-
-## Démarrage local (SQLite)
+Prerequis: Node.js 20+ et les dependances installees avec `npm install`.
+Le build MTAR demande aussi GNU Make; SAP Business Application Studio et la
+plupart des environnements Linux le fournissent. Sous Windows, installez Make
+ou executez le build depuis BAS.
 
 ```bash
-npm install
-npm add @cap-js/sqlite -D
-cds deploy --to sqlite
-cds watch
+npx cds deploy --to sqlite
+npm run watch-home
 ```
 
-> **Windows :** si `better-sqlite3` échoue au déploiement, exécutez `npm rebuild better-sqlite3` (nécessite les outils C++ Visual Studio) ou utilisez **SAP Business Application Studio**, où SQLite est préconfiguré.
-
-Applications disponibles (après `cds watch`) :
+Applications disponibles apres `cds watch`:
 
 | Application | URL |
-|-------------|-----|
+|---|---|
 | Accueil | http://localhost:4004/home/webapp/index.html |
 | Connexion | http://localhost:4004/login/webapp/index.html |
 | Dashboard Planificateur | http://localhost:4004/planner-dashboard/webapp/index.html |
 | Dashboard Superviseur | http://localhost:4004/supervisor-dashboard/webapp/index.html |
-| Tournées (Fiori Elements) | http://localhost:4004/tours/webapp/index.html |
-| Roadmaps (Fiori Elements) | http://localhost:4004/roadmaps/webapp/index.html |
+| Tournees | http://localhost:4004/tours/webapp/index.html |
+| Feuilles de route | http://localhost:4004/roadmaps/webapp/index.html |
 | API OData | http://localhost:4004/odata/v4/route-management/ |
 
 ## Parcours utilisateur
 
-1. L'utilisateur arrive sur l'accueil public `/home/webapp/index.html`.
-2. Les tuiles protégées redirigent vers `/login/webapp/index.html?redirect=...` si aucune session n'est active.
-3. Après connexion, l'utilisateur revient vers la page demandée ou vers son dashboard par défaut.
-4. Le planificateur accède aux dashboards de planification, tournées et roadmaps.
-5. Le superviseur accède aux dashboards de supervision, validation des tournées et validation des roadmaps.
+1. L'utilisateur arrive sur l'accueil public.
+2. Une tuile protegee redirige vers la connexion en conservant la destination.
+3. Le backend verifie les identifiants et l'etat actif du compte.
+4. Le planificateur arrive dans son dashboard de planification.
+5. Le superviseur arrive dans son dashboard de validation.
 
-## Séparation front / back
+## Comptes de demonstration
 
-- `db/` contient le modèle métier CDS et les données CSV.
-- `srv/route-management-service.cds` expose le contrat OData, les actions et les types de retour.
-- `srv/route-management-service.js` porte les règles métier : statuts, validation, rejet, génération de codes, statistiques et feuilles de route.
-- `srv/handlers/login-handler.js` isole la logique d'authentification applicative.
-- `app/` contient uniquement les applications UI5/Fiori : navigation, affichage, messages utilisateur et appels OData.
-- Les règles métier critiques restent vérifiées côté backend même si le front masque ou désactive certaines actions.
+| Utilisateur | Mot de passe | Role |
+|---|---|---|
+| `youssef.louzi.plan@sepur.com` | `plan123` | PLANIFICATEUR |
+| `youssef.louzi.sup@sepur.com` | `sup123` | SUPERVISEUR |
 
-## Comptes de test
-
-| Utilisateur | Mot de passe | Rôle |
-|-------------|--------------|------|
-| `oussama.benkacem.plan@sepur.com` | `plan123` | PLANIFICATEUR |
-| `oussama.benkacem.sup@sepur.com` | `sup123` | SUPERVISEUR |
+Les mots de passe sont stockes en base sous forme de hash scrypt. L'entite
+`Users` n'est pas exposee par l'API OData.
 
 ## Architecture
 
-```
-db/          Modèle CDS + données CSV
-srv/         RouteManagementService (CDS + logique métier JS)
-app/         login, planner-dashboard, supervisor-dashboard, tours, roadmaps
+```text
+app/         Frontend UI5/Fiori uniquement
+srv/         API OData, controles et regles metier
+db/          Modele CDS et donnees initiales
+approuter/   Point d'entree du deploiement Cloud Foundry
 ```
 
-## Production BTP (futur)
+Les controleurs presents dans `app/` sont des controleurs UI5 de presentation,
+pas des controleurs backend. La description complete est disponible dans
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-- `mta.yaml` et `xs-security.json` conservés pour déploiement Cloud Foundry
-- Basculer `cds.requires.db.kind` vers `hana` en production
-- Remplacer l’action `login` par **XSUAA** et rôles IAS
+## Build et deploiement BTP
+
+```bash
+npm run build
+cf deploy mta_archives/archive.mtar --retries 1
+```
+
+Le `mta.yaml` construit la base HANA, le service CAP, les huit interfaces et
+l'Application Router. `approuter/xs-app.json` centralise les routes frontend,
+SAPUI5 et OData.
+
+Pour une production reelle, remplacer la session applicative de demonstration
+par XSUAA/IAS et mapper les roles Planificateur et Superviseur.

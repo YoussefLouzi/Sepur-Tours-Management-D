@@ -12,7 +12,7 @@ using {
 entity Users : cuid {
     email    : String(120);
     username : String(100);
-    password : String(100);
+    password : String(255); // scrypt$<salt>$<hash>
     fullName : String(200);
     role     : String(30);     // PLANIFICATEUR | SUPERVISEUR
     active   : Boolean default true;

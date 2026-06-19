@@ -14,13 +14,10 @@ annotate service.Tours with {
     tourDate        @title : 'Date de collecte';
     zone            @title : 'Zone de collecte';
     collectionType  @title : 'Matériau / Type de déchet';
-    client_ID       @title : 'Client';
+    client          @title : 'Client';
     status          @title : 'Statut';
     quantity        @title : 'Quantité à collecter';
     unitOfMeasure   @title : 'Unité';
-
-    driver_ID       @title : 'Ressource humaine';
-    vehicle_ID      @title : 'Ressource matérielle';
 
     driver          @title : 'Ressource humaine';
     vehicle         @title : 'Ressource matérielle';

@@ -1,132 +1,150 @@
 _schema-version: 3.3.0
 ID: Sepur_tours_management
-description: A simple CAP project.
-version: 1.0.0
+description: Gestion des tournees et feuilles de route SEPUR
+version: 1.1.0
+
 modules:
   - name: Sepur_tours_management-srv
     type: nodejs
     path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      instances: 1
+      memory: 512M
+    build-parameters:
+      builder: npm-ci
     requires:
       - name: Sepur_tours_management-db
     provides:
       - name: srv-api
         properties:
           srv-url: ${default-url}
-    parameters:
-      buildpack: nodejs_buildpack
-      instances: 1
-    build-parameters:
-      builder: npm-ci
+
   - name: Sepur_tours_management-db-deployer
     type: hdb
     path: gen/db
-    requires:
-      - name: Sepur_tours_management-db
     parameters:
       buildpack: nodejs_buildpack
-  - name: Sepur_tours_management-app-content
-    type: com.sap.application.content
-    path: .
     requires:
-      - name: Sepur_tours_management-repo-host
-        parameters:
-          content-target: true
+      - name: Sepur_tours_management-db
+
+  - name: Sepur_tours_management-approuter
+    type: nodejs
+    path: approuter
+    parameters:
+      buildpack: nodejs_buildpack
+      disk-quota: 256M
+      memory: 256M
+      keep-existing-routes: true
     build-parameters:
-      build-result: resources
+      builder: npm-ci
       requires:
-        - artifacts:
-            - nstours.zip
-          name: nstours
-          target-path: resources/
-        - artifacts:
-            - sepursupervisorsupervisortours.zip
-          name: sepursupervisorsupervisortours
-          target-path: resources/
-        - artifacts:
-            - sepursupervisorsupervisorroadmaps.zip
-          name: sepursupervisorsupervisorroadmaps
-          target-path: resources/
-        - artifacts:
-            - sepursupervisorsupervisordashboardfiori.zip
-          name: sepursupervisorsupervisordashboardfiori
-          target-path: resources/
-  - name: nstours
+        - name: sepur-home-ui
+          artifacts: ["*"]
+          target-path: resources/home
+        - name: sepur-login-ui
+          artifacts: ["*"]
+          target-path: resources/login
+        - name: sepur-planner-dashboard-ui
+          artifacts: ["*"]
+          target-path: resources/planner-dashboard
+        - name: sepur-supervisor-dashboard-ui
+          artifacts: ["*"]
+          target-path: resources/supervisor-dashboard
+        - name: sepur-tours-ui
+          artifacts: ["*"]
+          target-path: resources/tours
+        - name: sepur-roadmaps-ui
+          artifacts: ["*"]
+          target-path: resources/roadmaps
+        - name: sepur-supervisor-tours-ui
+          artifacts: ["*"]
+          target-path: resources/supervisor-tours
+        - name: sepur-supervisor-roadmaps-ui
+          artifacts: ["*"]
+          target-path: resources/supervisor-roadmaps
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: route-management-api
+          url: ~{srv-url}
+          forwardAuthToken: false
+      - name: Sepur_tours_management-destination-service
+
+  - name: sepur-home-ui
+    type: html5
+    path: app/home
+    build-parameters: &ui-build
+      builder: custom
+      commands: []
+      build-result: webapp
+      supported-platforms: []
+
+  - name: sepur-login-ui
+    type: html5
+    path: app/login
+    build-parameters: *ui-build
+
+  - name: sepur-planner-dashboard-ui
+    type: html5
+    path: app/planner-dashboard
+    build-parameters: *ui-build
+
+  - name: sepur-supervisor-dashboard-ui
+    type: html5
+    path: app/supervisor-dashboard
+    build-parameters: *ui-build
+
+  - name: sepur-tours-ui
     type: html5
     path: app/tours
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
-      supported-platforms:
-        []
-  - name: sepursupervisorsupervisortours
+    build-parameters: *ui-build
+
+  - name: sepur-roadmaps-ui
+    type: html5
+    path: app/roadmaps
+    build-parameters: *ui-build
+
+  - name: sepur-supervisor-tours-ui
     type: html5
     path: app/supervisor-tours
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
-      supported-platforms:
-        []
-  - name: sepursupervisorsupervisorroadmaps
+    build-parameters: *ui-build
+
+  - name: sepur-supervisor-roadmaps-ui
     type: html5
     path: app/supervisor-roadmaps
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
-      supported-platforms:
-        []
-  - name: sepursupervisorsupervisordashboardfiori
-    type: html5
-    path: app/supervisor-dashboard-fiori
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm install
-        - npm run build:cf
-      supported-platforms:
-        []
+    build-parameters: *ui-build
+
 resources:
   - name: Sepur_tours_management-db
     type: com.sap.xs.hdi-container
     parameters:
       service: hana
       service-plan: hdi-shared
-  - name: Sepur_tours_management-repo-host
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: html5-apps-repo
-      service-name: Sepur_tours_management-html5-service
-      service-plan: app-host
+
   - name: Sepur_tours_management-destination-service
     type: org.cloudfoundry.managed-service
     parameters:
+      service: destination
+      service-plan: lite
+      service-name: Sepur_tours_management-destination-service
       config:
         HTML5Runtime_enabled: false
         init_data:
           instance:
             destinations:
-              - Authentication: NoAuthentication
-                Name: ui5
-                ProxyType: Internet
+              - Name: ui5
                 Type: HTTP
+                ProxyType: Internet
+                Authentication: NoAuthentication
                 URL: https://ui5.sap.com
             existing_destinations_policy: update
         version: 1.0.0
-      service: destination
-      service-name: Sepur_tours_management-destination-service
-      service-plan: lite
+
 parameters:
-  deploy_mode: html5-repo
   enable-parallel-deployments: true
+
 build-parameters:
   before-all:
     - builder: custom

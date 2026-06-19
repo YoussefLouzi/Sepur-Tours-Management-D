@@ -1,5 +1,7 @@
 "use strict";
 
+const crypto = require("crypto");
+
 /**
  * Handler d'authentification.
  * Ce fichier contient uniquement la logique du login.
@@ -19,21 +21,15 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
 
         let user = await SELECT.one
             .from(Users)
-            .where({
-                email,
-                password
-            });
+            .where({ email });
 
         if (!user) {
             user = await SELECT.one
                 .from(Users)
-                .where({
-                    username: email,
-                    password
-                });
+                .where({ username: email });
         }
 
-        if (!user) {
+        if (!user || !verifyPassword(password, user.password)) {
             return reject(req, "Identifiants incorrects.", 401);
         }
 
@@ -51,3 +47,20 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
         };
     });
 };
+
+function verifyPassword(password, storedPassword) {
+    const parts = String(storedPassword || "").split("$");
+
+    if (parts.length !== 3 || parts[0] !== "scrypt") {
+        return false;
+    }
+
+    try {
+        const expected = Buffer.from(parts[2], "hex");
+        const actual = crypto.scryptSync(password, parts[1], expected.length);
+
+        return expected.length > 0 && crypto.timingSafeEqual(actual, expected);
+    } catch (error) {
+        return false;
+    }
+}
