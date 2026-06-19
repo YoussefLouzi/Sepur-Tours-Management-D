@@ -5,7 +5,7 @@ la gestion des feuilles de route.
 
 ## Demarrage local
 
-Prerequis: Node.js 20+ et les dependances installees avec `npm install`.
+Prerequis: Node.js 22.18+ et les dependances installees avec `npm install`.
 Le build MTAR demande aussi GNU Make; SAP Business Application Studio et la
 plupart des environnements Linux le fournissent. Sous Windows, installez Make
 ou executez le build depuis BAS.
@@ -48,15 +48,18 @@ Les mots de passe sont stockes en base sous forme de hash scrypt. L'entite
 ## Architecture
 
 ```text
-app/         Frontend UI5/Fiori uniquement
+frontend/    Frontend UI5/Fiori uniquement
 srv/         API OData, controles et regles metier
 db/          Modele CDS et donnees initiales
 approuter/   Point d'entree du deploiement Cloud Foundry
 ```
 
-Les controleurs presents dans `app/` sont des controleurs UI5 de presentation,
+Les controleurs presents dans `frontend/` sont des controleurs UI5 de presentation,
 pas des controleurs backend. La description complete est disponible dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+Le guide complet BAS et Cloud Foundry est disponible dans
+[`docs/BAS_CLOUD_FOUNDRY_DEPLOYMENT.md`](docs/BAS_CLOUD_FOUNDRY_DEPLOYMENT.md).
 
 ## Build et deploiement BTP
 
@@ -68,6 +71,10 @@ cf deploy mta_archives/archive.mtar --retries 1
 Le `mta.yaml` construit la base HANA, le service CAP, les huit interfaces et
 l'Application Router. `approuter/xs-app.json` centralise les routes frontend,
 SAPUI5 et OData.
+
+Apres deploiement, l'URL suivante ouvre directement la page d'accueil:
+
+`https://b3754953trial-dev-sepur-tours-management-approuter.cfapps.us10-001.hana.ondemand.com`
 
 Pour une production reelle, remplacer la session applicative de demonstration
 par XSUAA/IAS et mapper les roles Planificateur et Superviseur.

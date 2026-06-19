@@ -2,6 +2,9 @@
   "name": "Sepur_tours_management",
   "version": "1.0.0",
   "description": "Digitalisation des tournées de collecte et gestion des roadmaps — SAP CAP/Fiori",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "dependencies": {
     "@sap/cds": "^9"
   },
@@ -30,19 +33,22 @@
   },
   "private": true,
   "workspaces": [
-    "app/*"
+    "frontend/*"
   ],
   "sapux": [
-    "app/login",
-    "app/planner-dashboard",
-    "app/supervisor-dashboard",
-    "app/tours",
-    "app/roadmaps",
-    "app/supervisor-tours",
-    "app/supervisor-roadmaps",
-    "app/supervisor-dashboard-fiori"
+    "frontend/login",
+    "frontend/planner-dashboard",
+    "frontend/supervisor-dashboard",
+    "frontend/tours",
+    "frontend/roadmaps",
+    "frontend/supervisor-tours",
+    "frontend/supervisor-roadmaps",
+    "frontend/supervisor-dashboard-fiori"
   ],
   "cds": {
+    "folders": {
+      "app": "frontend"
+    },
     "requires": {
       "[development]": {
         "db": {

@@ -135,12 +135,15 @@ service RouteManagementService {
     }
 
     type PlannerStats {
-        totalTours    : Integer;
-        draftTours    : Integer;
-        pendingTours  : Integer;
-        acceptedTours : Integer;
-        rejectedTours : Integer;
-        totalRoadmaps : Integer;
+        totalTours        : Integer;
+        draftTours        : Integer;
+        pendingTours      : Integer;
+        acceptedTours     : Integer;
+        rejectedTours     : Integer;
+        totalRoadmaps     : Integer;
+        createdRoadmaps   : Integer;
+        validatedRoadmaps : Integer;
+        rejectedRoadmaps  : Integer;
     }
 
     type SupervisorStats {
@@ -154,6 +157,10 @@ service RouteManagementService {
         rejectedRoadmaps   : Integer;
         integratedRoadmaps : Integer;
         activeRoadmaps     : Integer;
+        totalDecisions     : Integer;
+        acceptedDecisions  : Integer;
+        rejectedDecisions  : Integer;
+        salesOrdersCount   : Integer;
     }
 
     type TourDetails {

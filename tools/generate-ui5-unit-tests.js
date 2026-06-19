@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const appsRoot = path.join(__dirname, "..", "app");
+const appsRoot = path.join(__dirname, "..", "frontend");
 
 function toUnixPath(value) {
     return value.replace(/\\/g, "/");
@@ -200,7 +200,7 @@ function processApp(appName) {
 
 function main() {
     if (!fs.existsSync(appsRoot)) {
-        console.error("Dossier app introuvable.");
+        console.error("Dossier frontend introuvable.");
         process.exit(1);
     }
 

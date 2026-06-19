@@ -1,5 +1,9 @@
 const cds = require('@sap/cds');
 const registerLoginHandler = require('./handlers/login-handler');
+const {
+  registerErrorHandler,
+  rejectRequest: reject
+} = require('./lib/error-handler');
 
 const TOUR_STATUS = {
   CREATED: 'CREATED',
@@ -12,11 +16,6 @@ const ROADMAP_STATUS = {
   VALIDATED: 'VALIDATED',
   REJECTED: 'REJECTED'
 };
-
-function reject(req, message, status = 400) {
-  return req.reject(status, message);
-}
-
 
 /* ===================================================== */
 /* STATUS HELPERS                                        */
@@ -37,22 +36,6 @@ function normalizeTourStatus(status) {
 
   return TOUR_STATUS.CREATED;
 }
-
-// function normalizeRoadmapStatus(status) {
-//   if (['DRAFT', 'PENDING', 'CREATED'].includes(status)) {
-//     return ROADMAP_STATUS.CREATED;
-//   }
-
-//   if (['ACTIVE', 'VALIDATED', 'COMPLETED'].includes(status)) {
-//     return ROADMAP_STATUS.VALIDATED;
-//   }
-
-//   if (['REJECTED', 'CANCELLED'].includes(status)) {
-//     return ROADMAP_STATUS.REJECTED;
-//   }
-
-//   return ROADMAP_STATUS.CREATED;
-// }
 
 function normalizeRoadmapStatus(status) {
   const normalized = String(status || '')
@@ -179,9 +162,10 @@ function syncRoadmapPayload(data) {
     }
   }
 
-  if (data.month && data.year && !data.startDate) {
-    const month = String(data.month).padStart(2, '0');
-    data.startDate = `${data.year}-${month}-01`;
+  if (data.month && data.year) {
+    const range = monthRange(data.year, data.month);
+    data.startDate = range.startDate;
+    data.endDate = range.endDate;
   }
 }
 
@@ -245,6 +229,8 @@ function escapeHtml(value) {
 
 module.exports = class RouteManagementService extends cds.ApplicationService {
   init() {
+    registerErrorHandler(this);
+
     const {
       Users,
       Tours,
@@ -334,37 +320,43 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     this.before('CREATE', 'Tours', async (req) => {
   syncTourPayload(req.data);
 
-  if (!req.data.tourCode) {
-    req.data.tourCode = await nextCode('Tours', 'tourCode', 'TOUR');
-  }
+  const code = await nextCode('Tours', 'tourCode', 'TOUR');
+  req.data.tourCode = code;
+  req.data.tourNumber = code;
+  req.data.status = TOUR_STATUS.CREATED;
+  req.data.rejectionReason = null;
 
-  if (!req.data.tourNumber) {
-    req.data.tourNumber = req.data.tourCode;
-  }
-
-  if (!req.data.status) {
-    req.data.status = TOUR_STATUS.CREATED;
-  }
-
-  if (req.data.quantity !== undefined && req.data.quantity !== null) {
-    const quantity = Number(req.data.quantity);
-
-    if (Number.isNaN(quantity) || quantity <= 0) {
-      return reject(req, 'La quantité doit être supérieure à zéro.');
-    }
+  const validationError = validateTourPayload(req, req.data);
+  if (validationError) {
+    return validationError;
   }
 });
+
+    this.before('SAVE', 'Tours', async (req) => {
+      syncTourPayload(req.data);
+
+      const validationError = validateTourPayload(req, req.data);
+      if (validationError) {
+        return validationError;
+      }
+
+      if (!req.data.tourCode) {
+        const code = await nextCode('Tours', 'tourCode', 'TOUR');
+        req.data.tourCode = code;
+        req.data.tourNumber = code;
+      }
+
+      req.data.status = TOUR_STATUS.CREATED;
+      req.data.rejectionReason = null;
+    });
     
 
       this.before('UPDATE', 'Tours', async (req) => {
   syncTourPayload(req.data);
 
-  if (req.data.quantity !== undefined && req.data.quantity !== null) {
-    const quantity = Number(req.data.quantity);
-
-    if (Number.isNaN(quantity) || quantity <= 0) {
-      return reject(req, 'La quantité doit être supérieure à zéro.');
-    }
+  const validationError = validateTourPayload(req, req.data, true);
+  if (validationError) {
+    return validationError;
   }
 
   const id = req.data.ID || req.params?.[0]?.ID;
@@ -413,8 +405,6 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
   });
 
   const allowedFields = new Set([
-    'tourCode',
-    'tourNumber',
     'tourDate',
     'collectionDate',
     'zone',
@@ -423,9 +413,6 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     'remarks',
     'quantity',
     'unitOfMeasure',
-    'status',
-    'rejectionReason',
-
     'client_ID',
     'client',
 
@@ -440,13 +427,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     'assignedHumanResource_ID',
     'assignedHumanResource',
     'assignedMaterialResource_ID',
-    'assignedMaterialResource',
-
-    'roadmap_ID',
-    'roadmap',
-    'createdByUser_ID',
-    'createdByUser',
-    'updatedAt'
+    'assignedMaterialResource'
   ]);
 
   const forbidden = keys.filter((key) => !allowedFields.has(key));
@@ -506,31 +487,46 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     this.before('CREATE', 'Roadmaps', async (req) => {
   syncRoadmapPayload(req.data);
 
-  if (!req.data.roadmapNumber && !req.data.roadmapCode) {
-    const code = await nextCode('Roadmaps', 'roadmapNumber', 'RM');
-    req.data.roadmapNumber = code;
-    req.data.roadmapCode = code;
-  }
+  const code = await nextCode('Roadmaps', 'roadmapNumber', 'RM');
+  req.data.roadmapNumber = code;
+  req.data.roadmapCode = code;
+  req.data.status = ROADMAP_STATUS.CREATED;
+  req.data.integrationStatus = 'PENDING';
+  req.data.rejectionReason = null;
 
-  if (req.data.roadmapNumber && !req.data.roadmapCode) {
-    req.data.roadmapCode = req.data.roadmapNumber;
-  }
-
-  if (req.data.roadmapCode && !req.data.roadmapNumber) {
-    req.data.roadmapNumber = req.data.roadmapCode;
-  }
-
-  if (!req.data.status) {
-    req.data.status = ROADMAP_STATUS.CREATED;
-  }
-
-  if (!req.data.integrationStatus) {
-    req.data.integrationStatus = 'PENDING';
+  const validationError = validateRoadmapPayload(req, req.data);
+  if (validationError) {
+    return validationError;
   }
 });
 
+    this.before('SAVE', 'Roadmaps', async (req) => {
+      syncRoadmapPayload(req.data);
+
+      const validationError = validateRoadmapPayload(req, req.data);
+      if (validationError) {
+        return validationError;
+      }
+
+      if (!req.data.roadmapCode) {
+        const code = await nextCode('Roadmaps', 'roadmapNumber', 'RM');
+        req.data.roadmapNumber = code;
+        req.data.roadmapCode = code;
+      }
+
+      req.data.status = ROADMAP_STATUS.CREATED;
+      req.data.integrationStatus = 'PENDING';
+      req.data.rejectionReason = null;
+    });
+
     this.before('UPDATE', 'Roadmaps', async (req) => {
       syncRoadmapPayload(req.data);
+
+      const validationError = validateRoadmapPayload(req, req.data, true);
+      if (validationError) {
+        return validationError;
+      }
+
       const id = req.data.ID || req.params?.[0]?.ID;
 
       if (!id) {
@@ -562,6 +558,8 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'tourDriverFirstName',
         'tourDriverLastName',
         'tourVehicleRegistration',
+        'startDate',
+        'endDate',
         'assignedTours',
         'steps',
         'createdAt',
@@ -575,25 +573,13 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       });
 
       const allowedFields = new Set([
-  'roadmapCode',
-  'roadmapNumber',
-  'startDate',
-  'endDate',
-  'status',
-  'rejectionReason',
-
   'client_ID',
   'client',
   'month',
   'year',
-  'integrationStatus',
-  'sapSalesOrder',
-  'integrationDate',
-  'integrationMessage',
 
   'tour_ID',
-  'tour',
-  'updatedAt'
+  'tour'
 ]);
 
       const forbidden = keys.filter((key) => !allowedFields.has(key));
@@ -609,9 +595,12 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       if (normalizedStatus === ROADMAP_STATUS.REJECTED) {
         const businessFields = [
-          'roadmapCode',
           'startDate',
           'endDate',
+          'client_ID',
+          'client',
+          'month',
+          'year',
           'tour_ID',
           'tour'
         ];
@@ -1351,17 +1340,32 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         return reject(req, 'Une roadmap existe déjà pour cette tournée.');
       }
 
+      if (!tour.client_ID) {
+        return reject(req, 'La tournée doit avoir un client avant de créer une feuille de route.', 400, {
+          code: 'TOUR_CLIENT_REQUIRED',
+          target: 'client'
+        });
+      }
+
       return cds.tx(req, async () => {
         const roadmapCode = await nextCode('Roadmaps', 'roadmapCode', 'RM');
         const roadmapID = cds.utils.uuid();
         const startDate = tour.tourDate || new Date().toISOString().slice(0, 10);
+        const roadmapDate = new Date(`${startDate}T00:00:00Z`);
+        const month = roadmapDate.getUTCMonth() + 1;
+        const year = roadmapDate.getUTCFullYear();
 
         await INSERT.into(Roadmaps).entries({
           ID: roadmapID,
           roadmapCode,
+          roadmapNumber: roadmapCode,
           status: ROADMAP_STATUS.CREATED,
+          integrationStatus: 'PENDING',
           startDate,
           endDate: startDate,
+          month,
+          year,
+          client_ID: tour.client_ID,
           rejectionReason: null,
           tour_ID: tourID
         });
@@ -1415,6 +1419,9 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       const tours = await SELECT.from(Tours).columns('status').where(where);
       const roadmaps = await SELECT.from(Roadmaps).columns('status');
+      const createdRoadmaps = roadmaps.filter((roadmap) => isCreatedRoadmapStatus(roadmap.status)).length;
+      const validatedRoadmaps = roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length;
+      const rejectedRoadmaps = roadmaps.filter((roadmap) => isRejectedRoadmapStatus(roadmap.status)).length;
 
       return {
         totalTours: tours.length,
@@ -1422,19 +1429,30 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         pendingTours: tours.filter((tour) => isCreatedStatus(tour.status)).length,
         acceptedTours: tours.filter((tour) => isValidatedStatus(tour.status)).length,
         rejectedTours: tours.filter((tour) => isRejectedStatus(tour.status)).length,
-        totalRoadmaps: roadmaps.length
+        totalRoadmaps: roadmaps.length,
+        createdRoadmaps,
+        validatedRoadmaps,
+        rejectedRoadmaps
       };
     });
 
     this.on('getSupervisorStats', async () => {
       const tours = await SELECT.from(Tours).columns('status');
-      const roadmaps = await SELECT.from(Roadmaps).columns('status', 'integrationStatus');
+      const roadmaps = await SELECT.from(Roadmaps).columns('status', 'integrationStatus', 'sapSalesOrder');
+      const decisions = await SELECT.from(DecisionHistories).columns('decision');
       const createdRoadmaps = roadmaps.filter((roadmap) => isCreatedRoadmapStatus(roadmap.status)).length;
       const validatedRoadmaps = roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length;
       const rejectedRoadmaps = roadmaps.filter((roadmap) => isRejectedRoadmapStatus(roadmap.status)).length;
       const integratedRoadmaps = roadmaps.filter((roadmap) => {
         return String(roadmap.integrationStatus || '').trim().toUpperCase() === 'INTEGRATED';
       }).length;
+      const acceptedDecisions = decisions.filter((decision) => {
+        return ['ACCEPTED', 'VALIDATED'].includes(String(decision.decision || '').trim().toUpperCase());
+      }).length;
+      const rejectedDecisions = decisions.filter((decision) => {
+        return String(decision.decision || '').trim().toUpperCase() === 'REJECTED';
+      }).length;
+      const salesOrdersCount = roadmaps.filter((roadmap) => hasValue(roadmap.sapSalesOrder)).length;
 
       return {
         totalTours: tours.length,
@@ -1446,7 +1464,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         validatedRoadmaps,
         rejectedRoadmaps,
         integratedRoadmaps,
-        activeRoadmaps: validatedRoadmaps
+        activeRoadmaps: validatedRoadmaps,
+        totalDecisions: decisions.length,
+        acceptedDecisions,
+        rejectedDecisions,
+        salesOrdersCount
       };
     });
 
@@ -1505,3 +1527,95 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     return super.init();
   }
 };
+
+function hasValue(value) {
+  return value !== undefined && value !== null && String(value).trim() !== '';
+}
+
+function requireValues(req, fields) {
+  const missing = fields.find((field) => !hasValue(field.value));
+
+  if (!missing) {
+    return null;
+  }
+
+  return reject(req, `${missing.label} est obligatoire.`, 400, {
+    code: 'MANDATORY_FIELD_MISSING',
+    target: missing.target
+  });
+}
+
+function validateTourPayload(req, data, partial = false) {
+  const required = [
+    { target: 'tourDate', keys: ['tourDate', 'collectionDate'], label: 'La date de collecte', value: data.tourDate || data.collectionDate },
+    { target: 'zone', keys: ['zone'], label: 'La zone de collecte', value: data.zone },
+    { target: 'collectionType', keys: ['collectionType'], label: 'Le type de collecte', value: data.collectionType },
+    { target: 'client', keys: ['client', 'client_ID'], label: 'Le client', value: data.client_ID || data.client?.ID },
+    { target: 'quantity', keys: ['quantity'], label: 'La quantité', value: data.quantity },
+    { target: 'unitOfMeasure', keys: ['unitOfMeasure'], label: "L'unité", value: data.unitOfMeasure }
+  ];
+
+  const fields = partial
+    ? required.filter((field) => field.keys.some((key) => Object.prototype.hasOwnProperty.call(data, key)))
+    : required;
+
+  const requiredError = requireValues(req, fields);
+
+  if (requiredError) {
+    return requiredError;
+  }
+
+  if (data.quantity !== undefined && data.quantity !== null) {
+    const quantity = Number(data.quantity);
+
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      return reject(req, 'La quantité doit être supérieure à zéro.', 400, {
+        code: 'INVALID_QUANTITY',
+        target: 'quantity'
+      });
+    }
+  }
+
+  return null;
+}
+
+function validateRoadmapPayload(req, data, partial = false) {
+  const required = [
+    { target: 'client', keys: ['client', 'client_ID'], label: 'Le client', value: data.client_ID || data.client?.ID },
+    { target: 'month', keys: ['month'], label: 'Le mois', value: data.month },
+    { target: 'year', keys: ['year'], label: "L'année", value: data.year }
+  ];
+  const fields = partial
+    ? required.filter((field) => field.keys.some((key) => Object.prototype.hasOwnProperty.call(data, key)))
+    : required;
+
+  const requiredError = requireValues(req, fields);
+
+  if (requiredError) {
+    return requiredError;
+  }
+
+  if (data.month !== undefined) {
+    const month = Number(data.month);
+
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      return reject(req, 'Le mois doit être compris entre 1 et 12.', 400, {
+        code: 'INVALID_MONTH',
+        target: 'month'
+      });
+    }
+  }
+
+  if (data.year !== undefined) {
+    const year = Number(data.year);
+
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      return reject(req, "L'année doit être comprise entre 2000 et 2100.", 400, {
+        code: 'INVALID_YEAR',
+        target: 'year'
+      });
+    }
+  }
+
+  return null;
+}

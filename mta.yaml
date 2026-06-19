@@ -36,6 +36,8 @@ modules:
       disk-quota: 256M
       memory: 256M
       keep-existing-routes: true
+      routes:
+        - route: b3754953trial-dev-sepur-tours-management-approuter.cfapps.us10-001.hana.ondemand.com
     build-parameters:
       builder: npm-ci
       requires:
@@ -74,7 +76,7 @@ modules:
 
   - name: sepur-home-ui
     type: html5
-    path: app/home
+    path: frontend/home
     build-parameters: &ui-build
       builder: custom
       commands: []
@@ -83,37 +85,37 @@ modules:
 
   - name: sepur-login-ui
     type: html5
-    path: app/login
+    path: frontend/login
     build-parameters: *ui-build
 
   - name: sepur-planner-dashboard-ui
     type: html5
-    path: app/planner-dashboard
+    path: frontend/planner-dashboard
     build-parameters: *ui-build
 
   - name: sepur-supervisor-dashboard-ui
     type: html5
-    path: app/supervisor-dashboard
+    path: frontend/supervisor-dashboard
     build-parameters: *ui-build
 
   - name: sepur-tours-ui
     type: html5
-    path: app/tours
+    path: frontend/tours
     build-parameters: *ui-build
 
   - name: sepur-roadmaps-ui
     type: html5
-    path: app/roadmaps
+    path: frontend/roadmaps
     build-parameters: *ui-build
 
   - name: sepur-supervisor-tours-ui
     type: html5
-    path: app/supervisor-tours
+    path: frontend/supervisor-tours
     build-parameters: *ui-build
 
   - name: sepur-supervisor-roadmaps-ui
     type: html5
-    path: app/supervisor-roadmaps
+    path: frontend/supervisor-roadmaps
     build-parameters: *ui-build
 
 resources:
