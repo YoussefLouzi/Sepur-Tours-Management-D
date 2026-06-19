@@ -40,7 +40,7 @@ cd approuter && npm ci && cd ..
 La structure attendue est:
 
 ```text
-frontend/    Applications UI5 et Fiori
+app/         Applications UI5 et Fiori
 srv/         Service CAP, regles metier, erreurs et annotations
 db/          Modele CDS et donnees initiales
 approuter/   Point d'entree Cloud Foundry

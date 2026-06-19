@@ -76,7 +76,7 @@ modules:
 
   - name: sepur-home-ui
     type: html5
-    path: frontend/home
+    path: app/home
     build-parameters: &ui-build
       builder: custom
       commands: []
@@ -85,37 +85,37 @@ modules:
 
   - name: sepur-login-ui
     type: html5
-    path: frontend/login
+    path: app/login
     build-parameters: *ui-build
 
   - name: sepur-planner-dashboard-ui
     type: html5
-    path: frontend/planner-dashboard
+    path: app/planner-dashboard
     build-parameters: *ui-build
 
   - name: sepur-supervisor-dashboard-ui
     type: html5
-    path: frontend/supervisor-dashboard
+    path: app/supervisor-dashboard
     build-parameters: *ui-build
 
   - name: sepur-tours-ui
     type: html5
-    path: frontend/tours
+    path: app/tours
     build-parameters: *ui-build
 
   - name: sepur-roadmaps-ui
     type: html5
-    path: frontend/roadmaps
+    path: app/roadmaps
     build-parameters: *ui-build
 
   - name: sepur-supervisor-tours-ui
     type: html5
-    path: frontend/supervisor-tours
+    path: app/supervisor-tours
     build-parameters: *ui-build
 
   - name: sepur-supervisor-roadmaps-ui
     type: html5
-    path: frontend/supervisor-roadmaps
+    path: app/supervisor-roadmaps
     build-parameters: *ui-build
 
 resources:

@@ -1,0 +1,127 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    controllerName="sepur.login.controller.Login"
+    displayBlock="true">
+
+    <App>
+        <Page class="loginPage">
+            <customHeader>
+                <OverflowToolbar class="loginShellBar">
+                    <Button
+                        icon="sap-icon://nav-back"
+                        type="Transparent"
+                        tooltip="Retour à l'accueil"
+                        press=".onBackHome" />
+                    <Avatar
+                        initials="SP"
+                        displayShape="Square"
+                        displaySize="XS"
+                        backgroundColor="Accent6"
+                        class="loginBrandAvatar" />
+                    <Title text="SEPUR" level="H4" class="loginShellTitle" />
+                    <ToolbarSpacer />
+                    <ObjectStatus
+                        text="Connexion sécurisée"
+                        icon="sap-icon://locked"
+                        state="Success" />
+                </OverflowToolbar>
+            </customHeader>
+
+            <content>
+                <VBox class="loginShell" alignItems="Center" justifyContent="Center">
+                    <VBox class="loginPanel">
+                        <VBox class="loginHeader">
+                            <ObjectStatus
+                                text="Espace collaborateur"
+                                icon="sap-icon://employee"
+                                state="Information" />
+                            <Title
+                                text="Se connecter"
+                                level="H1"
+                                class="loginTitle" />
+                            <Text
+                                text="Accédez aux fonctions correspondant à votre rôle SEPUR."
+                                class="loginSubtitle" />
+                        </VBox>
+
+                        <VBox class="loginForm">
+                            <Label
+                                text="E-mail professionnel"
+                                labelFor="inpUsername"
+                                required="true"
+                                class="loginLabel" />
+                            <Input
+                                id="inpUsername"
+                                value="{/username}"
+                                type="Email"
+                                placeholder="prenom.nom@sepur.com"
+                                width="100%"
+                                class="loginInput" />
+
+                            <Label
+                                text="Mot de passe"
+                                labelFor="inpPassword"
+                                required="true"
+                                class="loginLabel passwordLabel" />
+                            <Input
+                                id="inpPassword"
+                                type="Password"
+                                value="{/password}"
+                                placeholder="Saisissez votre mot de passe"
+                                width="100%"
+                                submit=".onLogin"
+                                showValueHelp="true"
+                                valueHelpIconSrc="sap-icon://show"
+                                valueHelpRequest=".onTogglePasswordVisibility"
+                                class="loginInput" />
+
+                            <HBox
+                                justifyContent="SpaceBetween"
+                                alignItems="Center"
+                                class="loginOptions"
+                                wrap="Wrap">
+                                <CheckBox
+                                    id="chkRemember"
+                                    text="Rester connecté"
+                                    selected="false" />
+                                <Link
+                                    text="Mot de passe oublié ?"
+                                    press=".onForgotPassword" />
+                            </HBox>
+
+                            <MessageStrip
+                                id="msgError"
+                                text=""
+                                type="Error"
+                                visible="false"
+                                showIcon="true"
+                                showCloseButton="false"
+                                class="loginMessage" />
+
+                            <Button
+                                text="Se connecter"
+                                icon="sap-icon://log"
+                                type="Emphasized"
+                                press=".onLogin"
+                                width="100%"
+                                class="loginButton" />
+                        </VBox>
+
+                        <HBox class="loginFooter" alignItems="Center">
+                            <Avatar
+                                icon="sap-icon://shield"
+                                displaySize="XS"
+                                displayShape="Square"
+                                backgroundColor="Accent10" />
+                            <VBox class="loginFooterText">
+                                <Text text="Accès contrôlé par rôle" class="footerTitle" />
+                                <Text text="Planificateur ou Superviseur" class="footerText" />
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </content>
+        </Page>
+    </App>
+</mvc:View>

@@ -24,7 +24,7 @@ srv/                       API OData et regles metier
 db/                        Modele persistant et donnees initiales
 ```
 
-`frontend/` contient exclusivement le frontend UI5/Fiori. Les fichiers
+`app/` contient exclusivement le frontend UI5/Fiori. Les fichiers
 `*.controller.js` qui s'y trouvent sont des controleurs de presentation: ils
 gerent les clics, la navigation, les modeles de vue et les messages. Ils ne
 doivent contenir ni requete SQL, ni regle de statut, ni acces direct a la base.

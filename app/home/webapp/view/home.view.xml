@@ -1,0 +1,200 @@
+<mvc:View
+    controllerName="home.controller.home"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Page showHeader="false" class="sepurLaunchpadPage">
+        <VBox class="launchpadShell">
+            <OverflowToolbar class="shellBar">
+                <Avatar
+                    initials="SP"
+                    displayShape="Square"
+                    displaySize="XS"
+                    backgroundColor="Accent6"
+                    class="brandAvatar" />
+                <VBox class="shellBrand">
+                    <Title text="SEPUR" level="H4" class="shellTitle" />
+                    <Text text="Gestion des tournées" class="shellSubtitle" />
+                </VBox>
+                <ToolbarSpacer />
+                <ObjectStatus
+                    text="{home>/roleLabel}"
+                    state="{home>/roleState}"
+                    visible="{home>/isLoggedIn}"
+                    class="sessionStatus" />
+                <Button
+                    text="Se connecter"
+                    icon="sap-icon://log"
+                    type="Emphasized"
+                    visible="{= !${home>/isLoggedIn} }"
+                    press=".onLogin" />
+                <Button
+                    text="{home>/userDisplayName}"
+                    icon="sap-icon://customer"
+                    type="Transparent"
+                    visible="{home>/isLoggedIn}"
+                    press=".onProfileMenu"
+                    class="profileButton" />
+                <Button
+                    icon="sap-icon://grid"
+                    type="Transparent"
+                    tooltip="Applications"
+                    press=".onOpenAppMenu" />
+            </OverflowToolbar>
+
+            <VBox class="launchContent">
+                <VBox class="welcomeBand">
+                    <ObjectStatus
+                        text="Plateforme opérationnelle"
+                        icon="sap-icon://connected"
+                        state="Information" />
+                    <Title
+                        text="Gestion des tournées et feuilles de route"
+                        level="H1"
+                        class="welcomeTitle" />
+                    <Text
+                        text="Planifiez les collectes, affectez les ressources et suivez les validations dans un espace unique."
+                        class="welcomeText" />
+                    <HBox class="welcomeActions" wrap="Wrap">
+                        <Button
+                            text="Espace planificateur"
+                            icon="sap-icon://calendar"
+                            type="Emphasized"
+                            press=".onOpenPlanning" />
+                        <Button
+                            text="Espace superviseur"
+                            icon="sap-icon://manager-insight"
+                            press=".onOpenSupervisor" />
+                    </HBox>
+                </VBox>
+
+                <VBox class="workspaceSection" visible="{home>/showPlanningServices}">
+                    <Title text="Planification" level="H2" class="sectionTitle" />
+                    <Text
+                        text="Préparation des collectes et organisation des feuilles de route."
+                        class="sectionSubtitle" />
+                    <FlexBox class="tileGrid" wrap="Wrap">
+                        <GenericTile
+                            header="Tableau de bord"
+                            subheader="Vue du planificateur"
+                            frameType="OneByOne"
+                            class="serviceTile"
+                            press=".onOpenPlanning">
+                            <tileContent>
+                                <TileContent footer="Planification">
+                                    <ImageContent src="sap-icon://business-objects-experience" />
+                                </TileContent>
+                            </tileContent>
+                        </GenericTile>
+                        <GenericTile
+                            header="Tournées"
+                            subheader="Créer et organiser"
+                            frameType="OneByOne"
+                            class="serviceTile"
+                            press=".onTours">
+                            <tileContent>
+                                <TileContent footer="Collectes">
+                                    <ImageContent src="sap-icon://shipping-status" />
+                                </TileContent>
+                            </tileContent>
+                        </GenericTile>
+                        <GenericTile
+                            header="Feuilles de route"
+                            subheader="Regrouper les tournées"
+                            frameType="OneByOne"
+                            class="serviceTile"
+                            press=".onRoadmaps">
+                            <tileContent>
+                                <TileContent footer="Organisation">
+                                    <ImageContent src="sap-icon://map-3" />
+                                </TileContent>
+                            </tileContent>
+                        </GenericTile>
+                    </FlexBox>
+                </VBox>
+
+                <VBox class="workspaceSection" visible="{home>/showSupervisorServices}">
+                    <Title text="Supervision" level="H2" class="sectionTitle" />
+                    <Text
+                        text="Contrôle, validation et traçabilité des décisions métier."
+                        class="sectionSubtitle" />
+                    <FlexBox class="tileGrid" wrap="Wrap">
+                        <GenericTile
+                            header="Tableau de bord"
+                            subheader="Vue du superviseur"
+                            frameType="OneByOne"
+                            class="serviceTile"
+                            press=".onOpenSupervisor">
+                            <tileContent>
+                                <TileContent footer="Supervision">
+                                    <ImageContent src="sap-icon://manager-insight" />
+                                </TileContent>
+                            </tileContent>
+                        </GenericTile>
+                        <GenericTile
+                            header="Valider les tournées"
+                            subheader="Accepter ou rejeter"
+                            frameType="OneByOne"
+                            class="serviceTile"
+                            press=".onSupervisorTours">
+                            <tileContent>
+                                <TileContent footer="Décisions">
+                                    <ImageContent src="sap-icon://validate" />
+                                </TileContent>
+                            </tileContent>
+                        </GenericTile>
+                        <GenericTile
+                            header="Valider les feuilles"
+                            subheader="Contrôler les affectations"
+                            frameType="OneByOne"
+                            class="serviceTile"
+                            press=".onSupervisorRoadmaps">
+                            <tileContent>
+                                <TileContent footer="Contrôle">
+                                    <ImageContent src="sap-icon://inspection" />
+                                </TileContent>
+                            </tileContent>
+                        </GenericTile>
+                    </FlexBox>
+                </VBox>
+
+                <VBox class="processSection">
+                    <Title text="Processus métier" level="H2" class="sectionTitle" />
+                    <Text
+                        text="Un flux contrôlé de la planification jusqu'à la préparation de l'intégration SAP."
+                        class="sectionSubtitle" />
+                    <HBox class="processFlow" alignItems="Center" wrap="Wrap">
+                        <VBox class="processStep">
+                            <core:Icon src="sap-icon://create-form" class="processIcon" />
+                            <Text text="1" class="processNumber" />
+                            <Title text="Créer" level="H4" class="processTitle" />
+                            <Text text="Saisir la collecte" class="processText" />
+                        </VBox>
+                        <core:Icon src="sap-icon://navigation-right-arrow" class="processArrow" />
+                        <VBox class="processStep">
+                            <core:Icon src="sap-icon://validate" class="processIcon" />
+                            <Text text="2" class="processNumber" />
+                            <Title text="Valider" level="H4" class="processTitle" />
+                            <Text text="Contrôler la demande" class="processText" />
+                        </VBox>
+                        <core:Icon src="sap-icon://navigation-right-arrow" class="processArrow" />
+                        <VBox class="processStep">
+                            <core:Icon src="sap-icon://map-3" class="processIcon" />
+                            <Text text="3" class="processNumber" />
+                            <Title text="Organiser" level="H4" class="processTitle" />
+                            <Text text="Générer la feuille" class="processText" />
+                        </VBox>
+                        <core:Icon src="sap-icon://navigation-right-arrow" class="processArrow" />
+                        <VBox class="processStep">
+                            <core:Icon src="sap-icon://chain-link" class="processIcon" />
+                            <Text text="4" class="processNumber" />
+                            <Title text="Intégrer" level="H4" class="processTitle" />
+                            <Text text="Préparer SAP S/4HANA" class="processText" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </VBox>
+    </Page>
+</mvc:View>
