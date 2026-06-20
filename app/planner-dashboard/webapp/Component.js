@@ -35,6 +35,11 @@ sap.ui.define([
                     user: oUser
                 }), "session");
 
+                const oDataModel = this.getModel();
+                if (oDataModel && typeof oDataModel.changeHttpHeaders === "function") {
+                    oDataModel.changeHttpHeaders({ "X-Sepur-User-Id": oUser.ID });
+                }
+
             } catch (e) {
                 window.location.href = "/login/webapp/index.html";
             }

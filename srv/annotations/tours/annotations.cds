@@ -24,6 +24,7 @@ annotate service.Tours with {
 
     description     @title : 'Remarques';
     rejectionReason @title : 'Motif de rejet';
+    scheduleStatus  @title : 'État temporel';
     createdBy       @title : 'Créé par';
 };
 
@@ -120,7 +121,7 @@ annotate service.Tours with @(
             Value : tourCode
         },
         Description    : {
-            Value : status
+            Value : statusText
         }
     },
 
@@ -131,6 +132,7 @@ annotate service.Tours with @(
     collectionType,
     client_ID,
     status,
+    scheduleStatus,
     quantity,
     unitOfMeasure,
     driver_ID,
@@ -170,7 +172,7 @@ annotate service.Tours with @(
         {
             $Type : 'UI.DataField',
             Label : 'Statut',
-            Value : status,
+            Value : statusText,
             Criticality : statusCriticality,
             CriticalityRepresentation : #WithIcon,
             ![@UI.Importance] : #High
@@ -179,6 +181,13 @@ annotate service.Tours with @(
     $Type : 'UI.DataField',
     Label : 'Quantité à collecter',
     Value : quantity
+},
+{
+    $Type : 'UI.DataField',
+    Label : 'État temporel',
+    Value : scheduleStatusText,
+    Criticality : scheduleCriticality,
+    CriticalityRepresentation : #WithIcon
 },
 {
     $Type : 'UI.DataField',
@@ -202,6 +211,11 @@ annotate service.Tours with @(
             $Type  : 'UI.ReferenceFacet',
             Label  : 'Suivi',
             Target : '@UI.FieldGroup#Tracking'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Historique des décisions',
+            Target : 'decisions/@UI.LineItem'
         }
     ],
 
@@ -270,8 +284,15 @@ annotate service.Tours with @(
             {
                 $Type : 'UI.DataField',
                 Label : 'Statut',
-                Value : status,
+                Value : statusText,
                 Criticality : statusCriticality,
+                CriticalityRepresentation : #WithIcon
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'État temporel',
+                Value : scheduleStatusText,
+                Criticality : scheduleCriticality,
                 CriticalityRepresentation : #WithIcon
             },
             {

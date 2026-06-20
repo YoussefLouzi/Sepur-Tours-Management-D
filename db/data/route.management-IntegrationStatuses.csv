@@ -1,0 +1,4 @@
+code,label
+PENDING,En attente d'intégration
+INTEGRATED,Intégrée à SAP
+FAILED,Échec d'intégration

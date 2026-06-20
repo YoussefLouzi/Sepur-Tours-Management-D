@@ -4,14 +4,16 @@ sap.ui.define([
   "sap/m/MessageToast",
   "sap/m/MessageBox",
   "sap/m/ActionSheet",
-  "sap/m/Button"
+  "sap/m/Button",
+  "sap/m/URLHelper"
 ], function (
   Controller,
   JSONModel,
   MessageToast,
   MessageBox,
   ActionSheet,
-  Button
+  Button,
+  URLHelper
 ) {
   "use strict";
 
@@ -19,6 +21,13 @@ sap.ui.define([
     onInit: function () {
       this._initHomeModel();
       this._startHeroAutoSlide();
+    },
+
+    onExit: function () {
+      if (this._heroInterval) {
+        clearInterval(this._heroInterval);
+        this._heroInterval = null;
+      }
     },
 
     _initHomeModel: function () {
@@ -68,7 +77,7 @@ sap.ui.define([
         if (sValue) {
           try {
             return JSON.parse(sValue);
-          } catch (error) {
+          } catch {
             return {
               username: sValue,
               role: ""
@@ -110,7 +119,7 @@ sap.ui.define([
 
     _goToLogin: function (sRedirectUrl) {
       var sRedirect = encodeURIComponent(sRedirectUrl || "/home/webapp/index.html");
-      window.location.href = "/login/webapp/index.html?redirect=" + sRedirect;
+      URLHelper.redirect("/login/webapp/index.html?redirect=" + sRedirect, false);
     },
 
     _openProtectedService: function (sTargetUrl, sRequiredRole) {
@@ -130,7 +139,7 @@ sap.ui.define([
         return;
       }
 
-      window.location.href = sTargetUrl;
+      URLHelper.redirect(sTargetUrl, false);
     },
 
     _startHeroAutoSlide: function () {
@@ -140,7 +149,7 @@ sap.ui.define([
         return;
       }
 
-      setInterval(function () {
+      this._heroInterval = setInterval(function () {
         var aPages = oCarousel.getPages();
 
         if (!aPages || aPages.length <= 1) {
@@ -180,10 +189,7 @@ sap.ui.define([
       sessionStorage.removeItem("sepur.user");
 
       MessageToast.show("Déconnexion effectuée.");
-
-      setTimeout(function () {
-        window.location.reload();
-      }, 400);
+      URLHelper.redirect("/home/webapp/index.html", false);
     },
 
     onProfileMenu: function (oEvent) {
@@ -263,7 +269,7 @@ sap.ui.define([
         text: "Accueil",
         icon: "sap-icon://home",
         press: function () {
-          window.location.href = "/home/webapp/index.html";
+          URLHelper.redirect("/home/webapp/index.html", false);
         }
       }));
 

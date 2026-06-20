@@ -35,7 +35,10 @@ sap.ui.define([
 
   function getErrorMessage(oError, sFallback) {
     var oCause = oError && oError.cause;
-    return (oCause && oCause.message) || (oError && oError.message) || sFallback;
+    var sMessage = (oCause && oCause.message) || (oError && oError.message) || "";
+    return /(?:node_modules|\.js:\d+|no handler|no such|SQLITE_|TypeError|ReferenceError|srv-dispatch)/i.test(sMessage)
+      ? sFallback
+      : (sMessage || sFallback);
   }
 
   async function getObject(oContext) {
@@ -80,7 +83,7 @@ sap.ui.define([
       var oContext = aContexts[0];
       var oTour = await getObject(oContext);
 
-      if (!oTour || String(oTour.status || "").toUpperCase() !== "VALIDATED") {
+      if (!oTour || oTour.IsActiveEntity === false || String(oTour.status || "").toUpperCase() !== "VALIDATED") {
         MessageBox.warning("La feuille de route ne peut être créée que depuis une tournée validée.");
         return;
       }

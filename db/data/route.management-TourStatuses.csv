@@ -1,0 +1,7 @@
+code,label,criticality
+CREATED,Créée - en attente de décision,2
+REJECTED,Rejetée - à corriger,1
+VALIDATED,Validée - à exécuter,3
+ASSIGNED,Affectée - prête à exécuter,3
+COMPLETED,Terminée,3
+CANCELLED,Annulée,0

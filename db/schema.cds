@@ -56,6 +56,46 @@ type IntegrationStatus : String enum {
     FAILED;
 }
 
+@readonly
+entity TourStatuses {
+    key code   : TourStatus;
+        label  : String(60);
+        criticality : Integer;
+}
+
+@readonly
+entity RoadmapStatuses {
+    key code   : RoadmapStatus;
+        label  : String(60);
+        criticality : Integer;
+}
+
+@readonly
+entity IntegrationStatuses {
+    key code  : IntegrationStatus;
+        label : String(60);
+}
+
+@readonly
+entity TourScheduleStatuses {
+    key code   : String(20);
+        label  : String(60);
+        criticality : Integer;
+}
+
+@readonly
+entity RoadmapScheduleStatuses {
+    key code   : String(20);
+        label  : String(60);
+        criticality : Integer;
+}
+
+@readonly
+entity UnitsOfMeasure {
+    key code  : String(10);
+        label : String(60);
+}
+
 /* ===================================================== */
 /* MASTER DATA                                           */
 /* ===================================================== */
@@ -312,6 +352,9 @@ entity Roadmaps : cuid, managed {
 
     steps : Composition of many RoadmapSteps
         on steps.roadmap = $self;
+
+    decisions : Association to many DecisionHistories
+        on decisions.roadmap = $self;
 }
 
 entity RoadmapTours : cuid, managed {
@@ -343,6 +386,7 @@ entity DecisionHistories : cuid, managed {
 
     decidedBy : Association to Users;
     tour      : Association to Tours;
+    roadmap   : Association to Roadmaps;
 }
 
 /* ===================================================== */

@@ -125,8 +125,20 @@ sap.ui.define([
                     value: t.acceptedTours || 0
                 },
                 {
+                    label: "Affectées",
+                    value: t.assignedTours || 0
+                },
+                {
+                    label: "Terminées",
+                    value: t.completedTours || 0
+                },
+                {
                     label: "Rejetées",
                     value: t.rejectedTours || 0
+                },
+                {
+                    label: "Annulées",
+                    value: t.cancelledTours || 0
                 }
             ]);
 
@@ -140,12 +152,16 @@ sap.ui.define([
                     value: r.validatedRoadmaps || 0
                 },
                 {
+                    label: "Terminées",
+                    value: r.completedRoadmaps || 0
+                },
+                {
                     label: "Rejetées",
                     value: r.rejectedRoadmaps || 0
                 },
                 {
-                    label: "Intégrées",
-                    value: r.integratedRoadmaps || 0
+                    label: "Annulées",
+                    value: r.cancelledRoadmaps || 0
                 }
             ]);
 
@@ -175,7 +191,10 @@ sap.ui.define([
                         colorPalette: [
                             "#E9730C",
                             "#107E3E",
-                            "#BB0000"
+                            "#0A6ED1",
+                            "#5B738B",
+                            "#BB0000",
+                            "#8396A8"
                         ],
                         background: {
                             color: "transparent"
@@ -252,7 +271,11 @@ sap.ui.define([
                     totalTours: stats.totalTours || 0,
                     pendingTours: stats.pendingValidation || 0,
                     acceptedTours: stats.acceptedTours || 0,
-                    rejectedTours: stats.rejectedTours || 0
+                    rejectedTours: stats.rejectedTours || 0,
+                    assignedTours: stats.assignedTours || 0,
+                    completedTours: stats.completedTours || 0,
+                    cancelledTours: stats.cancelledTours || 0,
+                    overdueTours: stats.overdueTours || 0
                 });
 
             } catch (e) {
@@ -262,7 +285,11 @@ sap.ui.define([
                     totalTours: 0,
                     pendingTours: 0,
                     acceptedTours: 0,
-                    rejectedTours: 0
+                    rejectedTours: 0,
+                    assignedTours: 0,
+                    completedTours: 0,
+                    cancelledTours: 0,
+                    overdueTours: 0
                 });
             }
         },
@@ -272,41 +299,37 @@ sap.ui.define([
 
             try {
                 const stats = await this._getSupervisorStats();
-                const created = stats.createdRoadmaps || 0;
-                const validated = stats.validatedRoadmaps || 0;
-                const rejected = stats.rejectedRoadmaps || 0;
-                const integrated = stats.integratedRoadmaps || 0;
-
                 viewModel.setProperty("/roadmapStats", {
                     totalRoadmaps: stats.totalRoadmaps || 0,
-
-                    createdRoadmaps: created,
-                    validatedRoadmaps: validated,
-                    rejectedRoadmaps: rejected,
-                    integratedRoadmaps: integrated,
-
-                    draftRoadmaps: created,
-                    activeRoadmaps: validated,
-                    completedRoadmaps: integrated,
-                    cancelledRoadmaps: rejected
+                    createdRoadmaps: stats.createdRoadmaps || 0,
+                    validatedRoadmaps: stats.validatedRoadmaps || 0,
+                    rejectedRoadmaps: stats.rejectedRoadmaps || 0,
+                    completedRoadmaps: stats.completedRoadmaps || 0,
+                    cancelledRoadmaps: stats.cancelledRoadmaps || 0,
+                    overdueRoadmaps: stats.overdueRoadmaps || 0,
+                    integratedRoadmaps: stats.integratedRoadmaps || 0
                 });
 
                 viewModel.setProperty("/roadmapBarData", [
                     {
                         label: "Créées",
-                        value: created
+                        value: stats.createdRoadmaps || 0
                     },
                     {
                         label: "Validées",
-                        value: validated
+                        value: stats.validatedRoadmaps || 0
+                    },
+                    {
+                        label: "Terminées",
+                        value: stats.completedRoadmaps || 0
                     },
                     {
                         label: "Rejetées",
-                        value: rejected
+                        value: stats.rejectedRoadmaps || 0
                     },
                     {
-                        label: "Intégrées",
-                        value: integrated
+                        label: "Annulées",
+                        value: stats.cancelledRoadmaps || 0
                     }
                 ]);
 
@@ -319,16 +342,13 @@ sap.ui.define([
 
                 viewModel.setProperty("/roadmapStats", {
                     totalRoadmaps: 0,
-
                     createdRoadmaps: 0,
                     validatedRoadmaps: 0,
                     rejectedRoadmaps: 0,
-                    integratedRoadmaps: 0,
-
-                    draftRoadmaps: 0,
-                    activeRoadmaps: 0,
                     completedRoadmaps: 0,
-                    cancelledRoadmaps: 0
+                    cancelledRoadmaps: 0,
+                    overdueRoadmaps: 0,
+                    integratedRoadmaps: 0
                 });
 
                 viewModel.setProperty("/roadmapBarData", [
@@ -341,11 +361,15 @@ sap.ui.define([
                         value: 0
                     },
                     {
+                        label: "Terminées",
+                        value: 0
+                    },
+                    {
                         label: "Rejetées",
                         value: 0
                     },
                     {
-                        label: "Intégrées",
+                        label: "Annulées",
                         value: 0
                     }
                 ]);
@@ -406,10 +430,7 @@ sap.ui.define([
                             .trim()
                             .toUpperCase();
 
-                        return status === "CREATED" ||
-                            status === "DRAFT" ||
-                            status === "PENDING" ||
-                            !status;
+                        return status === "CREATED";
                     });
 
                     if (toursToValidate.length > 0) {
@@ -446,10 +467,7 @@ sap.ui.define([
                             .trim()
                             .toUpperCase();
 
-                        return status === "CREATED" ||
-                            status === "DRAFT" ||
-                            status === "PENDING" ||
-                            !status;
+                        return status === "CREATED";
                     });
 
                     if (roadmapsToValidate.length > 0) {
@@ -464,7 +482,7 @@ sap.ui.define([
                         notifications.push({
                             type: "Information",
                             title: "Feuille de route à vérifier : " + (roadmap.roadmapCode || "-"),
-                            description: "Statut actuel : " + (roadmap.status || "CREATED")
+                            description: "En attente de la décision du superviseur."
                         });
                     });
                 }
@@ -576,6 +594,10 @@ sap.ui.define([
 
         onOpenRoadmaps: function () {
             window.location.href = "/supervisor-roadmaps/webapp/index.html";
+        },
+
+        onOpenHome: function () {
+            window.location.href = "/home/webapp/index.html";
         },
 
         onLogout: function () {

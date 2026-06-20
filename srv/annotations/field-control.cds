@@ -7,6 +7,13 @@ annotate RouteManagementService.Tours with {
     rejectionReason @readonly;
     updatedAt      @readonly;
     createdByName  @readonly;
+    statusText     @readonly;
+    scheduleStatus @readonly;
+    scheduleStatusText @readonly;
+    scheduleCriticality @readonly;
+    canValidate @readonly;
+    canReject @readonly;
+    canComplete @readonly;
 
     tourDate       @Common.FieldControl: #Mandatory;
     zone           @Common.FieldControl: #Mandatory;
@@ -28,6 +35,13 @@ annotate RouteManagementService.Roadmaps with {
     startDate         @readonly;
     endDate           @readonly;
     updatedAt         @readonly;
+    statusText        @readonly;
+    scheduleStatus    @readonly;
+    scheduleStatusText @readonly;
+    scheduleCriticality @readonly;
+    canValidate @readonly;
+    canReject @readonly;
+    canComplete @readonly;
 
     client            @Common.FieldControl: #Mandatory;
     month             @Common.FieldControl: #Mandatory;

@@ -1,0 +1,6 @@
+code,label,criticality
+ON_TIME,Dans les délais,0
+DUE_TODAY,À exécuter aujourd'hui,2
+OVERDUE,En retard,1
+COMPLETED,Terminée,3
+CANCELLED,Annulée,0

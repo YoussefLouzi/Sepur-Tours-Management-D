@@ -168,6 +168,13 @@
                       "enabled": true,
                       "requiresSelection": true,
                       "buttonType": "Reject"
+                    },
+                    "CompleteSelectedRoadmap": {
+                      "text": "Marquer comme terminée",
+                      "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onMarkRoadmapCompleted",
+                      "visible": true,
+                      "enabled": true,
+                      "requiresSelection": true
                     }
                   }
                 }
@@ -201,6 +208,12 @@
                       "visible": true,
                       "enabled": true,
                       "buttonType": "Reject"
+                    },
+                    "CompleteRoadmapObjectPage": {
+                      "text": "Marquer comme terminée",
+                      "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onMarkRoadmapCompleted",
+                      "visible": true,
+                      "enabled": true
                     },
                     "BackObjectPage": {
                       "text": "Retour",

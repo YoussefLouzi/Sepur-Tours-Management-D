@@ -5,33 +5,40 @@ const {
   rejectRequest: reject
 } = require('./lib/error-handler');
 
-const TOUR_STATUS = {
+const TOUR_STATUS = Object.freeze({
   CREATED: 'CREATED',
   VALIDATED: 'VALIDATED',
-  REJECTED: 'REJECTED'
-};
+  REJECTED: 'REJECTED',
+  ASSIGNED: 'ASSIGNED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+});
 
-const ROADMAP_STATUS = {
+const ROADMAP_STATUS = Object.freeze({
   CREATED: 'CREATED',
   VALIDATED: 'VALIDATED',
-  REJECTED: 'REJECTED'
-};
+  REJECTED: 'REJECTED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+});
 
 /* ===================================================== */
 /* STATUS HELPERS                                        */
 /* ===================================================== */
 
 function normalizeTourStatus(status) {
-  if (['DRAFT', 'PENDING', 'CREATED'].includes(status)) {
+  const normalized = String(status || '').trim().toUpperCase();
+
+  if (['DRAFT', 'PENDING'].includes(normalized)) {
     return TOUR_STATUS.CREATED;
   }
 
-  if (['ACCEPTED', 'VALIDATED', 'COMPLETED', 'ASSIGNED'].includes(status)) {
+  if (normalized === 'ACCEPTED') {
     return TOUR_STATUS.VALIDATED;
   }
 
-  if (['REJECTED', 'CANCELLED'].includes(status)) {
-    return TOUR_STATUS.REJECTED;
+  if (Object.values(TOUR_STATUS).includes(normalized)) {
+    return normalized;
   }
 
   return TOUR_STATUS.CREATED;
@@ -46,12 +53,12 @@ function normalizeRoadmapStatus(status) {
     return ROADMAP_STATUS.CREATED;
   }
 
-  if (['ACTIVE', 'VALIDATED', 'COMPLETED'].includes(normalized)) {
+  if (normalized === 'ACTIVE') {
     return ROADMAP_STATUS.VALIDATED;
   }
 
-  if (['REJECTED', 'CANCELLED'].includes(normalized)) {
-    return ROADMAP_STATUS.REJECTED;
+  if (Object.values(ROADMAP_STATUS).includes(normalized)) {
+    return normalized;
   }
 
   return ROADMAP_STATUS.CREATED;
@@ -79,6 +86,87 @@ function isValidatedRoadmapStatus(status) {
 
 function isRejectedRoadmapStatus(status) {
   return normalizeRoadmapStatus(status) === ROADMAP_STATUS.REJECTED;
+}
+
+function isDraftRequest(req) {
+  const key = req.params && req.params[0];
+  const active = key && key.IsActiveEntity;
+  const targetName = req.target && req.target.name || '';
+
+  return active === false || String(active).toLowerCase() === 'false' || targetName.endsWith('.drafts');
+}
+
+function ensureActiveEntity(req, label) {
+  if (!isDraftRequest(req)) {
+    return true;
+  }
+
+  reject(req, `Veuillez enregistrer ${label} avant de lancer cette action.`, 400, {
+    code: 'DRAFT_MUST_BE_ACTIVATED'
+  });
+  return false;
+}
+
+function requestUserID(req) {
+  const headers = req.headers || {};
+  return headers['x-sepur-user-id'] || headers['X-Sepur-User-Id'] || null;
+}
+
+async function requireRole(req, Users, expectedRole) {
+  const userID = requestUserID(req);
+
+  if (!userID) {
+    return reject(req, 'Action non autorisée pour ce rôle.', 403, { code: 'ROLE_REQUIRED' });
+  }
+
+  const user = await SELECT.one.from(Users).where({ ID: userID, active: true });
+  const role = String(user && user.role || '').trim().toUpperCase();
+
+  if (!user || (role !== expectedRole && role !== 'ADMIN')) {
+    return reject(req, 'Action non autorisée pour ce rôle.', 403, { code: 'FORBIDDEN' });
+  }
+
+  return user;
+}
+
+function tourStatusCriticality(status) {
+  const normalized = normalizeTourStatus(status);
+  if ([TOUR_STATUS.VALIDATED, TOUR_STATUS.ASSIGNED, TOUR_STATUS.COMPLETED].includes(normalized)) return 3;
+  if (normalized === TOUR_STATUS.REJECTED) return 1;
+  if (normalized === TOUR_STATUS.CREATED) return 2;
+  return 0;
+}
+
+function roadmapStatusCriticality(status) {
+  const normalized = normalizeRoadmapStatus(status);
+  if ([ROADMAP_STATUS.VALIDATED, ROADMAP_STATUS.COMPLETED].includes(normalized)) return 3;
+  if (normalized === ROADMAP_STATUS.REJECTED) return 1;
+  if (normalized === ROADMAP_STATUS.CREATED) return 2;
+  return 0;
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function tourScheduleStatus(tour) {
+  const status = normalizeTourStatus(tour.status);
+  if (status === TOUR_STATUS.COMPLETED) return 'COMPLETED';
+  if (status === TOUR_STATUS.CANCELLED) return 'CANCELLED';
+  const date = tour.tourDate || tour.collectionDate;
+  if (!date) return 'ON_TIME';
+  if (date < todayISO()) return 'OVERDUE';
+  if (date === todayISO()) return 'DUE_TODAY';
+  return 'ON_TIME';
+}
+
+function roadmapScheduleStatus(roadmap) {
+  const status = normalizeRoadmapStatus(roadmap.status);
+  if (status === ROADMAP_STATUS.COMPLETED) return 'COMPLETED';
+  if (status === ROADMAP_STATUS.CANCELLED) return 'CANCELLED';
+  if (roadmap.endDate && roadmap.endDate < todayISO()) return 'OVERDUE';
+  if (roadmap.startDate && roadmap.startDate > todayISO()) return 'UPCOMING';
+  return 'CURRENT';
 }
 
 /* ===================================================== */
@@ -257,25 +345,14 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
           continue;
         }
 
-         enrichTourAliases(tour);
-
-
+        enrichTourAliases(tour);
         const normalizedStatus = normalizeTourStatus(tour.status);
+        const isActive = tour.IsActiveEntity !== false;
         tour.status = normalizedStatus;
-
-        if (normalizedStatus === TOUR_STATUS.VALIDATED) {
-          tour.statusCriticality = 3;
-          tour.canValidate = false;
-          tour.canReject = false;
-        } else if (normalizedStatus === TOUR_STATUS.REJECTED) {
-          tour.statusCriticality = 1;
-          tour.canValidate = false;
-          tour.canReject = false;
-        } else {
-          tour.statusCriticality = 2;
-          tour.canValidate = true;
-          tour.canReject = true;
-        }
+        tour.statusCriticality = tourStatusCriticality(normalizedStatus);
+        tour.canValidate = isActive && normalizedStatus === TOUR_STATUS.CREATED;
+        tour.canReject = isActive && normalizedStatus === TOUR_STATUS.CREATED;
+        tour.canComplete = isActive && [TOUR_STATUS.VALIDATED, TOUR_STATUS.ASSIGNED].includes(normalizedStatus);
       }
     });
 
@@ -290,24 +367,15 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         if (!roadmap) {
           continue;
         }
-            enrichRoadmapAliases(roadmap);
+        enrichRoadmapAliases(roadmap);
 
         const normalizedStatus = normalizeRoadmapStatus(roadmap.status);
+        const isActive = roadmap.IsActiveEntity !== false;
         roadmap.status = normalizedStatus;
-
-        if (normalizedStatus === ROADMAP_STATUS.VALIDATED) {
-          roadmap.statusCriticality = 3;
-          roadmap.canValidate = false;
-          roadmap.canReject = false;
-        } else if (normalizedStatus === ROADMAP_STATUS.REJECTED) {
-          roadmap.statusCriticality = 1;
-          roadmap.canValidate = false;
-          roadmap.canReject = false;
-        } else {
-          roadmap.statusCriticality = 2;
-          roadmap.canValidate = true;
-          roadmap.canReject = true;
-        }
+        roadmap.statusCriticality = roadmapStatusCriticality(normalizedStatus);
+        roadmap.canValidate = isActive && normalizedStatus === ROADMAP_STATUS.CREATED;
+        roadmap.canReject = isActive && normalizedStatus === ROADMAP_STATUS.CREATED;
+        roadmap.canComplete = isActive && normalizedStatus === ROADMAP_STATUS.VALIDATED;
       }
     });
 
@@ -318,6 +386,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.before('CREATE', 'Tours', async (req) => {
+  await requireRole(req, Users, 'PLANIFICATEUR');
   syncTourPayload(req.data);
 
   const code = await nextCode('Tours', 'tourCode', 'TOUR');
@@ -326,6 +395,10 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
   req.data.status = TOUR_STATUS.CREATED;
   req.data.rejectionReason = null;
 
+  if (isDraftRequest(req)) {
+    return;
+  }
+
   const validationError = validateTourPayload(req, req.data);
   if (validationError) {
     return validationError;
@@ -333,6 +406,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 });
 
     this.before('SAVE', 'Tours', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
       syncTourPayload(req.data);
 
       const validationError = validateTourPayload(req, req.data);
@@ -352,6 +426,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     
 
       this.before('UPDATE', 'Tours', async (req) => {
+  await requireRole(req, Users, 'PLANIFICATEUR');
   syncTourPayload(req.data);
 
   const validationError = validateTourPayload(req, req.data, true);
@@ -373,6 +448,12 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
   const normalizedStatus = normalizeTourStatus(tour.status);
 
+  if (![TOUR_STATUS.CREATED, TOUR_STATUS.REJECTED].includes(normalizedStatus)) {
+    return reject(req, 'Les tournées validées, terminées ou annulées ne peuvent plus être modifiées.', 409, {
+      code: 'TOUR_NOT_EDITABLE'
+    });
+  }
+
   const technicalFields = new Set([
     'ID',
     'IsActiveEntity',
@@ -381,9 +462,15 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     'DraftAdministrativeData',
     'DraftAdministrativeData_DraftUUID',
     'SiblingEntity',
+    'DraftMessages',
     'statusCriticality',
     'canValidate',
     'canReject',
+    'canComplete',
+    'statusText',
+    'scheduleStatus',
+    'scheduleStatusText',
+    'scheduleCriticality',
     'clientName',
     'driverFirstName',
     'driverLastName',
@@ -394,6 +481,12 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     'roadmap',
     'humanResources',
     'materialResources',
+    'tourCode',
+    'tourNumber',
+    'status',
+    'rejectionReason',
+    'updatedAt',
+    'createdByUser_ID',
     'createdAt',
     'createdBy',
     'modifiedAt',
@@ -435,7 +528,9 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
   if (forbidden.length) {
     return reject(
       req,
-      `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
+      'Cette modification contient des champs non modifiables. Rechargez la page puis réessayez.',
+      400,
+      { code: 'READ_ONLY_FIELD_MODIFIED' }
     );
   }
 
@@ -485,6 +580,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.before('CREATE', 'Roadmaps', async (req) => {
+  await requireRole(req, Users, 'PLANIFICATEUR');
   syncRoadmapPayload(req.data);
 
   const code = await nextCode('Roadmaps', 'roadmapNumber', 'RM');
@@ -494,6 +590,10 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
   req.data.integrationStatus = 'PENDING';
   req.data.rejectionReason = null;
 
+  if (isDraftRequest(req)) {
+    return;
+  }
+
   const validationError = validateRoadmapPayload(req, req.data);
   if (validationError) {
     return validationError;
@@ -501,6 +601,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 });
 
     this.before('SAVE', 'Roadmaps', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
       syncRoadmapPayload(req.data);
 
       const validationError = validateRoadmapPayload(req, req.data);
@@ -520,6 +621,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     });
 
     this.before('UPDATE', 'Roadmaps', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
       syncRoadmapPayload(req.data);
 
       const validationError = validateRoadmapPayload(req, req.data, true);
@@ -539,6 +641,14 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         return;
       }
 
+      const normalizedStatus = normalizeRoadmapStatus(roadmap.status);
+
+      if (![ROADMAP_STATUS.CREATED, ROADMAP_STATUS.REJECTED].includes(normalizedStatus)) {
+        return reject(req, 'Les feuilles de route validées, terminées ou annulées ne peuvent plus être modifiées.', 409, {
+          code: 'ROADMAP_NOT_EDITABLE'
+        });
+      }
+
       const technicalFields = new Set([
         'ID',
         'IsActiveEntity',
@@ -547,9 +657,15 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'DraftAdministrativeData',
         'DraftAdministrativeData_DraftUUID',
         'SiblingEntity',
+        'DraftMessages',
         'statusCriticality',
         'canValidate',
         'canReject',
+        'canComplete',
+        'statusText',
+        'scheduleStatus',
+        'scheduleStatusText',
+        'scheduleCriticality',
         'tourCode',
         'tourDate',
         'tourZone',
@@ -562,6 +678,15 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'endDate',
         'assignedTours',
         'steps',
+        'roadmapCode',
+        'roadmapNumber',
+        'status',
+        'integrationStatus',
+        'sapSalesOrder',
+        'integrationDate',
+        'integrationMessage',
+        'rejectionReason',
+        'updatedAt',
         'createdAt',
         'createdBy',
         'modifiedAt',
@@ -587,11 +712,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       if (forbidden.length) {
         return reject(
           req,
-          `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
+          'Cette modification contient des champs non modifiables. Rechargez la page puis réessayez.',
+          400,
+          { code: 'READ_ONLY_FIELD_MODIFIED' }
         );
       }
-
-      const normalizedStatus = normalizeRoadmapStatus(roadmap.status);
 
       if (normalizedStatus === ROADMAP_STATUS.REJECTED) {
         const businessFields = [
@@ -619,6 +744,30 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.before('CREATE', 'RoadmapTours', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
+
+      if (!isDraftRequest(req) && req.data.roadmap_ID && req.data.tour_ID) {
+        const [roadmap, tour, existing] = await Promise.all([
+          SELECT.one.from(Roadmaps).where({ ID: req.data.roadmap_ID }),
+          SELECT.one.from(Tours).where({ ID: req.data.tour_ID }),
+          SELECT.one.from(RoadmapTours).where({ tour_ID: req.data.tour_ID })
+        ]);
+
+        if (!roadmap || ![ROADMAP_STATUS.CREATED, ROADMAP_STATUS.REJECTED]
+          .includes(normalizeRoadmapStatus(roadmap.status))) {
+          return reject(req, 'Cette feuille de route ne peut plus recevoir de tournées.', 409);
+        }
+
+        if (!tour || ![TOUR_STATUS.VALIDATED, TOUR_STATUS.ASSIGNED]
+          .includes(normalizeTourStatus(tour.status))) {
+          return reject(req, 'Seule une tournée validée et disponible peut être affectée.', 409);
+        }
+
+        if (existing && existing.roadmap_ID !== req.data.roadmap_ID) {
+          return reject(req, 'Cette tournée appartient déjà à une autre feuille de route.', 409);
+        }
+      }
+
       if (!req.data.sequence) {
         const roadmapID = req.data.roadmap_ID;
 
@@ -637,6 +786,19 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     });
 
     this.before('UPDATE', 'RoadmapTours', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
+
+      if (!isDraftRequest(req)) {
+        const assignmentID = req.data.ID || req.params?.[0]?.ID;
+        const assignment = assignmentID && await SELECT.one.from(RoadmapTours).where({ ID: assignmentID });
+        const roadmap = assignment?.roadmap_ID && await SELECT.one.from(Roadmaps).where({ ID: assignment.roadmap_ID });
+
+        if (roadmap && ![ROADMAP_STATUS.CREATED, ROADMAP_STATUS.REJECTED]
+          .includes(normalizeRoadmapStatus(roadmap.status))) {
+          return reject(req, 'Une affectation validée ou terminée ne peut plus être modifiée.', 409);
+        }
+      }
+
       const technicalFields = new Set([
         'ID',
         'IsActiveEntity',
@@ -645,6 +807,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'DraftAdministrativeData',
         'DraftAdministrativeData_DraftUUID',
         'SiblingEntity',
+        'DraftMessages',
         'roadmapCode',
         'tourCode',
         'tourDate',
@@ -654,6 +817,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         'driverFirstName',
         'driverLastName',
         'vehicleRegistration',
+        'updatedAt',
         'createdAt',
         'createdBy',
         'modifiedAt',
@@ -678,8 +842,101 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       if (forbidden.length) {
         return reject(
           req,
-          `Modification interdite pour les champs suivants : ${forbidden.join(', ')}`
+          'Cette modification contient des champs non modifiables. Rechargez la page puis réessayez.',
+          400,
+          { code: 'READ_ONLY_FIELD_MODIFIED' }
         );
+      }
+    });
+
+    this.after('CREATE', 'RoadmapTours', async (assignment) => {
+      if (!assignment || assignment.IsActiveEntity === false || !assignment.tour_ID || !assignment.roadmap_ID) {
+        return;
+      }
+
+      await UPDATE(Tours).set({
+        status: TOUR_STATUS.ASSIGNED,
+        roadmap_ID: assignment.roadmap_ID,
+        updatedAt: new Date().toISOString()
+      }).where({
+        ID: assignment.tour_ID,
+        status: TOUR_STATUS.VALIDATED
+      });
+    });
+
+    this.before('DELETE', 'RoadmapTours', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
+
+      if (isDraftRequest(req)) {
+        return;
+      }
+
+      const assignmentID = req.data.ID || req.params?.[0]?.ID;
+      const assignment = assignmentID && await SELECT.one.from(RoadmapTours).where({ ID: assignmentID });
+      const roadmap = assignment?.roadmap_ID && await SELECT.one.from(Roadmaps).where({ ID: assignment.roadmap_ID });
+
+      if (roadmap && ![ROADMAP_STATUS.CREATED, ROADMAP_STATUS.REJECTED]
+        .includes(normalizeRoadmapStatus(roadmap.status))) {
+        return reject(req, 'Une affectation validée ou terminée ne peut plus être supprimée.', 409);
+      }
+
+      req._deletedRoadmapAssignment = assignment;
+    });
+
+    this.after('DELETE', 'RoadmapTours', async (_data, req) => {
+      const assignment = req._deletedRoadmapAssignment;
+
+      if (!assignment?.tour_ID) {
+        return;
+      }
+
+      await UPDATE(Tours).set({
+        status: TOUR_STATUS.VALIDATED,
+        roadmap_ID: null,
+        updatedAt: new Date().toISOString()
+      }).where({
+        ID: assignment.tour_ID,
+        status: TOUR_STATUS.ASSIGNED
+      });
+    });
+
+    this.before('DELETE', 'Tours', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
+      const id = req.data.ID || req.params?.[0]?.ID;
+      const tour = id && await SELECT.one.from(Tours).where({ ID: id });
+
+      if (tour && ![TOUR_STATUS.CREATED, TOUR_STATUS.REJECTED].includes(normalizeTourStatus(tour.status))) {
+        return reject(req, 'Seules les tournées créées ou rejetées peuvent être supprimées.', 409, {
+          code: 'TOUR_NOT_DELETABLE'
+        });
+      }
+    });
+
+    this.before('DELETE', 'Roadmaps', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
+      const id = req.data.ID || req.params?.[0]?.ID;
+      const roadmap = id && await SELECT.one.from(Roadmaps).where({ ID: id });
+
+      if (roadmap && ![ROADMAP_STATUS.CREATED, ROADMAP_STATUS.REJECTED].includes(normalizeRoadmapStatus(roadmap.status))) {
+        return reject(req, 'Seules les feuilles de route créées ou rejetées peuvent être supprimées.', 409, {
+          code: 'ROADMAP_NOT_DELETABLE'
+        });
+      }
+
+      if (roadmap) {
+        const assignments = await SELECT.from(RoadmapTours).columns('tour_ID').where({ roadmap_ID: id });
+        const tourIDs = assignments.map((assignment) => assignment.tour_ID).filter(Boolean);
+
+        if (tourIDs.length) {
+          await UPDATE(Tours).set({
+            status: TOUR_STATUS.VALIDATED,
+            roadmap_ID: null,
+            updatedAt: new Date().toISOString()
+          }).where({
+            ID: { in: tourIDs },
+            status: TOUR_STATUS.ASSIGNED
+          });
+        }
       }
     });
 
@@ -688,6 +945,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.on('submitTour', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
       const { tourID } = req.data;
 
       const tour = await SELECT.one.from(Tours).where({ ID: tourID });
@@ -713,6 +971,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
     this.on('acceptTour', async (req) => {
       const { tourID, supervisorID } = req.data;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
+
+      if (supervisorID && supervisorID !== supervisor.ID) {
+        return reject(req, 'Le superviseur indiqué ne correspond pas à la session active.', 403);
+      }
 
       const tour = await SELECT.one.from(Tours).where({ ID: tourID });
 
@@ -722,16 +985,6 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       if (!isCreatedStatus(tour.status)) {
         return reject(req, 'Seules les tournées créées peuvent être validées.');
-      }
-
-      const supervisor = await SELECT.one.from(Users).where({ ID: supervisorID });
-
-      if (!supervisor) {
-        return reject(req, 'Superviseur introuvable.');
-      }
-
-      if (supervisor.role !== 'SUPERVISEUR') {
-        return reject(req, 'Seul un superviseur peut valider une tournée.');
       }
 
       await UPDATE(Tours)
@@ -746,7 +999,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         ID: cds.utils.uuid(),
         decision: TOUR_STATUS.VALIDATED,
         reason: null,
-        decidedBy_ID: supervisorID,
+        decidedBy_ID: supervisor.ID,
         tour_ID: tourID
       });
 
@@ -755,6 +1008,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
     this.on('rejectTour', async (req) => {
       const { tourID, supervisorID, reason } = req.data;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
+
+      if (supervisorID && supervisorID !== supervisor.ID) {
+        return reject(req, 'Le superviseur indiqué ne correspond pas à la session active.', 403);
+      }
 
       if (!reason || !String(reason).trim()) {
         return reject(req, 'Le motif de refus est obligatoire.');
@@ -768,16 +1026,6 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       if (!isCreatedStatus(tour.status)) {
         return reject(req, 'Seules les tournées créées peuvent être rejetées.');
-      }
-
-      const supervisor = await SELECT.one.from(Users).where({ ID: supervisorID });
-
-      if (!supervisor) {
-        return reject(req, 'Superviseur introuvable.');
-      }
-
-      if (supervisor.role !== 'SUPERVISEUR') {
-        return reject(req, 'Seul un superviseur peut rejeter une tournée.');
       }
 
       const trimmedReason = String(reason).trim();
@@ -794,7 +1042,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         ID: cds.utils.uuid(),
         decision: TOUR_STATUS.REJECTED,
         reason: trimmedReason,
-        decidedBy_ID: supervisorID,
+        decidedBy_ID: supervisor.ID,
         tour_ID: tourID
       });
 
@@ -806,6 +1054,8 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.on('validate', 'Tours', async (req) => {
+      if (!ensureActiveEntity(req, 'la tournée')) return;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
       const tourID = req.params?.[0]?.ID;
 
       if (!tourID) {
@@ -830,15 +1080,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         })
         .where({ ID: tourID });
 
-      const supervisor = await SELECT.one.from(Users)
-        .columns('ID')
-        .where({ role: 'SUPERVISEUR', active: true });
-
       await INSERT.into(DecisionHistories).entries({
         ID: cds.utils.uuid(),
         decision: TOUR_STATUS.VALIDATED,
         reason: null,
-        decidedBy_ID: supervisor?.ID || null,
+        decidedBy_ID: supervisor.ID,
         tour_ID: tourID
       });
 
@@ -846,6 +1092,8 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     });
 
     this.on('rejectTourDecision', 'Tours', async (req) => {
+      if (!ensureActiveEntity(req, 'la tournée')) return;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
       const tourID = req.params?.[0]?.ID;
       const reason = req.data.reason;
 
@@ -877,15 +1125,44 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         })
         .where({ ID: tourID });
 
-      const supervisor = await SELECT.one.from(Users)
-        .columns('ID')
-        .where({ role: 'SUPERVISEUR', active: true });
-
       await INSERT.into(DecisionHistories).entries({
         ID: cds.utils.uuid(),
         decision: TOUR_STATUS.REJECTED,
         reason: trimmedReason,
-        decidedBy_ID: supervisor?.ID || null,
+        decidedBy_ID: supervisor.ID,
+        tour_ID: tourID
+      });
+
+      return SELECT.one.from(Tours).where({ ID: tourID });
+    });
+
+    this.on('markTourCompleted', 'Tours', async (req) => {
+      if (!ensureActiveEntity(req, 'la tournée')) return;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
+      const tourID = req.params?.[0]?.ID;
+      const tour = tourID && await SELECT.one.from(Tours).where({ ID: tourID });
+
+      if (!tour) {
+        return reject(req, 'Tournée introuvable.', 404);
+      }
+
+      const status = normalizeTourStatus(tour.status);
+      if (![TOUR_STATUS.VALIDATED, TOUR_STATUS.ASSIGNED].includes(status)) {
+        return reject(req, 'Une tournée ne peut être terminée qu’après validation ou affectation.', 409, {
+          code: 'INVALID_TOUR_COMPLETION'
+        });
+      }
+
+      await UPDATE(Tours).set({
+        status: TOUR_STATUS.COMPLETED,
+        updatedAt: new Date().toISOString()
+      }).where({ ID: tourID });
+
+      await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
+        decision: TOUR_STATUS.COMPLETED,
+        reason: null,
+        decidedBy_ID: supervisor.ID,
         tour_ID: tourID
       });
 
@@ -895,7 +1172,9 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
     /* ROADMAPS — BOUND ACTIONS FOR FIORI                    */
     /* ===================================================== */
-        this.on('autoAssignTours', 'Roadmaps', async (req) => {
+    this.on('autoAssignTours', 'Roadmaps', async (req) => {
+      if (!ensureActiveEntity(req, 'la feuille de route')) return;
+      await requireRole(req, Users, 'PLANIFICATEUR');
       const roadmapID = req.params?.[0]?.ID;
 
       if (!roadmapID) {
@@ -938,6 +1217,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
           .filter((assignment) => assignment.roadmap_ID !== roadmapID)
           .map((assignment) => assignment.tour_ID)
       );
+      const assignedToCurrentRoadmap = new Set(
+        existingAssignments
+          .filter((assignment) => assignment.roadmap_ID === roadmapID)
+          .map((assignment) => assignment.tour_ID)
+      );
 
       const allTours = await SELECT.from(Tours);
 
@@ -957,7 +1241,9 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         const sameClient = tour.client_ID === roadmap.client_ID;
         const sameMonth = d.getUTCMonth() + 1 === Number(roadmap.month);
         const sameYear = d.getUTCFullYear() === Number(roadmap.year);
-        const validStatus = normalizeTourStatus(tour.status) === TOUR_STATUS.VALIDATED;
+        const status = normalizeTourStatus(tour.status);
+        const validStatus = status === TOUR_STATUS.VALIDATED ||
+          (status === TOUR_STATUS.ASSIGNED && assignedToCurrentRoadmap.has(tour.ID));
         const notAssignedElsewhere = !assignedToOtherRoadmap.has(tour.ID);
 
         return sameClient && sameMonth && sameYear && validStatus && notAssignedElsewhere;
@@ -971,6 +1257,17 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       }
 
       await DELETE.from(RoadmapTours).where({ roadmap_ID: roadmapID });
+
+      if (assignedToCurrentRoadmap.size) {
+        await UPDATE(Tours).set({
+          status: TOUR_STATUS.VALIDATED,
+          roadmap_ID: null,
+          updatedAt: new Date().toISOString()
+        }).where({
+          ID: { in: Array.from(assignedToCurrentRoadmap) },
+          status: TOUR_STATUS.ASSIGNED
+        });
+      }
 
       let sequence = 1;
 
@@ -986,10 +1283,18 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         sequence += 1;
       }
 
+      await UPDATE(Tours).set({
+        status: TOUR_STATUS.ASSIGNED,
+        roadmap_ID: roadmapID,
+        updatedAt: new Date().toISOString()
+      }).where({ ID: { in: matchingTours.map((tour) => tour.ID) } });
+
       return SELECT.one.from(Roadmaps).where({ ID: roadmapID });
     });
 
     this.on('generateRoadmapSheetHtml', 'Roadmaps', async (req) => {
+      if (!ensureActiveEntity(req, 'la feuille de route')) return;
+      await requireRole(req, Users, 'PLANIFICATEUR');
       const roadmapID = req.params?.[0]?.ID;
 
       if (!roadmapID) {
@@ -1219,6 +1524,8 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
 
     this.on('validateRoadmap', 'Roadmaps', async (req) => {
+      if (!ensureActiveEntity(req, 'la feuille de route')) return;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
       const roadmapID = req.params?.[0]?.ID;
 
       if (!roadmapID) {
@@ -1236,11 +1543,25 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       }
 
       const assignments = await SELECT.from(RoadmapTours)
-        .columns('ID')
+        .columns('ID', 'tour_ID')
         .where({ roadmap_ID: roadmapID });
 
       if (!assignments.length) {
         return reject(req, 'Affectez au moins une tournée avant de valider la feuille de route.');
+      }
+
+      const linkedTours = await SELECT.from(Tours).columns('status').where({
+        ID: { in: assignments.map((assignment) => assignment.tour_ID) }
+      });
+      const hasUnvalidatedTour = linkedTours.some((tour) => {
+        return ![TOUR_STATUS.VALIDATED, TOUR_STATUS.ASSIGNED, TOUR_STATUS.COMPLETED]
+          .includes(normalizeTourStatus(tour.status));
+      });
+
+      if (linkedTours.length !== assignments.length || hasUnvalidatedTour) {
+        return reject(req, 'Toutes les tournées associées doivent être validées avant de valider la feuille de route.', 409, {
+          code: 'ROADMAP_TOURS_NOT_VALIDATED'
+        });
       }
 
       await UPDATE(Roadmaps)
@@ -1251,10 +1572,20 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         })
         .where({ ID: roadmapID });
 
+      await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
+        decision: ROADMAP_STATUS.VALIDATED,
+        reason: null,
+        decidedBy_ID: supervisor.ID,
+        roadmap_ID: roadmapID
+      });
+
       return SELECT.one.from(Roadmaps).where({ ID: roadmapID });
     });
 
     this.on('rejectRoadmap', 'Roadmaps', async (req) => {
+      if (!ensureActiveEntity(req, 'la feuille de route')) return;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
       const roadmapID = req.params?.[0]?.ID;
       const reason = req.data.reason;
 
@@ -1286,6 +1617,63 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         })
         .where({ ID: roadmapID });
 
+      await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
+        decision: ROADMAP_STATUS.REJECTED,
+        reason: trimmedReason,
+        decidedBy_ID: supervisor.ID,
+        roadmap_ID: roadmapID
+      });
+
+      return SELECT.one.from(Roadmaps).where({ ID: roadmapID });
+    });
+
+    this.on('markRoadmapCompleted', 'Roadmaps', async (req) => {
+      if (!ensureActiveEntity(req, 'la feuille de route')) return;
+      const supervisor = await requireRole(req, Users, 'SUPERVISEUR');
+      const roadmapID = req.params?.[0]?.ID;
+      const roadmap = roadmapID && await SELECT.one.from(Roadmaps).where({ ID: roadmapID });
+
+      if (!roadmap) {
+        return reject(req, 'Feuille de route introuvable.', 404);
+      }
+
+      if (normalizeRoadmapStatus(roadmap.status) !== ROADMAP_STATUS.VALIDATED) {
+        return reject(req, 'Seule une feuille de route validée peut être terminée.', 409, {
+          code: 'INVALID_ROADMAP_COMPLETION'
+        });
+      }
+
+      const assignments = await SELECT.from(RoadmapTours).columns('tour_ID').where({ roadmap_ID: roadmapID });
+      const tourIDs = assignments.map((assignment) => assignment.tour_ID).filter(Boolean);
+      if (!tourIDs.length && roadmap.tour_ID) tourIDs.push(roadmap.tour_ID);
+
+      const linkedTours = tourIDs.length
+        ? await SELECT.from(Tours).columns('status').where({ ID: { in: tourIDs } })
+        : [];
+
+      if (!linkedTours.length || linkedTours.some((tour) => normalizeTourStatus(tour.status) !== TOUR_STATUS.COMPLETED)) {
+        return reject(
+          req,
+          'La feuille de route ne peut pas être terminée tant que toutes les tournées associées ne sont pas terminées.',
+          409,
+          { code: 'ROADMAP_TOURS_NOT_COMPLETED' }
+        );
+      }
+
+      await UPDATE(Roadmaps).set({
+        status: ROADMAP_STATUS.COMPLETED,
+        updatedAt: new Date().toISOString()
+      }).where({ ID: roadmapID });
+
+      await INSERT.into(DecisionHistories).entries({
+        ID: cds.utils.uuid(),
+        decision: ROADMAP_STATUS.COMPLETED,
+        reason: null,
+        decidedBy_ID: supervisor.ID,
+        roadmap_ID: roadmapID
+      });
+
       return SELECT.one.from(Roadmaps).where({ ID: roadmapID });
     });
 
@@ -1294,6 +1682,8 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.on('updateResources', 'RoadmapTours', async (req) => {
+      if (!ensureActiveEntity(req, 'la ligne de feuille de route')) return;
+      await requireRole(req, Users, 'PLANIFICATEUR');
       const roadmapTourID = req.params?.[0]?.ID;
       const { clientID, driverID, vehicleID } = req.data;
 
@@ -1311,6 +1701,21 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         return reject(req, 'Aucune tournée associée à cette ligne.');
       }
 
+      const [roadmap, tour] = await Promise.all([
+        SELECT.one.from(Roadmaps).where({ ID: roadmapTour.roadmap_ID }),
+        SELECT.one.from(Tours).where({ ID: roadmapTour.tour_ID })
+      ]);
+
+      if (!roadmap || ![ROADMAP_STATUS.CREATED, ROADMAP_STATUS.REJECTED]
+        .includes(normalizeRoadmapStatus(roadmap.status))) {
+        return reject(req, 'Les ressources ne peuvent être modifiées que pendant la préparation de la feuille de route.', 409);
+      }
+
+      if (!tour || ![TOUR_STATUS.VALIDATED, TOUR_STATUS.ASSIGNED]
+        .includes(normalizeTourStatus(tour.status))) {
+        return reject(req, 'Les ressources ne peuvent être affectées qu’à une tournée validée.', 409);
+      }
+
       const updateData = {
         updatedAt: new Date().toISOString()
       };
@@ -1320,27 +1725,34 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         if (!client) {
           return reject(req, 'Client introuvable.');
         }
+        if (roadmap.client_ID && clientID !== roadmap.client_ID) {
+          return reject(req, 'Le client de la tournée doit correspondre à celui de la feuille de route.', 409);
+        }
         updateData.client_ID = clientID;
       }
 
       if (driverID) {
         const driver = await SELECT.one.from(Drivers).where({ ID: driverID });
-        if (!driver) {
-          return reject(req, 'Ressource humaine introuvable.');
+        if (!driver || driver.available === false) {
+          return reject(req, 'La ressource humaine sélectionnée n’est pas disponible.');
         }
         updateData.driver_ID = driverID;
       }
 
       if (vehicleID) {
         const vehicle = await SELECT.one.from(Vehicles).where({ ID: vehicleID });
-        if (!vehicle) {
-          return reject(req, 'Ressource matérielle introuvable.');
+        if (!vehicle || vehicle.available === false) {
+          return reject(req, 'La ressource matérielle sélectionnée n’est pas disponible.');
         }
         updateData.vehicle_ID = vehicleID;
       }
 
       await UPDATE(Tours)
-        .set(updateData)
+        .set({
+          ...updateData,
+          status: TOUR_STATUS.ASSIGNED,
+          roadmap_ID: roadmapTour.roadmap_ID
+        })
         .where({ ID: roadmapTour.tour_ID });
 
       return SELECT.one.from(RoadmapTours).where({ ID: roadmapTourID });
@@ -1351,6 +1763,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
     /* ===================================================== */
 
     this.on('createRoadmapFromTour', async (req) => {
+      await requireRole(req, Users, 'PLANIFICATEUR');
       const { tourID } = req.data;
 
       const tour = await SELECT.one.from(Tours).where({ ID: tourID });
@@ -1408,6 +1821,12 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
           tour_ID: tourID
         });
 
+        await UPDATE(Tours).set({
+          status: TOUR_STATUS.ASSIGNED,
+          roadmap_ID: roadmapID,
+          updatedAt: new Date().toISOString()
+        }).where({ ID: tourID });
+
         let points = await SELECT.from(TourCollectionPoints)
           .where({ tour_ID: tourID })
           .orderBy('sequence');
@@ -1445,15 +1864,17 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
     this.on('getPlannerStats', async (req) => {
       const { userID } = req.data || {};
-      const allTours = await SELECT.from(Tours).columns('status', 'createdByUser_ID');
+      const allTours = await SELECT.from(Tours).columns('status', 'tourDate', 'collectionDate', 'createdByUser_ID');
       const hasAuthorData = allTours.some((tour) => hasValue(tour.createdByUser_ID));
       const tours = userID && hasAuthorData
         ? allTours.filter((tour) => tour.createdByUser_ID === userID)
         : allTours;
-      const roadmaps = await SELECT.from(Roadmaps).columns('status');
+      const roadmaps = await SELECT.from(Roadmaps).columns('status', 'startDate', 'endDate');
       const createdRoadmaps = roadmaps.filter((roadmap) => isCreatedRoadmapStatus(roadmap.status)).length;
       const validatedRoadmaps = roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length;
       const rejectedRoadmaps = roadmaps.filter((roadmap) => isRejectedRoadmapStatus(roadmap.status)).length;
+      const completedRoadmaps = roadmaps.filter((roadmap) => normalizeRoadmapStatus(roadmap.status) === ROADMAP_STATUS.COMPLETED).length;
+      const cancelledRoadmaps = roadmaps.filter((roadmap) => normalizeRoadmapStatus(roadmap.status) === ROADMAP_STATUS.CANCELLED).length;
 
       return {
         totalTours: tours.length,
@@ -1461,20 +1882,29 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         pendingTours: tours.filter((tour) => isCreatedStatus(tour.status)).length,
         acceptedTours: tours.filter((tour) => isValidatedStatus(tour.status)).length,
         rejectedTours: tours.filter((tour) => isRejectedStatus(tour.status)).length,
+        assignedTours: tours.filter((tour) => normalizeTourStatus(tour.status) === TOUR_STATUS.ASSIGNED).length,
+        completedTours: tours.filter((tour) => normalizeTourStatus(tour.status) === TOUR_STATUS.COMPLETED).length,
+        cancelledTours: tours.filter((tour) => normalizeTourStatus(tour.status) === TOUR_STATUS.CANCELLED).length,
+        overdueTours: tours.filter((tour) => tourScheduleStatus(tour) === 'OVERDUE').length,
         totalRoadmaps: roadmaps.length,
         createdRoadmaps,
         validatedRoadmaps,
-        rejectedRoadmaps
+        rejectedRoadmaps,
+        completedRoadmaps,
+        cancelledRoadmaps,
+        overdueRoadmaps: roadmaps.filter((roadmap) => roadmapScheduleStatus(roadmap) === 'OVERDUE').length
       };
     });
 
     this.on('getSupervisorStats', async () => {
-      const tours = await SELECT.from(Tours).columns('status');
-      const roadmaps = await SELECT.from(Roadmaps).columns('status', 'integrationStatus', 'sapSalesOrder');
+      const tours = await SELECT.from(Tours).columns('status', 'tourDate', 'collectionDate');
+      const roadmaps = await SELECT.from(Roadmaps).columns('status', 'startDate', 'endDate', 'integrationStatus', 'sapSalesOrder');
       const decisions = await SELECT.from(DecisionHistories).columns('decision');
       const createdRoadmaps = roadmaps.filter((roadmap) => isCreatedRoadmapStatus(roadmap.status)).length;
       const validatedRoadmaps = roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length;
       const rejectedRoadmaps = roadmaps.filter((roadmap) => isRejectedRoadmapStatus(roadmap.status)).length;
+      const completedRoadmaps = roadmaps.filter((roadmap) => normalizeRoadmapStatus(roadmap.status) === ROADMAP_STATUS.COMPLETED).length;
+      const cancelledRoadmaps = roadmaps.filter((roadmap) => normalizeRoadmapStatus(roadmap.status) === ROADMAP_STATUS.CANCELLED).length;
       const integratedRoadmaps = roadmaps.filter((roadmap) => {
         return String(roadmap.integrationStatus || '').trim().toUpperCase() === 'INTEGRATED';
       }).length;
@@ -1491,10 +1921,17 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         pendingValidation: tours.filter((tour) => isCreatedStatus(tour.status)).length,
         acceptedTours: tours.filter((tour) => isValidatedStatus(tour.status)).length,
         rejectedTours: tours.filter((tour) => isRejectedStatus(tour.status)).length,
+        assignedTours: tours.filter((tour) => normalizeTourStatus(tour.status) === TOUR_STATUS.ASSIGNED).length,
+        completedTours: tours.filter((tour) => normalizeTourStatus(tour.status) === TOUR_STATUS.COMPLETED).length,
+        cancelledTours: tours.filter((tour) => normalizeTourStatus(tour.status) === TOUR_STATUS.CANCELLED).length,
+        overdueTours: tours.filter((tour) => tourScheduleStatus(tour) === 'OVERDUE').length,
         totalRoadmaps: roadmaps.length,
         createdRoadmaps,
         validatedRoadmaps,
         rejectedRoadmaps,
+        completedRoadmaps,
+        cancelledRoadmaps,
+        overdueRoadmaps: roadmaps.filter((roadmap) => roadmapScheduleStatus(roadmap) === 'OVERDUE').length,
         integratedRoadmaps,
         activeRoadmaps: validatedRoadmaps,
         totalDecisions: decisions.length,

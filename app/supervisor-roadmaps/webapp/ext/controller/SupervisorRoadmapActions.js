@@ -22,11 +22,7 @@ sap.ui.define([
   }
 
   function isCreatedStatus(sStatus) {
-    var sNormalized = normalizeStatus(sStatus);
-
-    return sNormalized === "CREATED" ||
-      sNormalized === "DRAFT" ||
-      sNormalized === "PENDING";
+    return normalizeStatus(sStatus) === "CREATED";
   }
 
   function addContextOnce(aContexts, oContext) {
@@ -84,7 +80,7 @@ sap.ui.define([
         oObject = oContext.getObject();
       }
 
-      if (oObject && isCreatedStatus(oObject.status)) {
+      if (oObject && oObject.IsActiveEntity !== false && isCreatedStatus(oObject.status)) {
         addContextOnce(aCreatedContexts, oContext);
       }
     }
@@ -137,7 +133,10 @@ sap.ui.define([
 
   function getErrorMessage(oError, sFallback) {
     var oCause = oError && oError.cause;
-    return (oCause && oCause.message) || (oError && oError.message) || sFallback;
+    var sMessage = (oCause && oCause.message) || (oError && oError.message) || "";
+    return /(?:node_modules|\.js:\d+|no handler|no such|SQLITE_|TypeError|ReferenceError|srv-dispatch)/i.test(sMessage)
+      ? sFallback
+      : (sMessage || sFallback);
   }
 
   return {
@@ -168,13 +167,13 @@ sap.ui.define([
       var aCreatedContexts = await keepOnlyCreatedRoadmaps(aContexts);
 
       if (!aCreatedContexts.length) {
-        MessageBox.warning("Seules les feuilles de route avec le statut CREATED peuvent être validées.");
+        MessageBox.warning("Seules les feuilles de route créées peuvent être validées.");
         return;
       }
 
       var sMessage = aCreatedContexts.length === 1
         ? "Voulez-vous valider cette feuille de route ?"
-        : "Voulez-vous valider les feuilles de route sélectionnées avec le statut CREATED ?";
+        : "Voulez-vous valider les feuilles de route sélectionnées ?";
 
       MessageBox.confirm(sMessage, {
         title: "Validation des feuilles de route",
@@ -207,7 +206,7 @@ sap.ui.define([
       var aCreatedContexts = await keepOnlyCreatedRoadmaps(aContexts);
 
       if (!aCreatedContexts.length) {
-        MessageBox.warning("Seules les feuilles de route avec le statut CREATED peuvent être rejetées.");
+        MessageBox.warning("Seules les feuilles de route créées peuvent être rejetées.");
         return;
       }
 
@@ -275,6 +274,42 @@ sap.ui.define([
       });
 
       oDialog.open();
+    },
+
+    onMarkRoadmapCompleted: async function () {
+      var aContexts = getContextsFromArguments(arguments);
+      var aCompletable = [];
+
+      for (var i = 0; i < aContexts.length; i += 1) {
+        var oObject = typeof aContexts[i].requestObject === "function"
+          ? await aContexts[i].requestObject()
+          : (aContexts[i].getObject && aContexts[i].getObject());
+
+        if (oObject && oObject.IsActiveEntity !== false && normalizeStatus(oObject.status) === "VALIDATED") {
+          addContextOnce(aCompletable, aContexts[i]);
+        }
+      }
+
+      if (!aCompletable.length) {
+        MessageBox.warning("Sélectionnez une feuille de route validée à terminer.");
+        return;
+      }
+
+      MessageBox.confirm("Confirmer la clôture des feuilles de route sélectionnées ?", {
+        title: "Clôture des feuilles de route",
+        actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+        emphasizedAction: MessageBox.Action.OK,
+        onClose: async function (sAction) {
+          if (sAction !== MessageBox.Action.OK) return;
+
+          try {
+            await executeForAll(aCompletable, "markRoadmapCompleted");
+            MessageToast.show("Feuille(s) de route marquée(s) comme terminée(s).");
+          } catch (oError) {
+            MessageBox.error(getErrorMessage(oError, "Impossible de terminer la feuille de route."));
+          }
+        }
+      });
     }
   };
 });

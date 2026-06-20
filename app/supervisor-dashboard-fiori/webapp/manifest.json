@@ -68,7 +68,9 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "sepur.supervisor.supervisordashboardfiori.i18n.i18n"
+          "bundleName": "sepur.supervisor.supervisordashboardfiori.i18n.i18n",
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
         }
       },
       "mainModel": {
@@ -82,7 +84,11 @@
       },
       "@i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "uri": "i18n/i18n.properties"
+        "uri": "i18n/i18n.properties",
+        "settings": {
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
+        }
       }
     },
     "resources": {

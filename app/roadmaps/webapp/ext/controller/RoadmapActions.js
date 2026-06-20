@@ -27,7 +27,10 @@ sap.ui.define([
 
   function getErrorMessage(oError, sFallback) {
     var oCause = oError && oError.cause;
-    return (oCause && oCause.message) || (oError && oError.message) || sFallback;
+    var sMessage = (oCause && oCause.message) || (oError && oError.message) || "";
+    return /(?:node_modules|\.js:\d+|no handler|no such|SQLITE_|TypeError|ReferenceError|srv-dispatch)/i.test(sMessage)
+      ? sFallback
+      : (sMessage || sFallback);
   }
 
   function refreshContext(oContext) {
@@ -71,6 +74,12 @@ sap.ui.define([
         return;
       }
 
+      var oRoadmap = typeof oContext.getObject === "function" && oContext.getObject();
+      if (oRoadmap && (oRoadmap.IsActiveEntity === false || String(oRoadmap.status || "").toUpperCase() !== "CREATED")) {
+        MessageBox.warning("Enregistrez une feuille de route créée avant d’affecter les tournées.");
+        return;
+      }
+
       MessageBox.confirm(
         "Voulez-vous affecter automatiquement les tournées du même client et du même mois ?",
         {
@@ -101,6 +110,12 @@ sap.ui.define([
 
       if (!oContext) {
         MessageBox.warning("Roadmap introuvable.");
+        return;
+      }
+
+      var oRoadmap = typeof oContext.getObject === "function" && oContext.getObject();
+      if (oRoadmap && oRoadmap.IsActiveEntity === false) {
+        MessageBox.warning("Veuillez enregistrer la feuille de route avant de la générer.");
         return;
       }
 

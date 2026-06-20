@@ -10,8 +10,8 @@ rafraichissent leur modele OData apres chaque action.
 |---|---|---|
 | 1 | Ouvrir l'URL de l'Application Router | La page d'accueil est affichee |
 | 2 | Choisir un espace protege | La page de connexion est ouverte avec le retour memorise |
-| 3 | Se connecter avec `planificateur` / `1234` | Le dashboard planificateur est affiche |
-| 4 | Se connecter avec `superviseur` / `1234` | Le dashboard superviseur est affiche |
+| 3 | Se connecter avec `planificateur` / `plan123` | Le dashboard planificateur est affiche |
+| 4 | Se connecter avec `superviseur` / `sup123` | Le dashboard superviseur est affiche |
 | 5 | Tenter d'ouvrir un espace d'un autre role | L'acces est refuse avec un message en francais |
 
 ## Planificateur
@@ -35,10 +35,12 @@ rafraichissent leur modele OData apres chaque action.
 | Tournees | Rejeter | Exige un motif, historise la decision et rafraichit la liste |
 | Feuilles de route | Valider | Exige le statut `CREATED` et au moins une tournee affectee |
 | Feuilles de route | Rejeter | Exige un motif et rafraichit la liste sans rechargement complet de la page |
+| Tournees | Marquer comme terminee | Exige une tournee validee ou affectee et rafraichit la liste |
+| Feuilles de route | Marquer comme terminee | Exige que toutes les tournees affectees soient terminees |
 
 ## Regles de donnees
 
-- Une tournee validee ou rejetee ne peut pas recevoir une seconde decision.
+- Une tournee validee, terminee ou annulee ne peut pas recevoir une seconde decision.
 - Une tournee ne peut appartenir qu'a une seule feuille de route.
 - Une feuille de route validee ou rejetee n'est plus modifiable par les actions metier.
 - L'affectation automatique respecte le client, le mois, l'annee et la disponibilite.

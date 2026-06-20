@@ -33,6 +33,12 @@
                                 press=".onDashboard" />
 
                             <Button
+                                text="Accueil"
+                                icon="sap-icon://home"
+                                class="menuButton"
+                                press=".onOpenHome" />
+
+                            <Button
                                 text="Tournées"
                                 icon="sap-icon://map"
                                 class="menuButton"
@@ -45,7 +51,7 @@
                                 press=".onOpenRoadmaps" />
 
                             <Button
-                                text="Sales Orders"
+                                text="Commandes SAP"
                                 icon="sap-icon://sales-order"
                                 class="menuButton"
                                 press=".onSelectSalesOrders" />
@@ -220,7 +226,7 @@
                                     </GenericTile>
 
                                     <GenericTile
-                                        header="Sales Orders"
+                                        header="Commandes SAP"
                                         subheader="Commandes clients générées"
                                         frameType="TwoByOne"
                                         class="sapKpiTile"

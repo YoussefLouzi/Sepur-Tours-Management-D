@@ -1,0 +1,6 @@
+code,label,criticality
+UPCOMING,À venir,0
+CURRENT,En cours,2
+OVERDUE,En retard,1
+COMPLETED,Terminée,3
+CANCELLED,Annulée,0

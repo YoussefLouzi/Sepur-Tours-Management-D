@@ -14,7 +14,7 @@ sap.ui.define(
                 var sUserRole = String(oUser && oUser.role || "").trim().toUpperCase();
 
                 if (sUserRole === sRole || sUserRole === "ADMIN") {
-                    return true;
+                    return oUser;
                 }
             } catch (e) {
                 // Invalid session payload: redirect to login.
@@ -22,7 +22,7 @@ sap.ui.define(
 
             window.location.href = "/login/webapp/index.html?redirect=" +
                 encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
-            return false;
+            return null;
         }
 
         return Component.extend("sepur.supervisor.supervisorroadmaps.Component", {
@@ -31,11 +31,18 @@ sap.ui.define(
             },
 
             init: function () {
-                if (!requireRole("SUPERVISEUR")) {
+                var oUser = requireRole("SUPERVISEUR");
+
+                if (!oUser) {
                     return;
                 }
 
                 Component.prototype.init.apply(this, arguments);
+
+                var oModel = this.getModel();
+                if (oModel && typeof oModel.changeHttpHeaders === "function") {
+                    oModel.changeHttpHeaders({ "X-Sepur-User-Id": oUser.ID });
+                }
             }
         });
     }

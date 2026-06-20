@@ -9,3 +9,4 @@ using from './annotations/supervisor-roadmaps/annotations';
 using from './annotations/supervisor-dashboard-fiori/annotations';
 
 using from './annotations/field-control';
+using from './annotations/value-helps';

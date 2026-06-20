@@ -30,8 +30,17 @@ function registerErrorHandler(service) {
         const status = Number.isFinite(rawStatus)
             ? rawStatus
             : (isAssertionError ? 400 : 500);
+        const technicalText = [
+            error.message,
+            error.code,
+            ...details.map((detail) => `${detail.code || ""} ${detail.message || ""}`)
+        ]
+            .filter(Boolean)
+            .join(" ");
+        const isTechnicalError = /(?:node_modules|\.js:\d+|no handler|no such (?:function|table|column)|SQLITE_|sql error|srv-dispatch|TypeError|ReferenceError|SyntaxError)/i
+            .test(technicalText);
 
-        if (status < 500) {
+        if (status < 500 && !isTechnicalError) {
             error.status = status;
             error.statusCode = status;
 
@@ -52,6 +61,8 @@ function registerErrorHandler(service) {
         error.statusCode = 500;
         error.code = "INTERNAL_ERROR";
         error.message = "Une erreur interne est survenue. Veuillez réessayer ultérieurement.";
+        delete error.details;
+        delete error.stack;
     });
 }
 

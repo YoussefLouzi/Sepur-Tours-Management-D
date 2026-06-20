@@ -11,6 +11,24 @@ service RouteManagementService {
     @readonly
     entity Materials as projection on db.Materials;
 
+    @readonly
+    entity TourStatuses as projection on db.TourStatuses;
+
+    @readonly
+    entity RoadmapStatuses as projection on db.RoadmapStatuses;
+
+    @readonly
+    entity IntegrationStatuses as projection on db.IntegrationStatuses;
+
+    @readonly
+    entity TourScheduleStatuses as projection on db.TourScheduleStatuses;
+
+    @readonly
+    entity RoadmapScheduleStatuses as projection on db.RoadmapScheduleStatuses;
+
+    @readonly
+    entity UnitsOfMeasure as projection on db.UnitsOfMeasure;
+
     entity Vehicles as projection on db.Vehicles;
 
     entity Drivers as projection on db.Drivers;
@@ -29,13 +47,49 @@ service RouteManagementService {
         driver.lastName              as driverLastName      : String,
         createdByUser.fullName       as createdByName       : String,
 
+        case
+            when status = 'CREATED' then 'Créée'
+            when status = 'REJECTED' then 'Rejetée'
+            when status = 'VALIDATED' then 'Validée'
+            when status = 'ASSIGNED' then 'Affectée'
+            when status = 'COMPLETED' then 'Terminée'
+            when status = 'CANCELLED' then 'Annulée'
+            else 'Statut inconnu'
+        end as statusText : String(40),
+
+        case
+            when status = 'COMPLETED' then 'COMPLETED'
+            when status = 'CANCELLED' then 'CANCELLED'
+            when coalesce(tourDate, collectionDate) < current_date then 'OVERDUE'
+            when coalesce(tourDate, collectionDate) = current_date then 'DUE_TODAY'
+            else 'ON_TIME'
+        end as scheduleStatus : String(20),
+
+        case
+            when status = 'COMPLETED' then 'Terminée'
+            when status = 'CANCELLED' then 'Annulée'
+            when coalesce(tourDate, collectionDate) < current_date then 'En retard'
+            when coalesce(tourDate, collectionDate) = current_date then 'À exécuter aujourd’hui'
+            else 'Dans les délais'
+        end as scheduleStatusText : String(60),
+
+        case
+            when status = 'COMPLETED' then 3
+            when status = 'CANCELLED' then 0
+            when coalesce(tourDate, collectionDate) < current_date then 1
+            when coalesce(tourDate, collectionDate) = current_date then 2
+            else 0
+        end as scheduleCriticality : Integer,
+
         virtual statusCriticality    : Integer,
         virtual canValidate          : Boolean,
-        virtual canReject            : Boolean
+        virtual canReject            : Boolean,
+        virtual canComplete          : Boolean
     }
     actions {
         action validate() returns Tours;
         action rejectTourDecision(reason : String) returns Tours;
+        action markTourCompleted() returns Tours;
     };
 
     @odata.draft.enabled
@@ -51,15 +105,50 @@ service RouteManagementService {
         tour.driver.lastName            as tourDriverLastName       : String,
         tour.vehicle.registrationNumber as tourVehicleRegistration  : String,
 
+        case
+            when status = 'CREATED' then 'Créée'
+            when status = 'REJECTED' then 'Rejetée'
+            when status = 'VALIDATED' then 'Validée'
+            when status = 'COMPLETED' then 'Terminée'
+            when status = 'CANCELLED' then 'Annulée'
+            else 'Statut inconnu'
+        end as statusText : String(40),
+
+        case
+            when status = 'COMPLETED' then 'COMPLETED'
+            when status = 'CANCELLED' then 'CANCELLED'
+            when endDate < current_date then 'OVERDUE'
+            when startDate > current_date then 'UPCOMING'
+            else 'CURRENT'
+        end as scheduleStatus : String(20),
+
+        case
+            when status = 'COMPLETED' then 'Terminée'
+            when status = 'CANCELLED' then 'Annulée'
+            when endDate < current_date then 'En retard'
+            when startDate > current_date then 'À venir'
+            else 'En cours'
+        end as scheduleStatusText : String(60),
+
+        case
+            when status = 'COMPLETED' then 3
+            when status = 'CANCELLED' then 0
+            when endDate < current_date then 1
+            when startDate > current_date then 0
+            else 2
+        end as scheduleCriticality : Integer,
+
         virtual statusCriticality       : Integer,
         virtual canValidate             : Boolean,
-        virtual canReject               : Boolean
+        virtual canReject               : Boolean,
+        virtual canComplete             : Boolean
     }
     actions {
         action validateRoadmap() returns Roadmaps;
     action rejectRoadmap(reason : String) returns Roadmaps;
     action autoAssignTours() returns Roadmaps;
     action generateRoadmapSheetHtml() returns LargeString;
+    action markRoadmapCompleted() returns Roadmaps;
     };
 
     entity RoadmapTours as projection on db.RoadmapTours {
@@ -84,7 +173,12 @@ service RouteManagementService {
 
     entity RoadmapSteps as projection on db.RoadmapSteps;
 
-    entity DecisionHistories as projection on db.DecisionHistories;
+    entity DecisionHistories as projection on db.DecisionHistories {
+        *,
+        decidedBy.fullName as decidedByName : String,
+        tour.tourCode as decisionTourCode : String,
+        roadmap.roadmapCode as decisionRoadmapCode : String
+    };
 
     @readonly
     @Aggregation.ApplySupported: {
@@ -143,10 +237,17 @@ service RouteManagementService {
         pendingTours      : Integer;
         acceptedTours     : Integer;
         rejectedTours     : Integer;
+        assignedTours     : Integer;
+        completedTours    : Integer;
+        cancelledTours    : Integer;
+        overdueTours      : Integer;
         totalRoadmaps     : Integer;
         createdRoadmaps   : Integer;
         validatedRoadmaps : Integer;
         rejectedRoadmaps  : Integer;
+        completedRoadmaps : Integer;
+        cancelledRoadmaps : Integer;
+        overdueRoadmaps   : Integer;
     }
 
     type SupervisorStats {
@@ -154,10 +255,17 @@ service RouteManagementService {
         pendingValidation  : Integer;
         acceptedTours      : Integer;
         rejectedTours      : Integer;
+        assignedTours      : Integer;
+        completedTours     : Integer;
+        cancelledTours     : Integer;
+        overdueTours       : Integer;
         totalRoadmaps      : Integer;
         createdRoadmaps    : Integer;
         validatedRoadmaps  : Integer;
         rejectedRoadmaps   : Integer;
+        completedRoadmaps  : Integer;
+        cancelledRoadmaps  : Integer;
+        overdueRoadmaps    : Integer;
         integratedRoadmaps : Integer;
         activeRoadmaps     : Integer;
         totalDecisions     : Integer;
@@ -479,6 +587,11 @@ annotate RouteManagementService.Tours with @(
             $Type  : 'UI.ReferenceFacet',
             Label  : 'Suivi',
             Target : '@UI.FieldGroup#Tracking'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Historique des décisions',
+            Target : 'decisions/@UI.LineItem'
         }
     ],
 
@@ -598,7 +711,7 @@ annotate RouteManagementService.Roadmaps with @(
             Value : roadmapCode
         },
         Description    : {
-            Value : status
+            Value : statusText
         }
     },
 
@@ -608,6 +721,7 @@ annotate RouteManagementService.Roadmaps with @(
         month,
         year,
         status,
+        scheduleStatus,
         integrationStatus
     ],
 
@@ -637,10 +751,17 @@ annotate RouteManagementService.Roadmaps with @(
         {
             $Type : 'UI.DataField',
             Label : 'Statut',
-            Value : status,
+            Value : statusText,
             Criticality : statusCriticality,
             CriticalityRepresentation : #WithIcon,
             ![@UI.Importance] : #High
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'État temporel',
+            Value : scheduleStatusText,
+            Criticality : scheduleCriticality,
+            CriticalityRepresentation : #WithIcon
         },
         {
             $Type : 'UI.DataField',
@@ -664,6 +785,11 @@ annotate RouteManagementService.Roadmaps with @(
             $Type  : 'UI.ReferenceFacet',
             Label  : 'Suivi',
             Target : '@UI.FieldGroup#Tracking'
+        },
+        {
+            $Type  : 'UI.ReferenceFacet',
+            Label  : 'Historique des décisions',
+            Target : 'decisions/@UI.LineItem'
         }
     ],
 
@@ -697,8 +823,15 @@ annotate RouteManagementService.Roadmaps with @(
             {
                 $Type : 'UI.DataField',
                 Label : 'Statut',
-                Value : status,
+                Value : statusText,
                 Criticality : statusCriticality,
+                CriticalityRepresentation : #WithIcon
+            },
+            {
+                $Type : 'UI.DataField',
+                Label : 'État temporel',
+                Value : scheduleStatusText,
+                Criticality : scheduleCriticality,
                 CriticalityRepresentation : #WithIcon
             },
             {
@@ -751,6 +884,31 @@ annotate RouteManagementService.RoadmapTours with @(
             $Type : 'UI.DataField',
             Label : 'Remarque',
             Value : note
+        }
+    ]
+);
+
+annotate RouteManagementService.DecisionHistories with @(
+    UI.LineItem : [
+        {
+            $Type : 'UI.DataField',
+            Label : 'Décision',
+            Value : decision
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Motif',
+            Value : reason
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Décidé par',
+            Value : decidedByName
+        },
+        {
+            $Type : 'UI.DataField',
+            Label : 'Date de décision',
+            Value : decisionDate
         }
     ]
 );

@@ -44,7 +44,7 @@ recalculent plus les statuts metier dans leurs controleurs.
 1. `/` ouvre `/home/webapp/index.html`.
 2. L'accueil presente les espaces Planificateur et Superviseur.
 3. Une action protegee envoie vers `/login/webapp/index.html`.
-4. Le backend compare le mot de passe aux variables d'environnement de demonstration, ou a la valeur `1234` par defaut.
+4. Le backend verifie l'identifiant, le mot de passe et l'etat actif dans l'entite `Users`.
 5. Le role determine le dashboard et les ecrans accessibles.
 6. Toutes les donnees metier passent par `/odata/v4/route-management/`.
 
@@ -72,6 +72,6 @@ cf deploy mta_archives/archive.mtar --retries 1
 ```
 
 Pour une mise en production au-dela d'une soutenance, remplacer la session
-applicative de demonstration par les roles XSUAA/IAS. Les mots de passe de
-demonstration restent en clair dans l'environnement mais ne sont ni exposes
-par OData ni publies dans le depot.
+applicative de demonstration par les roles XSUAA/IAS. Les comptes de
+demonstration sont fournis par les donnees initiales HANA/SQLite; l'entite
+`Users` et son mot de passe ne sont jamais exposes par OData.

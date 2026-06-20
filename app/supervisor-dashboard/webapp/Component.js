@@ -19,7 +19,16 @@ sap.ui.define([
                 return;
             }
 
-            const user = JSON.parse(raw);
+            let user;
+
+            try {
+                user = JSON.parse(raw);
+            } catch (error) {
+                localStorage.removeItem("sepur.user");
+                sessionStorage.removeItem("sepur.user");
+                window.location.href = "/login/webapp/index.html";
+                return;
+            }
 
             const role = String(user.role || "").trim().toUpperCase();
 
@@ -40,15 +49,22 @@ sap.ui.define([
                     totalTours: 0,
                     pendingTours: 0,
                     acceptedTours: 0,
-                    rejectedTours: 0
+                    rejectedTours: 0,
+                    assignedTours: 0,
+                    completedTours: 0,
+                    cancelledTours: 0,
+                    overdueTours: 0
                 },
 
                 roadmapStats: {
                     totalRoadmaps: 0,
-                    draftRoadmaps: 0,
-                    activeRoadmaps: 0,
+                    createdRoadmaps: 0,
+                    validatedRoadmaps: 0,
+                    rejectedRoadmaps: 0,
                     completedRoadmaps: 0,
-                    cancelledRoadmaps: 0
+                    cancelledRoadmaps: 0,
+                    overdueRoadmaps: 0,
+                    integratedRoadmaps: 0
                 },
 
                 salesOrderStats: {
@@ -70,6 +86,11 @@ sap.ui.define([
                     lastSync: "-"
                 }
             }), "view");
+
+            const oDataModel = this.getModel();
+            if (oDataModel && typeof oDataModel.changeHttpHeaders === "function") {
+                oDataModel.changeHttpHeaders({ "X-Sepur-User-Id": user.ID });
+            }
         },
 
         _getInitials: function (name) {

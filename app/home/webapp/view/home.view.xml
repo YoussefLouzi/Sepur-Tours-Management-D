@@ -12,9 +12,10 @@
             <HBox class="sapTopHeader" alignItems="Center" justifyContent="SpaceBetween">
 
                 <HBox alignItems="Center" class="headerLeft">
-                    <Button icon="sap-icon://menu2" type="Transparent" class="headerIconButton"/>
                     <Image
-                        src="https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg"
+                        src="https://www.sepur.com/wp-content/uploads/2025/01/logo-sepur-insertion-e1736954850722.png"
+                        decorative="false"
+                        alt="SEPUR"
                         class="sapLogoImage"/>
                     <Text text="SEPUR - Gestion des tournées" class="headerTitle"/>
                 </HBox>
@@ -34,9 +35,6 @@
                         visible="{home>/isLoggedIn}"
                         press=".onProfileMenu"
                         class="profileButton"/>
-
-                    <Button icon="sap-icon://bell" type="Transparent" class="headerIconButton"/>
-                    <Button icon="sap-icon://sys-help" type="Transparent" class="headerIconButton"/>
 
                     <Button
                         icon="sap-icon://grid"
@@ -102,7 +100,7 @@
             <!-- CONTENT -->
             <VBox class="contentArea">
 
-                <Text text="End-to-End Waste Collection Processing" class="sectionTitle"/>
+                <Text text="Pilotage de la collecte de bout en bout" class="sectionTitle"/>
                 <Text
                     text="Services métier disponibles pour gérer le processus complet de collecte SEPUR."
                     class="sectionSubtitle"/>
@@ -195,34 +193,6 @@
                             <TileContent>
                                 <content>
                                     <ImageContent src="sap-icon://map-3"/>
-                                </content>
-                            </TileContent>
-                        </tileContent>
-                    </GenericTile>
-
-                    <GenericTile
-                        header="Monitoring opérationnel"
-                        subheader="Suivi global du processus"
-                        class="serviceTile"
-                        visible="{home>/showCommonServices}">
-                        <tileContent>
-                            <TileContent>
-                                <content>
-                                    <ImageContent src="sap-icon://business-objects-experience"/>
-                                </content>
-                            </TileContent>
-                        </tileContent>
-                    </GenericTile>
-
-                    <GenericTile
-                        header="Préparation SAP S/4HANA"
-                        subheader="Données prêtes pour CPI"
-                        class="serviceTile"
-                        visible="{home>/showCommonServices}">
-                        <tileContent>
-                            <TileContent>
-                                <content>
-                                    <ImageContent src="sap-icon://chain-link"/>
                                 </content>
                             </TileContent>
                         </tileContent>

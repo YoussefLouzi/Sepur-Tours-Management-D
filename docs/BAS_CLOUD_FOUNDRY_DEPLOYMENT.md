@@ -59,16 +59,11 @@ L'accueil local est disponible a l'adresse affichee par BAS, avec le chemin
 
 | Role | Nom d'utilisateur | E-mail | Mot de passe par defaut |
 |---|---|---|---|
-| Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `1234` |
-| Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `1234` |
+| Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `plan123` |
+| Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `sup123` |
 
-Le mot de passe simple `1234` fonctionne pour ces deux comptes, y compris apres
-deploiement. Pour imposer d'autres valeurs sans modifier le code, utiliser:
-
-```bash
-export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'
-export DEMO_SUPERVISOR_PASSWORD='<mot-de-passe-superviseur>'
-```
+Ces quatre identifiants utilisent les utilisateurs charges depuis
+`db/data/route.management-Users.csv`; aucun mot de passe n'est stocke dans le frontend.
 
 ## 4. Compiler et verifier
 
@@ -104,9 +99,6 @@ cf target
 ```bash
 npm run build
 cf deploy mta_archives/archive.mtar --retries 1
-cf set-env Sepur_tours_management-srv DEMO_PLANNER_PASSWORD '<mot-de-passe-planificateur>'
-cf set-env Sepur_tours_management-srv DEMO_SUPERVISOR_PASSWORD '<mot-de-passe-superviseur>'
-cf restage Sepur_tours_management-srv
 ```
 
 Le MTAR contient le service CAP, le deployer HDI, l'Application Router et les
@@ -187,9 +179,8 @@ utilisee par une autre application.
 Le login applicatif actuel convient a une demonstration PFE. Pour une mise en
 production, remplacer cette session par SAP Cloud Identity Services et XSUAA,
 puis appliquer les roles Planificateur et Superviseur directement aux actions
-CAP. Les variables d'environnement en clair sont reservees a la demonstration
-PFE et ne doivent jamais etre commitees. Pour une production reelle, utiliser
-IAS/XSUAA et ne jamais placer de secret ou de mot de passe dans le frontend.
+CAP. Ne jamais placer de secret ou de mot de passe de production dans le depot
+ou dans le frontend.
 
 Le profil Cloud Foundry utilise temporairement l'authentification CAP `dummy`
 car l'authentification fonctionnelle est geree par l'action `login`. Cette

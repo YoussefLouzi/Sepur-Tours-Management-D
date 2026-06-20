@@ -75,10 +75,17 @@ sap.ui.define([
                     createdTours: 0,
                     validatedTours: 0,
                     rejectedTours: 0,
+                    assignedTours: 0,
+                    completedTours: 0,
+                    cancelledTours: 0,
+                    overdueTours: 0,
                     totalRoadmaps: 0,
                     createdRoadmaps: 0,
                     validatedRoadmaps: 0,
-                    rejectedRoadmaps: 0
+                    rejectedRoadmaps: 0,
+                    completedRoadmaps: 0,
+                    cancelledRoadmaps: 0,
+                    overdueRoadmaps: 0
                 },
 
                 tourChartData: [],
@@ -135,7 +142,10 @@ sap.ui.define([
                         colorPalette: [
                             "#E9730C",
                             "#107E3E",
-                            "#BB0000"
+                            "#0A6ED1",
+                            "#5B738B",
+                            "#BB0000",
+                            "#8396A8"
                         ],
                         background: {
                             color: "transparent"
@@ -219,7 +229,7 @@ sap.ui.define([
 
             } catch (e) {
                 console.error("[Dashboard] Erreur chargement:", e);
-                MessageBox.error("Impossible de charger les données du dashboard.\n\n" + (e.message || ""));
+                MessageBox.error("Impossible de charger le tableau de bord. Veuillez réessayer.");
             } finally {
                 oModel.setProperty("/busy", false);
 
@@ -251,7 +261,7 @@ sap.ui.define([
 
         _loadTours: async function () {
             const sUrl = "/odata/v4/route-management/Tours" +
-                "?$select=ID,tourCode,tourDate,zone,collectionType,status,clientName,vehicleRegistration,driverLastName,createdAt" +
+                "?$select=ID,tourCode,tourDate,zone,collectionType,status,scheduleStatus,clientName,vehicleRegistration,driverLastName,createdAt" +
                 "&$orderby=createdAt desc" +
                 "&$top=1000";
 
@@ -267,7 +277,7 @@ sap.ui.define([
 
         _loadRoadmaps: async function () {
             const sUrl = "/odata/v4/route-management/Roadmaps" +
-                "?$select=ID,roadmapCode,startDate,endDate,status,tourCode,tourDate,tourZone,createdAt" +
+                "?$select=ID,roadmapCode,startDate,endDate,status,scheduleStatus,tourCode,tourDate,tourZone,createdAt" +
                 "&$orderby=createdAt desc" +
                 "&$top=1000";
 
@@ -300,22 +310,34 @@ sap.ui.define([
                 createdTours: oStats.pendingTours || 0,
                 validatedTours: oStats.acceptedTours || 0,
                 rejectedTours: oStats.rejectedTours || 0,
+                assignedTours: oStats.assignedTours || 0,
+                completedTours: oStats.completedTours || 0,
+                cancelledTours: oStats.cancelledTours || 0,
+                overdueTours: oStats.overdueTours || 0,
                 totalRoadmaps: oStats.totalRoadmaps || 0,
                 createdRoadmaps: oStats.createdRoadmaps || 0,
                 validatedRoadmaps: oStats.validatedRoadmaps || 0,
-                rejectedRoadmaps: oStats.rejectedRoadmaps || 0
+                rejectedRoadmaps: oStats.rejectedRoadmaps || 0,
+                completedRoadmaps: oStats.completedRoadmaps || 0,
+                cancelledRoadmaps: oStats.cancelledRoadmaps || 0,
+                overdueRoadmaps: oStats.overdueRoadmaps || 0
             });
 
             oModel.setProperty("/tourChartData", [
                 { status: "Créées", total: oStats.pendingTours || 0 },
                 { status: "Validées", total: oStats.acceptedTours || 0 },
-                { status: "Rejetées", total: oStats.rejectedTours || 0 }
+                { status: "Affectées", total: oStats.assignedTours || 0 },
+                { status: "Terminées", total: oStats.completedTours || 0 },
+                { status: "Rejetées", total: oStats.rejectedTours || 0 },
+                { status: "Annulées", total: oStats.cancelledTours || 0 }
             ]);
 
             oModel.setProperty("/roadmapChartData", [
                 { status: "Créées", total: oStats.createdRoadmaps || 0 },
                 { status: "Validées", total: oStats.validatedRoadmaps || 0 },
-                { status: "Rejetées", total: oStats.rejectedRoadmaps || 0 }
+                { status: "Terminées", total: oStats.completedRoadmaps || 0 },
+                { status: "Rejetées", total: oStats.rejectedRoadmaps || 0 },
+                { status: "Annulées", total: oStats.cancelledRoadmaps || 0 }
             ]);
         },
 

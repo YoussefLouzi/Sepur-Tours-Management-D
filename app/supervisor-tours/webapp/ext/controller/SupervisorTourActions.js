@@ -40,7 +40,10 @@ sap.ui.define([
 
   function getErrorMessage(oError, sFallback) {
     var oCause = oError && oError.cause;
-    return (oCause && oCause.message) || (oError && oError.message) || sFallback;
+    var sMessage = (oCause && oCause.message) || (oError && oError.message) || "";
+    return /(?:node_modules|\.js:\d+|no handler|no such|SQLITE_|TypeError|ReferenceError|srv-dispatch)/i.test(sMessage)
+      ? sFallback
+      : (sMessage || sFallback);
   }
 
   function filterCreatedContexts(aContexts) {
@@ -51,7 +54,16 @@ sap.ui.define([
 
       var oTour = oContext.getObject();
       var sStatus = String(oTour && oTour.status || "").trim().toUpperCase();
-      return sStatus === "CREATED" || sStatus === "DRAFT" || sStatus === "PENDING";
+      return oTour && oTour.IsActiveEntity !== false && sStatus === "CREATED";
+    });
+  }
+
+  function filterCompletableContexts(aContexts) {
+    return aContexts.filter(function (oContext) {
+      if (typeof oContext.getObject !== "function") return true;
+      var oTour = oContext.getObject();
+      var sStatus = String(oTour && oTour.status || "").trim().toUpperCase();
+      return oTour && oTour.IsActiveEntity !== false && (sStatus === "VALIDATED" || sStatus === "ASSIGNED");
     });
   }
 
@@ -228,6 +240,38 @@ sap.ui.define([
       });
 
       oDialog.open();
+    },
+
+    onMarkTourCompleted: function () {
+      var aContexts = filterCompletableContexts(getContextsFromArguments(arguments));
+
+      if (!aContexts.length) {
+        MessageBox.warning("Sélectionnez une tournée validée ou affectée à terminer.");
+        return;
+      }
+
+      MessageBox.confirm(
+        aContexts.length === 1
+          ? "Confirmer l’exécution complète de cette tournée ?"
+          : "Confirmer l’exécution complète des tournées sélectionnées ?",
+        {
+          title: "Clôture des tournées",
+          actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+          emphasizedAction: MessageBox.Action.OK,
+          onClose: async function (sAction) {
+            if (sAction !== MessageBox.Action.OK) return;
+
+            try {
+              await executeForAll(aContexts, "markTourCompleted");
+              MessageToast.show(aContexts.length === 1
+                ? "Tournée marquée comme terminée."
+                : "Tournées marquées comme terminées.");
+            } catch (oError) {
+              MessageBox.error(getErrorMessage(oError, "Impossible de terminer la tournée."));
+            }
+          }
+        }
+      );
     }
   };
 });

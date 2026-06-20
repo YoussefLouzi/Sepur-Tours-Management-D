@@ -97,20 +97,24 @@ sap.ui.define([
 
         _getErrorMessage: function (oError) {
             const sFallback = "Échec de la connexion. Vérifiez vos identifiants.";
+            const sTechnicalPattern = /(?:stack|sql|sqlite|hana|no handler|no such|internal|\.js:\d+|[a-z]:\\|\/home\/|\/srv\/|at\s+\w+)/i;
+            let sMessage = "";
 
             if (!oError) {
                 return sFallback;
             }
 
             if (oError.error && oError.error.message) {
-                return oError.error.message.value || oError.error.message;
+                sMessage = oError.error.message.value || oError.error.message;
+            } else if (oError.cause && oError.cause.message) {
+                sMessage = oError.cause.message;
+            } else {
+                sMessage = oError.message || "";
             }
 
-            if (oError.cause && oError.cause.message) {
-                return oError.cause.message;
-            }
-
-            return oError.message || sFallback;
+            return sMessage && !sTechnicalPattern.test(String(sMessage))
+                ? String(sMessage)
+                : sFallback;
         },
 
         onLogin: async function () {

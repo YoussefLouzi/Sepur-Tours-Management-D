@@ -39,17 +39,11 @@ Applications disponibles apres `cds watch`:
 
 | Nom d'utilisateur | E-mail | Mot de passe de demonstration | Role |
 |---|---|---|---|
-| `planificateur` | `youssef.louzi.plan@sepur.com` | `1234` | PLANIFICATEUR |
-| `superviseur` | `youssef.louzi.sup@sepur.com` | `1234` | SUPERVISEUR |
+| `planificateur` | `youssef.louzi.plan@sepur.com` | `plan123` | PLANIFICATEUR |
+| `superviseur` | `youssef.louzi.sup@sepur.com` | `sup123` | SUPERVISEUR |
 
-Le mot de passe simple `1234` fonctionne en local, dans BAS et sur Cloud Foundry.
-Pour le remplacer sans modifier le code, configurer:
-
-```bash
-export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'
-export DEMO_SUPERVISOR_PASSWORD='<mot-de-passe-superviseur>'
-npm run watch-home
-```
+Les noms d'utilisateur et les e-mails ci-dessus sont tous deux acceptes. Les
+identifiants sont verifies dans la table `Users` en local et sur Cloud Foundry.
 
 L'entite `Users` n'est pas exposee par l'API OData. Le mot de passe par defaut
 est reserve a la demonstration PFE et doit etre remplace pour une production reelle.
