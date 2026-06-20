@@ -53,29 +53,73 @@ annotate service.Roadmaps with {
 };
 
 annotate service.TourStatuses with @(
+    Capabilities.FilterRestrictions : {
+        FilterExpressionRestrictions : [
+            { Property : code, AllowedExpressions : 'SingleValue' }
+        ]
+    },
     UI.LineItem : [
         { $Type : 'UI.DataField', Label : 'Code', Value : code },
         { $Type : 'UI.DataField', Label : 'Statut', Value : label }
     ]
-);
+) {
+    code @Common.Text : label @Common.TextArrangement : #TextOnly;
+};
 
 annotate service.RoadmapStatuses with @(
+    Capabilities.FilterRestrictions : {
+        FilterExpressionRestrictions : [
+            { Property : code, AllowedExpressions : 'SingleValue' }
+        ]
+    },
     UI.LineItem : [
         { $Type : 'UI.DataField', Label : 'Code', Value : code },
         { $Type : 'UI.DataField', Label : 'Statut', Value : label }
     ]
-);
+) {
+    code @Common.Text : label @Common.TextArrangement : #TextOnly;
+};
 
 annotate service.TourScheduleStatuses with @(
+    Capabilities.FilterRestrictions : {
+        FilterExpressionRestrictions : [
+            { Property : code, AllowedExpressions : 'SingleValue' }
+        ]
+    },
     UI.LineItem : [
         { $Type : 'UI.DataField', Label : 'Code', Value : code },
         { $Type : 'UI.DataField', Label : 'État temporel', Value : label }
     ]
-);
+) {
+    code @Common.Text : label @Common.TextArrangement : #TextOnly;
+};
 
 annotate service.RoadmapScheduleStatuses with @(
+    Capabilities.FilterRestrictions : {
+        FilterExpressionRestrictions : [
+            { Property : code, AllowedExpressions : 'SingleValue' }
+        ]
+    },
     UI.LineItem : [
         { $Type : 'UI.DataField', Label : 'Code', Value : code },
         { $Type : 'UI.DataField', Label : 'État temporel', Value : label }
     ]
-);
+) {
+    code @Common.Text : label @Common.TextArrangement : #TextOnly;
+};
+
+annotate service.UnitsOfMeasure with @Capabilities.FilterRestrictions : {
+    FilterExpressionRestrictions : [
+        { Property : code, AllowedExpressions : 'SingleValue' }
+    ]
+} {
+    code @Common.Text : label @Common.TextArrangement : #TextOnly;
+};
+
+annotate service.IntegrationStatuses with @Capabilities.FilterRestrictions : {
+    FilterExpressionRestrictions : [
+        { Property : code, AllowedExpressions : 'SingleValue' }
+    ]
+} {
+    code @Common.Text : label @Common.TextArrangement : #TextOnly;
+};
