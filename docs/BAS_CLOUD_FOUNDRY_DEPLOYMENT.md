@@ -57,10 +57,10 @@ npm run watch-home
 L'accueil local est disponible a l'adresse affichee par BAS, avec le chemin
 `/home/webapp/index.html`.
 
-| Role | Utilisateur | Mot de passe |
-|---|---|---|
-| Planificateur | `youssef.louzi.plan@sepur.com` | `plan123` |
-| Superviseur | `youssef.louzi.sup@sepur.com` | `sup123` |
+| Role | Nom d'utilisateur | E-mail | Mot de passe |
+|---|---|---|---|
+| Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `plan123` |
+| Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `sup123` |
 
 ## 4. Compiler et verifier
 

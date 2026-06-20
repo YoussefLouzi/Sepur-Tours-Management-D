@@ -40,7 +40,7 @@
                             <Input
                                 id="inpUsername"
                                 value="{/username}"
-                                placeholder="planificateur ou superviseur"
+                                placeholder="planificateur, superviseur ou e-mail"
                                 width="100%"
                                 class="loginInput sapStyleInput" />
 

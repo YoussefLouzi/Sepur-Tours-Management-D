@@ -12,21 +12,31 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
     const { reject } = helpers;
 
     srv.on("login", async (req) => {
-        const email = String(req.data.email || req.data.username || "").trim().toLowerCase();
+        const identifier = String(req.data.email || req.data.username || "").trim().toLowerCase();
         const password = String(req.data.password || "");
 
-        if (!email || !password) {
-            return reject(req, "E-mail et mot de passe requis.");
+        if (!identifier || !password) {
+            return reject(req, "Identifiant et mot de passe requis.");
         }
+
+        const canonicalIdentifier = resolveDemoAlias(identifier);
 
         let user = await SELECT.one
             .from(Users)
-            .where({ email });
+            .where({ email: canonicalIdentifier });
 
         if (!user) {
             user = await SELECT.one
                 .from(Users)
-                .where({ username: email });
+                .where({ username: identifier });
+        }
+
+        // Compatibilite avec les bases existantes ou l'e-mail etait stocke
+        // dans la colonne username.
+        if (!user && canonicalIdentifier !== identifier) {
+            user = await SELECT.one
+                .from(Users)
+                .where({ username: canonicalIdentifier });
         }
 
         if (!user || !verifyPassword(password, user.password)) {
@@ -47,6 +57,17 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
         };
     });
 };
+
+function resolveDemoAlias(identifier) {
+    const aliases = {
+        planificateur: "youssef.louzi.plan@sepur.com",
+        planner: "youssef.louzi.plan@sepur.com",
+        superviseur: "youssef.louzi.sup@sepur.com",
+        supervisor: "youssef.louzi.sup@sepur.com"
+    };
+
+    return aliases[identifier] || identifier;
+}
 
 function verifyPassword(password, storedPassword) {
     const parts = String(storedPassword || "").split("$");

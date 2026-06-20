@@ -37,10 +37,10 @@ Applications disponibles apres `cds watch`:
 
 ## Comptes de demonstration
 
-| Utilisateur | Mot de passe | Role |
-|---|---|---|
-| `youssef.louzi.plan@sepur.com` | `plan123` | PLANIFICATEUR |
-| `youssef.louzi.sup@sepur.com` | `sup123` | SUPERVISEUR |
+| Nom d'utilisateur | E-mail | Mot de passe | Role |
+|---|---|---|---|
+| `planificateur` | `youssef.louzi.plan@sepur.com` | `plan123` | PLANIFICATEUR |
+| `superviseur` | `youssef.louzi.sup@sepur.com` | `sup123` | SUPERVISEUR |
 
 Les mots de passe sont stockes en base sous forme de hash scrypt. L'entite
 `Users` n'est pas exposee par l'API OData.
