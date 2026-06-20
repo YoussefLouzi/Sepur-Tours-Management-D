@@ -830,10 +830,15 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         })
         .where({ ID: tourID });
 
+      const supervisor = await SELECT.one.from(Users)
+        .columns('ID')
+        .where({ role: 'SUPERVISEUR', active: true });
+
       await INSERT.into(DecisionHistories).entries({
         ID: cds.utils.uuid(),
         decision: TOUR_STATUS.VALIDATED,
         reason: null,
+        decidedBy_ID: supervisor?.ID || null,
         tour_ID: tourID
       });
 
@@ -872,10 +877,15 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         })
         .where({ ID: tourID });
 
+      const supervisor = await SELECT.one.from(Users)
+        .columns('ID')
+        .where({ role: 'SUPERVISEUR', active: true });
+
       await INSERT.into(DecisionHistories).entries({
         ID: cds.utils.uuid(),
         decision: TOUR_STATUS.REJECTED,
         reason: trimmedReason,
+        decidedBy_ID: supervisor?.ID || null,
         tour_ID: tourID
       });
 
@@ -896,6 +906,10 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
       if (!roadmap) {
         return reject(req, 'Feuille de route introuvable.');
+      }
+
+      if (!isCreatedRoadmapStatus(roadmap.status)) {
+        return reject(req, 'Seule une feuille de route créée peut recevoir des tournées.');
       }
 
       if (!roadmap.client_ID) {
@@ -941,13 +955,20 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         }
 
         const sameClient = tour.client_ID === roadmap.client_ID;
-        const sameMonth = d.getMonth() + 1 === Number(roadmap.month);
-        const sameYear = d.getFullYear() === Number(roadmap.year);
+        const sameMonth = d.getUTCMonth() + 1 === Number(roadmap.month);
+        const sameYear = d.getUTCFullYear() === Number(roadmap.year);
         const validStatus = normalizeTourStatus(tour.status) === TOUR_STATUS.VALIDATED;
         const notAssignedElsewhere = !assignedToOtherRoadmap.has(tour.ID);
 
         return sameClient && sameMonth && sameYear && validStatus && notAssignedElsewhere;
       });
+
+      if (!matchingTours.length) {
+        return reject(
+          req,
+          'Aucune tournée validée et disponible ne correspond au client et à la période sélectionnés.'
+        );
+      }
 
       await DELETE.from(RoadmapTours).where({ roadmap_ID: roadmapID });
 
@@ -1201,17 +1222,25 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       const roadmapID = req.params?.[0]?.ID;
 
       if (!roadmapID) {
-        return reject(req, 'Identifiant de roadmap manquant.');
+        return reject(req, 'Identifiant de feuille de route manquant.');
       }
 
       const roadmap = await SELECT.one.from(Roadmaps).where({ ID: roadmapID });
 
       if (!roadmap) {
-        return reject(req, 'Roadmap introuvable.');
+        return reject(req, 'Feuille de route introuvable.');
       }
 
       if (!isCreatedRoadmapStatus(roadmap.status)) {
-        return reject(req, 'Seules les roadmaps créées peuvent être validées.');
+        return reject(req, 'Seules les feuilles de route créées peuvent être validées.');
+      }
+
+      const assignments = await SELECT.from(RoadmapTours)
+        .columns('ID')
+        .where({ roadmap_ID: roadmapID });
+
+      if (!assignments.length) {
+        return reject(req, 'Affectez au moins une tournée avant de valider la feuille de route.');
       }
 
       await UPDATE(Roadmaps)
@@ -1230,7 +1259,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       const reason = req.data.reason;
 
       if (!roadmapID) {
-        return reject(req, 'Identifiant de roadmap manquant.');
+        return reject(req, 'Identifiant de feuille de route manquant.');
       }
 
       if (!reason || !String(reason).trim()) {
@@ -1240,11 +1269,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       const roadmap = await SELECT.one.from(Roadmaps).where({ ID: roadmapID });
 
       if (!roadmap) {
-        return reject(req, 'Roadmap introuvable.');
+        return reject(req, 'Feuille de route introuvable.');
       }
 
       if (!isCreatedRoadmapStatus(roadmap.status)) {
-        return reject(req, 'Seules les roadmaps créées peuvent être rejetées.');
+        return reject(req, 'Seules les feuilles de route créées peuvent être rejetées.');
       }
 
       const trimmedReason = String(reason).trim();
@@ -1331,13 +1360,14 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
       }
 
       if (!isValidatedStatus(tour.status)) {
-        return reject(req, 'La roadmap ne peut être créée que depuis une tournée validée.');
+        return reject(req, 'La feuille de route ne peut être créée que depuis une tournée validée.');
       }
 
-      const existing = await SELECT.one.from(Roadmaps).where({ tour_ID: tourID });
+      const existingRoadmap = await SELECT.one.from(Roadmaps).where({ tour_ID: tourID });
+      const existingAssignment = await SELECT.one.from(RoadmapTours).where({ tour_ID: tourID });
 
-      if (existing) {
-        return reject(req, 'Une roadmap existe déjà pour cette tournée.');
+      if (existingRoadmap || existingAssignment) {
+        return reject(req, 'Cette tournée est déjà rattachée à une feuille de route.');
       }
 
       if (!tour.client_ID) {
@@ -1347,7 +1377,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         });
       }
 
-      return cds.tx(req, async () => {
+      {
         const roadmapCode = await nextCode('Roadmaps', 'roadmapCode', 'RM');
         const roadmapID = cds.utils.uuid();
         const startDate = tour.tourDate || new Date().toISOString().slice(0, 10);
@@ -1406,7 +1436,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         }
 
         return SELECT.one.from(Roadmaps).where({ ID: roadmapID });
-      });
+      }
     });
 
     /* ===================================================== */
@@ -1415,9 +1445,11 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
     this.on('getPlannerStats', async (req) => {
       const { userID } = req.data || {};
-      const where = userID ? { createdByUser_ID: userID } : {};
-
-      const tours = await SELECT.from(Tours).columns('status').where(where);
+      const allTours = await SELECT.from(Tours).columns('status', 'createdByUser_ID');
+      const hasAuthorData = allTours.some((tour) => hasValue(tour.createdByUser_ID));
+      const tours = userID && hasAuthorData
+        ? allTours.filter((tour) => tour.createdByUser_ID === userID)
+        : allTours;
       const roadmaps = await SELECT.from(Roadmaps).columns('status');
       const createdRoadmaps = roadmaps.filter((roadmap) => isCreatedRoadmapStatus(roadmap.status)).length;
       const validatedRoadmaps = roadmaps.filter((roadmap) => isValidatedRoadmapStatus(roadmap.status)).length;

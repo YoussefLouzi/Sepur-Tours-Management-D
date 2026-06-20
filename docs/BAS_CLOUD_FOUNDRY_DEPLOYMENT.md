@@ -57,13 +57,13 @@ npm run watch-home
 L'accueil local est disponible a l'adresse affichee par BAS, avec le chemin
 `/home/webapp/index.html`.
 
-| Role | Nom d'utilisateur | E-mail | Variable du mot de passe |
+| Role | Nom d'utilisateur | E-mail | Mot de passe par defaut |
 |---|---|---|---|
-| Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `DEMO_PLANNER_PASSWORD` |
-| Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `DEMO_SUPERVISOR_PASSWORD` |
+| Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `1234` |
+| Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `1234` |
 
-En execution locale BAS, tout mot de passe non vide est accepte pour ces deux
-comptes de demonstration. Pour imposer des valeurs fixes localement, utiliser:
+Le mot de passe simple `1234` fonctionne pour ces deux comptes, y compris apres
+deploiement. Pour imposer d'autres valeurs sans modifier le code, utiliser:
 
 ```bash
 export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'

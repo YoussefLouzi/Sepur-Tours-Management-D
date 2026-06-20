@@ -6,105 +6,129 @@ sap.ui.define([
   "sap/m/Button",
   "sap/m/Label",
   "sap/m/VBox"
-], function (
-  MessageToast,
-  MessageBox,
-  Dialog,
-  TextArea,
-  Button,
-  Label,
-  VBox
-) {
+], function (MessageToast, MessageBox, Dialog, TextArea, Button, Label, VBox) {
   "use strict";
 
-  function getContextFromArguments(aArgs) {
-    for (var i = 0; i < aArgs.length; i += 1) {
-      var arg = aArgs[i];
+  function addContext(aContexts, oContext) {
+    if (!oContext || typeof oContext.getPath !== "function" || typeof oContext.getModel !== "function") {
+      return;
+    }
 
-      if (Array.isArray(arg) && arg.length && arg[0] && typeof arg[0].getPath === "function") {
-        return arg[0];
+    if (!aContexts.some(function (item) { return item.getPath() === oContext.getPath(); })) {
+      aContexts.push(oContext);
+    }
+  }
+
+  function getContextsFromArguments(aArgs) {
+    var aContexts = [];
+
+    Array.prototype.forEach.call(aArgs, function (arg) {
+      if (Array.isArray(arg)) {
+        arg.forEach(function (item) { addContext(aContexts, item); });
       }
 
-      if (arg && typeof arg.getPath === "function" && typeof arg.getModel === "function") {
-        return arg;
-      }
+      addContext(aContexts, arg);
 
       if (arg && typeof arg.getSource === "function") {
-        var source = arg.getSource();
-
-        if (source && typeof source.getBindingContext === "function") {
-          var context = source.getBindingContext();
-
-          if (context) {
-            return context;
-          }
-        }
+        var oSource = arg.getSource();
+        addContext(aContexts, oSource && oSource.getBindingContext && oSource.getBindingContext());
       }
-    }
+    });
 
-    return null;
+    return aContexts;
   }
 
-  function getModelFromContext(oContext) {
-    return oContext && typeof oContext.getModel === "function"
-      ? oContext.getModel()
-      : null;
+  function getErrorMessage(oError, sFallback) {
+    var oCause = oError && oError.cause;
+    return (oCause && oCause.message) || (oError && oError.message) || sFallback;
   }
 
-  function refreshModel(oModel) {
-    if (oModel && typeof oModel.refresh === "function") {
-      oModel.refresh();
-    }
+  function filterCreatedContexts(aContexts) {
+    return aContexts.filter(function (oContext) {
+      if (typeof oContext.getObject !== "function") {
+        return true;
+      }
+
+      var oTour = oContext.getObject();
+      var sStatus = String(oTour && oTour.status || "").trim().toUpperCase();
+      return sStatus === "CREATED" || sStatus === "DRAFT" || sStatus === "PENDING";
+    });
   }
 
   async function executeBoundAction(oContext, sActionName, oParameters) {
-    var oModel = getModelFromContext(oContext);
+    var oModel = oContext && oContext.getModel();
 
     if (!oModel) {
       throw new Error("Modèle OData introuvable.");
     }
 
-    var sFullActionName = "RouteManagementService." + sActionName + "(...)";
-    var oAction = oModel.bindContext(sFullActionName, oContext);
+    var oAction = oModel.bindContext("RouteManagementService." + sActionName + "(...)", oContext);
 
-    if (oParameters) {
-      Object.keys(oParameters).forEach(function (sKey) {
-        oAction.setParameter(sKey, oParameters[sKey]);
-      });
-    }
+    Object.keys(oParameters || {}).forEach(function (sKey) {
+      oAction.setParameter(sKey, oParameters[sKey]);
+    });
 
     await oAction.execute();
+  }
 
-    refreshModel(oModel);
+  function refreshContexts(aContexts) {
+    var aModels = [];
+
+    aContexts.forEach(function (oContext) {
+      var oModel = oContext.getModel();
+
+      if (oModel && aModels.indexOf(oModel) === -1) {
+        aModels.push(oModel);
+      }
+    });
+
+    aModels.forEach(function (oModel) {
+      if (typeof oModel.refresh === "function") {
+        oModel.refresh();
+      }
+    });
+  }
+
+  async function executeForAll(aContexts, sActionName, oParameters) {
+    for (var i = 0; i < aContexts.length; i += 1) {
+      await executeBoundAction(aContexts[i], sActionName, oParameters);
+    }
+
+    refreshContexts(aContexts);
   }
 
   return {
     onBackToDashboard: function () {
       MessageToast.show("Retour au dashboard superviseur...");
-
-      setTimeout(function () {
-        window.location.href = "/supervisor-dashboard/webapp/index.html";
-      }, 300);
+      setTimeout(function () { window.location.href = "/supervisor-dashboard/webapp/index.html"; }, 300);
     },
 
     onBack: function () {
       MessageToast.show("Retour...");
-
-      setTimeout(function () {
-        window.history.back();
-      }, 200);
+      setTimeout(function () { window.history.back(); }, 200);
     },
 
     onValidateTour: async function () {
-      var oContext = getContextFromArguments(arguments);
+      var aContexts = getContextsFromArguments(arguments);
 
-      if (!oContext) {
+      if (!aContexts.length) {
         MessageBox.warning("Veuillez sélectionner une tournée à valider.");
         return;
       }
 
-      MessageBox.confirm("Voulez-vous valider cette tournée ?", {
-        title: "Validation de la tournée",
+      aContexts = filterCreatedContexts(aContexts);
+
+      if (!aContexts.length) {
+        MessageBox.warning("Seules les tournées créées peuvent être validées.");
+        return;
+      }
+
+      var sMessage = aContexts.length === 1
+        ? "Voulez-vous valider cette tournée ?"
+        : "Voulez-vous valider les tournées sélectionnées ?";
+
+      MessageBox.confirm(sMessage, {
+        title: "Validation des tournées",
         actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
         emphasizedAction: MessageBox.Action.OK,
         onClose: async function (sAction) {
@@ -113,76 +137,94 @@ sap.ui.define([
           }
 
           try {
-            await executeBoundAction(oContext, "validate");
-            MessageToast.show("Tournée validée avec succès.");
-          } catch (error) {
-            MessageBox.error(error.message || "Erreur lors de la validation de la tournée.");
+            await executeForAll(aContexts, "validate");
+            MessageToast.show(aContexts.length === 1
+              ? "Tournée validée avec succès."
+              : "Tournées validées avec succès.");
+          } catch (oError) {
+            MessageBox.error(getErrorMessage(
+              oError,
+              "Erreur lors de la validation des tournées."
+            ));
           }
         }
       });
     },
 
     onRejectTour: function () {
-      var oContext = getContextFromArguments(arguments);
+      var aContexts = getContextsFromArguments(arguments);
 
-      if (!oContext) {
+      if (!aContexts.length) {
         MessageBox.warning("Veuillez sélectionner une tournée à rejeter.");
+        return;
+      }
+
+      aContexts = filterCreatedContexts(aContexts);
+
+      if (!aContexts.length) {
+        MessageBox.warning("Seules les tournées créées peuvent être rejetées.");
         return;
       }
 
       var oReasonArea = new TextArea({
         width: "100%",
         rows: 5,
+        growing: true,
+        maxLength: 500,
         placeholder: "Saisir le motif de rejet..."
       });
 
+      var oRejectButton = new Button({
+        text: "Rejeter",
+        type: "Reject",
+        press: async function () {
+          var sReason = oReasonArea.getValue().trim();
+
+          if (!sReason) {
+            MessageBox.warning("Le motif de rejet est obligatoire.");
+            return;
+          }
+
+          oRejectButton.setEnabled(false);
+          oRejectButton.setBusy(true);
+
+          try {
+            await executeForAll(aContexts, "rejectTourDecision", { reason: sReason });
+            MessageToast.show(aContexts.length === 1
+              ? "Tournée rejetée avec succès."
+              : "Tournées rejetées avec succès.");
+            oDialog.close();
+          } catch (oError) {
+            MessageBox.error(getErrorMessage(
+              oError,
+              "Erreur lors du rejet des tournées."
+            ));
+          } finally {
+            oRejectButton.setBusy(false);
+            oRejectButton.setEnabled(true);
+          }
+        }
+      });
+
       var oDialog = new Dialog({
-        title: "Rejeter la tournée",
-        contentWidth: "420px",
+        title: aContexts.length === 1 ? "Rejeter la tournée" : "Rejeter les tournées",
+        contentWidth: "28rem",
         content: [
           new VBox({
             width: "100%",
+            class: "sapUiSmallMargin",
             items: [
-              new Label({
-                text: "Motif de rejet obligatoire",
-                required: true
-              }),
+              new Label({ text: "Motif de rejet obligatoire", required: true }),
               oReasonArea
             ]
           })
         ],
-        beginButton: new Button({
-          text: "Rejeter",
-          type: "Reject",
-          press: async function () {
-            var sReason = oReasonArea.getValue();
-
-            if (!sReason || !sReason.trim()) {
-              MessageBox.warning("Le motif de rejet est obligatoire.");
-              return;
-            }
-
-            try {
-              await executeBoundAction(oContext, "rejectTourDecision", {
-                reason: sReason.trim()
-              });
-
-              MessageToast.show("Tournée rejetée avec succès.");
-              oDialog.close();
-            } catch (error) {
-              MessageBox.error(error.message || "Erreur lors du rejet de la tournée.");
-            }
-          }
-        }),
+        beginButton: oRejectButton,
         endButton: new Button({
           text: "Annuler",
-          press: function () {
-            oDialog.close();
-          }
+          press: function () { oDialog.close(); }
         }),
-        afterClose: function () {
-          oDialog.destroy();
-        }
+        afterClose: function () { oDialog.destroy(); }
       });
 
       oDialog.open();

@@ -117,12 +117,27 @@ sap.ui.define([
     for (var i = 0; i < aContexts.length; i += 1) {
       await executeBoundAction(aContexts[i], sActionName, oParameters);
     }
+
+    var aModels = [];
+
+    aContexts.forEach(function (oContext) {
+      var oModel = oContext.getModel();
+
+      if (oModel && aModels.indexOf(oModel) === -1) {
+        aModels.push(oModel);
+      }
+    });
+
+    aModels.forEach(function (oModel) {
+      if (typeof oModel.refresh === "function") {
+        oModel.refresh();
+      }
+    });
   }
 
-  function reloadAfterSuccess() {
-    setTimeout(function () {
-      window.location.reload();
-    }, 500);
+  function getErrorMessage(oError, sFallback) {
+    var oCause = oError && oError.cause;
+    return (oCause && oCause.message) || (oError && oError.message) || sFallback;
   }
 
   return {
@@ -174,9 +189,8 @@ sap.ui.define([
             await executeForAll(aCreatedContexts, "validateRoadmap");
 
             MessageToast.show("Validation effectuée avec succès.");
-            reloadAfterSuccess();
           } catch (error) {
-            MessageBox.error(error.message || "Erreur lors de la validation.");
+            MessageBox.error(getErrorMessage(error, "Erreur lors de la validation."));
           }
         }
       });
@@ -203,9 +217,39 @@ sap.ui.define([
         placeholder: "Saisir le motif de rejet..."
       });
 
+      var oRejectButton = new Button({
+        text: "Rejeter",
+        type: "Reject",
+        press: async function () {
+          var sReason = oReasonArea.getValue();
+
+          if (!sReason || !sReason.trim()) {
+            MessageBox.warning("Le motif de rejet est obligatoire.");
+            return;
+          }
+
+          oRejectButton.setEnabled(false);
+          oRejectButton.setBusy(true);
+
+          try {
+            await executeForAll(aCreatedContexts, "rejectRoadmap", {
+              reason: sReason.trim()
+            });
+
+            MessageToast.show("Rejet effectué avec succès.");
+            oDialog.close();
+          } catch (error) {
+            MessageBox.error(getErrorMessage(error, "Erreur lors du rejet."));
+          } finally {
+            oRejectButton.setBusy(false);
+            oRejectButton.setEnabled(true);
+          }
+        }
+      });
+
       var oDialog = new Dialog({
         title: "Rejeter la feuille de route",
-        contentWidth: "440px",
+        contentWidth: "28rem",
         content: [
           new VBox({
             width: "100%",
@@ -218,30 +262,7 @@ sap.ui.define([
             ]
           })
         ],
-        beginButton: new Button({
-          text: "Rejeter",
-          type: "Reject",
-          press: async function () {
-            var sReason = oReasonArea.getValue();
-
-            if (!sReason || !sReason.trim()) {
-              MessageBox.warning("Le motif de rejet est obligatoire.");
-              return;
-            }
-
-            try {
-              await executeForAll(aCreatedContexts, "rejectRoadmap", {
-                reason: sReason.trim()
-              });
-
-              MessageToast.show("Rejet effectué avec succès.");
-              oDialog.close();
-              reloadAfterSuccess();
-            } catch (error) {
-              MessageBox.error(error.message || "Erreur lors du rejet.");
-            }
-          }
-        }),
+        beginButton: oRejectButton,
         endButton: new Button({
           text: "Annuler",
           press: function () {

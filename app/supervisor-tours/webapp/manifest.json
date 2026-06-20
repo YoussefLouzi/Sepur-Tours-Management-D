@@ -59,7 +59,9 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "sepur.supervisor.supervisortours.i18n.i18n"
+          "bundleName": "sepur.supervisor.supervisortours.i18n.i18n",
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
         }
       },
       "": {
@@ -74,7 +76,11 @@
       },
       "@i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "uri": "i18n/i18n.properties"
+        "uri": "i18n/i18n.properties",
+        "settings": {
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
+        }
       }
     },
     "resources": {
@@ -106,7 +112,7 @@
           "options": {
             "settings": {
               "contextPath": "/Tours",
-              "variantManagement": "None",
+              "variantManagement": "Page",
               "initialLoad": "Enabled",
               "hideDraftToggle": true,
               "creationMode": {
@@ -119,7 +125,8 @@
                       "text": "Retour au tableau de bord",
                       "press": "sepur.supervisor.supervisortours.ext.controller.SupervisorTourActions.onBackToDashboard",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }
@@ -151,6 +158,7 @@
   "press": "sepur.supervisor.supervisortours.ext.controller.SupervisorTourActions.onValidateTour",
   "visible": true,
   "enabled": true,
+  "requiresSelection": true,
   "buttonType": "Accept"
 },
 "RejectTourObjectPage": {
@@ -158,6 +166,7 @@
   "press": "sepur.supervisor.supervisortours.ext.controller.SupervisorTourActions.onRejectTour",
   "visible": true,
   "enabled": true,
+  "requiresSelection": true,
   "buttonType": "Reject"
 }
                   }
@@ -183,19 +192,22 @@
                       "text": "Valider",
                       "press": "sepur.supervisor.supervisortours.ext.controller.SupervisorTourActions.onValidateTour",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Accept"
                     },
                     "RejectTourObjectPage": {
                       "text": "Rejeter",
                       "press": "sepur.supervisor.supervisortours.ext.controller.SupervisorTourActions.onRejectTour",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Reject"
                     },
                     "BackObjectPage": {
                       "text": "Retour",
                       "press": "sepur.supervisor.supervisortours.ext.controller.SupervisorTourActions.onBack",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }

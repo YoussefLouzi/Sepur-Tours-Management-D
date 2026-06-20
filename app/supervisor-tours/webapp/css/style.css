@@ -1,78 +1,87 @@
-/* ===================================================== */
-/* Bouton Valider - vert                                 */
-/* ===================================================== */
-
-button[id*="ValidateSelectedTour"] .sapMBtnInner,
-button[id*="ValidateTourObjectPage"] .sapMBtnInner {
-  background-color: #107e3e !important;
-  border-color: #107e3e !important;
-  color: #ffffff !important;
+/* SAP Fiori Elements - finition S/4HANA */
+.sapFDynamicPage,
+.sapUxAPObjectPageLayout,
+.sapUxAPObjectPageWrapper {
+  background: #f5f6f7;
 }
 
-button[id*="ValidateSelectedTour"] .sapMBtnContent,
-button[id*="ValidateTourObjectPage"] .sapMBtnContent {
-  color: #ffffff !important;
+.sapFDynamicPageTitle,
+.sapFDynamicPageHeader,
+.sapUxAPObjectPageHeaderTitle,
+.sapUxAPObjectPageHeaderContent {
+  background: #ffffff;
+  box-shadow: none;
+  border-bottom: 1px solid #d9d9d9;
 }
 
-/* ===================================================== */
-/* Bouton Rejeter - rouge                                */
-/* ===================================================== */
-
-button[id*="RejectSelectedTour"] .sapMBtnInner,
-button[id*="RejectTourObjectPage"] .sapMBtnInner {
-  background-color: #bb0000 !important;
-  border-color: #bb0000 !important;
-  color: #ffffff !important;
+.sapFDynamicPageContent,
+.sapUxAPObjectPageContainer {
+  max-width: 100rem;
+  margin: 0 auto;
 }
 
-button[id*="RejectSelectedTour"] .sapMBtnContent,
-button[id*="RejectTourObjectPage"] .sapMBtnContent {
-  color: #ffffff !important;
+.sapMListTbl {
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
 }
 
-/* ===================================================== */
-/* Effet hover                                           */
-/* ===================================================== */
-
-button[id*="ValidateSelectedTour"]:hover .sapMBtnInner,
-button[id*="ValidateTourObjectPage"]:hover .sapMBtnInner {
-  background-color: #0b6b35 !important;
-  border-color: #0b6b35 !important;
+.sapMListTblHeaderCell {
+  background: #eef2f5;
+  border-bottom: 1px solid #89919a;
 }
 
-button[id*="RejectSelectedTour"]:hover .sapMBtnInner,
-button[id*="RejectTourObjectPage"]:hover .sapMBtnInner {
-  background-color: #970000 !important;
-  border-color: #970000 !important;
+.sapMListTblHeaderCell .sapMLabel {
+  color: #1d2d3e;
+  font-weight: 700;
 }
 
-/* ===================================================== */
-/* Boutons Retour - même style que Go                    */
-/* ===================================================== */
-
-button[id*="RetourSupervisorDashboard"] .sapMBtnInner,
-button[id*="BackObjectPage"] .sapMBtnInner,
-button[id*="RetourDashboardList"] .sapMBtnInner,
-button[id*="RetourBackObjectPage"] .sapMBtnInner {
-  background-color: #0a6ed1 !important;
-  border-color: #0a6ed1 !important;
-  color: #ffffff !important;
-  border-radius: 0.5rem !important;
-  font-weight: 700 !important;
+.sapMListTblRow {
+  min-height: 3rem;
 }
 
-button[id*="RetourSupervisorDashboard"] .sapMBtnContent,
-button[id*="BackObjectPage"] .sapMBtnContent,
-button[id*="RetourDashboardList"] .sapMBtnContent,
-button[id*="RetourBackObjectPage"] .sapMBtnContent {
-  color: #ffffff !important;
-  font-weight: 700 !important;
+.sapMListTblRow:hover > .sapMListTblCell {
+  background: #edf6ff;
 }
 
-button[id*="RetourSupervisorDashboard"]:hover .sapMBtnInner,
-button[id*="BackObjectPage"]:hover .sapMBtnInner,
-button[id*="RetourDashboardList"]:hover .sapMBtnInner,
-button[id*="RetourBackObjectPage"]:hover .sapMBtnInner {
-  background-color: #085caf !important;
-  border-color: #085caf !important;
+.sapUiTableRowHdr,
+.sapUiTableColHdrCnt {
+  background: #eef2f5;
+}
+
+.sapUxAPObjectPageSectionHeader {
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.sapUxAPObjectPageSectionTitle {
+  color: #1d2d3e;
+  font-weight: 700;
+}
+
+.sapUiFormTitle,
+.sapMTitle {
+  letter-spacing: 0;
+}
+
+.sapMDialogSection,
+.sapMMessageBox {
+  background: #ffffff;
+}
+
+.sapMBtnInner,
+.sapMInputBaseContentWrapper,
+.sapMSlt,
+.sapMTextAreaInner {
+  border-radius: 0.25rem;
+}
+
+@media (max-width: 48rem) {
+  .sapFDynamicPageContent,
+  .sapUxAPObjectPageContainer {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sapMListTblCell {
+    min-height: 2.75rem;
+  }
 }

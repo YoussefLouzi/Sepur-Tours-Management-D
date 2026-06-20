@@ -59,7 +59,9 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "sepur.supervisor.supervisorroadmaps.i18n.i18n"
+          "bundleName": "sepur.supervisor.supervisorroadmaps.i18n.i18n",
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
         }
       },
       "": {
@@ -74,7 +76,11 @@
       },
       "@i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "uri": "i18n/i18n.properties"
+        "uri": "i18n/i18n.properties",
+        "settings": {
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
+        }
       }
     },
     "resources": {
@@ -106,7 +112,7 @@
           "options": {
             "settings": {
               "contextPath": "/Roadmaps",
-              "variantManagement": "None",
+              "variantManagement": "Page",
               "initialLoad": "Enabled",
               "hideDraftToggle": true,
               "creationMode": {
@@ -119,7 +125,8 @@
                       "text": "Retour au tableau de bord",
                       "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onBackToDashboard",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }
@@ -151,14 +158,16 @@
                       "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onValidateRoadmap",
                       "visible": true,
                       "enabled": true,
-                      "requiresSelection": true
+                      "requiresSelection": true,
+                      "buttonType": "Accept"
                     },
                     "RejectSelectedRoadmap": {
                       "text": "Rejeter",
                       "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onRejectRoadmap",
                       "visible": true,
                       "enabled": true,
-                      "requiresSelection": true
+                      "requiresSelection": true,
+                      "buttonType": "Reject"
                     }
                   }
                 }
@@ -183,19 +192,22 @@
                       "text": "Valider",
                       "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onValidateRoadmap",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Accept"
                     },
                     "RejectRoadmapObjectPage": {
                       "text": "Rejeter",
                       "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onRejectRoadmap",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Reject"
                     },
                     "BackObjectPage": {
                       "text": "Retour",
                       "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onBack",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }

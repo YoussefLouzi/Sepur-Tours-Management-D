@@ -44,7 +44,7 @@ recalculent plus les statuts metier dans leurs controleurs.
 1. `/` ouvre `/home/webapp/index.html`.
 2. L'accueil presente les espaces Planificateur et Superviseur.
 3. Une action protegee envoie vers `/login/webapp/index.html`.
-4. Le backend compare le mot de passe aux variables d'environnement de demonstration.
+4. Le backend compare le mot de passe aux variables d'environnement de demonstration, ou a la valeur `1234` par defaut.
 5. Le role determine le dashboard et les ecrans accessibles.
 6. Toutes les donnees metier passent par `/odata/v4/route-management/`.
 

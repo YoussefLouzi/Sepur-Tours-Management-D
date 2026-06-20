@@ -1,10 +1,7 @@
 sap.ui.define([
   "sap/m/MessageToast",
   "sap/m/MessageBox"
-], function (
-  MessageToast,
-  MessageBox
-) {
+], function (MessageToast, MessageBox) {
   "use strict";
 
   function getContextFromArguments(aArgs) {
@@ -16,14 +13,11 @@ sap.ui.define([
       }
 
       if (arg && typeof arg.getSource === "function") {
-        var source = arg.getSource();
+        var oSource = arg.getSource();
+        var oContext = oSource && oSource.getBindingContext && oSource.getBindingContext();
 
-        if (source && typeof source.getBindingContext === "function") {
-          var context = source.getBindingContext();
-
-          if (context) {
-            return context;
-          }
+        if (oContext) {
+          return oContext;
         }
       }
     }
@@ -31,20 +25,29 @@ sap.ui.define([
     return null;
   }
 
+  function getErrorMessage(oError, sFallback) {
+    var oCause = oError && oError.cause;
+    return (oCause && oCause.message) || (oError && oError.message) || sFallback;
+  }
+
+  function refreshContext(oContext) {
+    var oModel = oContext && oContext.getModel();
+
+    if (oModel && typeof oModel.refresh === "function") {
+      oModel.refresh();
+    }
+  }
+
   async function executeBoundAction(oContext, sActionName) {
     if (!oContext || typeof oContext.getModel !== "function") {
-      throw new Error("Roadmap introuvable.");
+      throw new Error("Feuille de route introuvable.");
     }
 
     var oModel = oContext.getModel();
-    var sFullActionName = "RouteManagementService." + sActionName + "(...)";
-    var oAction = oModel.bindContext(sFullActionName, oContext);
+    var oAction = oModel.bindContext("RouteManagementService." + sActionName + "(...)", oContext);
 
     await oAction.execute();
-
-    if (typeof oModel.refresh === "function") {
-      oModel.refresh();
-    }
+    refreshContext(oContext);
 
     return oAction.getBoundContext() ? oAction.getBoundContext().getObject() : null;
   }
@@ -52,18 +55,12 @@ sap.ui.define([
   return {
     onBackToDashboard: function () {
       MessageToast.show("Retour au dashboard...");
-
-      setTimeout(function () {
-        window.location.href = "/planner-dashboard/webapp/index.html";
-      }, 300);
+      setTimeout(function () { window.location.href = "/planner-dashboard/webapp/index.html"; }, 300);
     },
 
     onBack: function () {
       MessageToast.show("Retour...");
-
-      setTimeout(function () {
-        window.history.back();
-      }, 200);
+      setTimeout(function () { window.history.back(); }, 200);
     },
 
     onAutoAssignTours: function () {
@@ -88,8 +85,11 @@ sap.ui.define([
             try {
               await executeBoundAction(oContext, "autoAssignTours");
               MessageToast.show("Tournées affectées avec succès.");
-            } catch (error) {
-              MessageBox.error(error.message || "Erreur lors de l’affectation des tournées.");
+            } catch (oError) {
+              MessageBox.error(getErrorMessage(
+                oError,
+                "Erreur lors de l’affectation des tournées."
+              ));
             }
           }
         }
@@ -104,7 +104,16 @@ sap.ui.define([
         return;
       }
 
+      var oWindow = window.open("", "_blank");
+
+      if (!oWindow) {
+        MessageBox.warning("Veuillez autoriser les fenêtres contextuelles pour afficher la feuille de route.");
+        return;
+      }
+
       try {
+        oWindow.document.write("<p style='font-family:Arial;padding:24px'>Génération en cours...</p>");
+
         var oModel = oContext.getModel();
         var oAction = oModel.bindContext(
           "RouteManagementService.generateRoadmapSheetHtml(...)",
@@ -117,22 +126,20 @@ sap.ui.define([
         var sHtml = oResult && (oResult.value || oResult);
 
         if (!sHtml) {
+          oWindow.close();
           MessageBox.warning("Aucune feuille de route générée.");
-          return;
-        }
-
-        var oWindow = window.open("", "_blank");
-
-        if (!oWindow) {
-          MessageBox.warning("Veuillez autoriser les popups pour télécharger la feuille de route.");
           return;
         }
 
         oWindow.document.open();
         oWindow.document.write(sHtml);
         oWindow.document.close();
-      } catch (error) {
-        MessageBox.error(error.message || "Erreur lors de la génération de la feuille de route.");
+      } catch (oError) {
+        oWindow.close();
+        MessageBox.error(getErrorMessage(
+          oError,
+          "Erreur lors de la génération de la feuille de route."
+        ));
       }
     }
   };

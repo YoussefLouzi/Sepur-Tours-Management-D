@@ -59,7 +59,9 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "ns.roadmaps.i18n.i18n"
+          "bundleName": "ns.roadmaps.i18n.i18n",
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
         }
       },
       "": {
@@ -74,7 +76,11 @@
       },
       "@i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "uri": "i18n/i18n.properties"
+        "uri": "i18n/i18n.properties",
+        "settings": {
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
+        }
       }
     },
     "resources": {
@@ -123,7 +129,8 @@
                       "text": "Retour au tableau de bord",
                       "press": "ns.roadmaps.ext.controller.RoadmapActions.onBackToDashboard",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }
@@ -167,19 +174,22 @@
                       "text": "Affecter les tournées",
                       "press": "ns.roadmaps.ext.controller.RoadmapActions.onAutoAssignTours",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Emphasized"
                     },
                     "GenerateRoadmapSheet": {
                       "text": "Générer feuille de route",
                       "press": "ns.roadmaps.ext.controller.RoadmapActions.onGenerateRoadmapSheet",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Default"
                     },
                     "RetourBackObjectPage": {
                       "text": "Retour",
                       "press": "ns.roadmaps.ext.controller.RoadmapActions.onBack",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }

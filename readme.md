@@ -37,13 +37,13 @@ Applications disponibles apres `cds watch`:
 
 ## Comptes de demonstration
 
-| Nom d'utilisateur | E-mail | Variable du mot de passe | Role |
+| Nom d'utilisateur | E-mail | Mot de passe de demonstration | Role |
 |---|---|---|---|
-| `planificateur` | `youssef.louzi.plan@sepur.com` | `DEMO_PLANNER_PASSWORD` | PLANIFICATEUR |
-| `superviseur` | `youssef.louzi.sup@sepur.com` | `DEMO_SUPERVISOR_PASSWORD` | SUPERVISEUR |
+| `planificateur` | `youssef.louzi.plan@sepur.com` | `1234` | PLANIFICATEUR |
+| `superviseur` | `youssef.louzi.sup@sepur.com` | `1234` | SUPERVISEUR |
 
-En developpement local/BAS, les comptes de demonstration acceptent tout mot de
-passe non vide. Pour tester avec des mots de passe fixes, configurer:
+Le mot de passe simple `1234` fonctionne en local, dans BAS et sur Cloud Foundry.
+Pour le remplacer sans modifier le code, configurer:
 
 ```bash
 export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'
@@ -51,8 +51,8 @@ export DEMO_SUPERVISOR_PASSWORD='<mot-de-passe-superviseur>'
 npm run watch-home
 ```
 
-L'entite `Users` n'est pas exposee par l'API OData et aucun mot de passe n'est
-publie dans le depot.
+L'entite `Users` n'est pas exposee par l'API OData. Le mot de passe par defaut
+est reserve a la demonstration PFE et doit etre remplace pour une production reelle.
 
 ## Architecture
 
@@ -69,6 +69,8 @@ pas des controleurs backend. La description complete est disponible dans
 
 Le guide complet BAS et Cloud Foundry est disponible dans
 [`docs/BAS_CLOUD_FOUNDRY_DEPLOYMENT.md`](docs/BAS_CLOUD_FOUNDRY_DEPLOYMENT.md).
+La recette des boutons et des regles metier est disponible dans
+[`docs/VALIDATION_FONCTIONNELLE.md`](docs/VALIDATION_FONCTIONNELLE.md).
 
 ## Build et deploiement BTP
 

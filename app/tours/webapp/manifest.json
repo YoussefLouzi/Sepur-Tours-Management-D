@@ -64,7 +64,9 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "ns.tours.i18n.i18n"
+          "bundleName": "ns.tours.i18n.i18n",
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
         }
       },
       "": {
@@ -78,11 +80,19 @@
       },
       "@i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "uri": "i18n/i18n.properties"
+        "uri": "i18n/i18n.properties",
+        "settings": {
+          "supportedLocales": ["fr", ""],
+          "fallbackLocale": "fr"
+        }
       }
     },
     "resources": {
-      "css": []
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
     },
     "routing": {
       "config": {},
@@ -116,7 +126,8 @@
                       "text": "Retour au tableau de bord",
                       "press": "ns.tours.ext.controller.ListReportActions.onBackToDashboard",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }
@@ -142,6 +153,16 @@
                       "filter": true,
                       "group": true
                     }
+                  },
+                  "actions": {
+                    "CreateRoadmapFromTour": {
+                      "text": "Créer une feuille de route",
+                      "press": "ns.tours.ext.controller.ListReportActions.onCreateRoadmapFromTour",
+                      "visible": true,
+                      "enabled": true,
+                      "requiresSelection": true,
+                      "buttonType": "Emphasized"
+                    }
                   }
                 }
               }
@@ -161,11 +182,19 @@
               "content": {
                 "header": {
                   "actions": {
+                    "CreateRoadmapFromTourObjectPage": {
+                      "text": "Créer une feuille de route",
+                      "press": "ns.tours.ext.controller.ListReportActions.onCreateRoadmapFromTour",
+                      "visible": true,
+                      "enabled": true,
+                      "buttonType": "Emphasized"
+                    },
                     "RetourBackObjectPage": {
                       "text": "Retour",
                       "press": "ns.tours.ext.controller.ListReportActions.onBack",
                       "visible": true,
-                      "enabled": true
+                      "enabled": true,
+                      "buttonType": "Transparent"
                     }
                   }
                 }

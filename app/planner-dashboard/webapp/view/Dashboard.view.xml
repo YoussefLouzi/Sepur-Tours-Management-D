@@ -90,6 +90,12 @@
 
                             <HBox alignItems="Center" class="topActions">
 
+                                <Button
+                                    text="Créer une tournée"
+                                    icon="sap-icon://add"
+                                    type="Emphasized"
+                                    press=".onCreateTour"
+                                    class="btnCreate" />
 
                                 <Button
                                     id="btnPlannerNotifications"
@@ -262,7 +268,7 @@
         subheader="Correction nécessaire"
         frameType="TwoByOne"
         class="sapKpiTile"
-        press=".onOpenRejectedTours">
+        press=".onOpenRoadmaps">
         <tileContent>
             <TileContent footer="À corriger">
                 <NumericContent
