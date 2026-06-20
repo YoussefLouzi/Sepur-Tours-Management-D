@@ -57,6 +57,11 @@
         "auth": {
           "kind": "dummy"
         }
+      },
+      "[production]": {
+        "auth": {
+          "kind": "dummy"
+        }
       }
     }
   }

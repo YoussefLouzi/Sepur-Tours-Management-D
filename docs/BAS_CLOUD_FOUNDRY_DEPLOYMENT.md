@@ -62,7 +62,8 @@ L'accueil local est disponible a l'adresse affichee par BAS, avec le chemin
 | Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `DEMO_PLANNER_PASSWORD` |
 | Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `DEMO_SUPERVISOR_PASSWORD` |
 
-Configurer les valeurs en clair dans le terminal BAS avant l'execution locale:
+En execution locale BAS, tout mot de passe non vide est accepte pour ces deux
+comptes de demonstration. Pour imposer des valeurs fixes localement, utiliser:
 
 ```bash
 export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'
@@ -189,3 +190,7 @@ puis appliquer les roles Planificateur et Superviseur directement aux actions
 CAP. Les variables d'environnement en clair sont reservees a la demonstration
 PFE et ne doivent jamais etre commitees. Pour une production reelle, utiliser
 IAS/XSUAA et ne jamais placer de secret ou de mot de passe dans le frontend.
+
+Le profil Cloud Foundry utilise temporairement l'authentification CAP `dummy`
+car l'authentification fonctionnelle est geree par l'action `login`. Cette
+configuration doit etre remplacee en meme temps que l'integration XSUAA/IAS.

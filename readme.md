@@ -42,7 +42,8 @@ Applications disponibles apres `cds watch`:
 | `planificateur` | `youssef.louzi.plan@sepur.com` | `DEMO_PLANNER_PASSWORD` | PLANIFICATEUR |
 | `superviseur` | `youssef.louzi.sup@sepur.com` | `DEMO_SUPERVISOR_PASSWORD` | SUPERVISEUR |
 
-Configurer les mots de passe en clair dans le terminal avant le demarrage:
+En developpement local/BAS, les comptes de demonstration acceptent tout mot de
+passe non vide. Pour tester avec des mots de passe fixes, configurer:
 
 ```bash
 export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'

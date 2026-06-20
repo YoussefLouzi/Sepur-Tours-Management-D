@@ -19,17 +19,18 @@ module.exports = function registerLoginHandler(srv, entities, helpers) {
         }
 
         const demoProfile = getDemoProfile(identifier);
-        const canonicalIdentifier = demoProfile ? demoProfile.email : identifier;
-        let user = await findUser(Users, identifier, canonicalIdentifier, demoProfile);
 
-        if (demoProfile && !getDemoPassword(demoProfile)) {
+        if (demoProfile && isProduction() && !getDemoPassword(demoProfile)) {
             return reject(
                 req,
                 "Le mot de passe de démonstration n'est pas configuré sur le serveur.",
-                503,
+                400,
                 { code: "AUTH_CONFIG_MISSING" }
             );
         }
+
+        const canonicalIdentifier = demoProfile ? demoProfile.email : identifier;
+        let user = await findUser(Users, identifier, canonicalIdentifier, demoProfile);
 
         if (!user || !isPasswordValid(password, user.password, demoProfile)) {
             return reject(req, "Identifiants incorrects.", 401);
@@ -85,7 +86,13 @@ async function findUser(Users, identifier, canonicalIdentifier, demoProfile) {
 
 function isPasswordValid(password, storedPassword, demoProfile) {
     if (demoProfile) {
-        return password === getDemoPassword(demoProfile);
+        const configuredPassword = getDemoPassword(demoProfile);
+
+        // En developpement/BAS, un mot de passe non vide suffit pour les
+        // comptes de demonstration. Cloud Foundry exige une variable dediee.
+        return configuredPassword
+            ? password === configuredPassword
+            : !isProduction();
     }
 
     return password === String(storedPassword || "");
@@ -93,6 +100,10 @@ function isPasswordValid(password, storedPassword, demoProfile) {
 
 function getDemoPassword(demoProfile) {
     return String(process.env[demoProfile.passwordEnv] || "");
+}
+
+function isProduction() {
+    return String(process.env.NODE_ENV || "").toLowerCase() === "production";
 }
 
 function getDemoProfile(identifier) {
