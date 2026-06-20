@@ -57,10 +57,17 @@ npm run watch-home
 L'accueil local est disponible a l'adresse affichee par BAS, avec le chemin
 `/home/webapp/index.html`.
 
-| Role | Nom d'utilisateur | E-mail | Mot de passe |
+| Role | Nom d'utilisateur | E-mail | Variable du mot de passe |
 |---|---|---|---|
-| Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `plan123` |
-| Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `sup123` |
+| Planificateur | `planificateur` | `youssef.louzi.plan@sepur.com` | `DEMO_PLANNER_PASSWORD` |
+| Superviseur | `superviseur` | `youssef.louzi.sup@sepur.com` | `DEMO_SUPERVISOR_PASSWORD` |
+
+Configurer les valeurs en clair dans le terminal BAS avant l'execution locale:
+
+```bash
+export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'
+export DEMO_SUPERVISOR_PASSWORD='<mot-de-passe-superviseur>'
+```
 
 ## 4. Compiler et verifier
 
@@ -96,6 +103,9 @@ cf target
 ```bash
 npm run build
 cf deploy mta_archives/archive.mtar --retries 1
+cf set-env Sepur_tours_management-srv DEMO_PLANNER_PASSWORD '<mot-de-passe-planificateur>'
+cf set-env Sepur_tours_management-srv DEMO_SUPERVISOR_PASSWORD '<mot-de-passe-superviseur>'
+cf restage Sepur_tours_management-srv
 ```
 
 Le MTAR contient le service CAP, le deployer HDI, l'Application Router et les
@@ -176,4 +186,6 @@ utilisee par une autre application.
 Le login applicatif actuel convient a une demonstration PFE. Pour une mise en
 production, remplacer cette session par SAP Cloud Identity Services et XSUAA,
 puis appliquer les roles Planificateur et Superviseur directement aux actions
-CAP. Ne jamais placer de secret ou de mot de passe dans le frontend.
+CAP. Les variables d'environnement en clair sont reservees a la demonstration
+PFE et ne doivent jamais etre commitees. Pour une production reelle, utiliser
+IAS/XSUAA et ne jamais placer de secret ou de mot de passe dans le frontend.

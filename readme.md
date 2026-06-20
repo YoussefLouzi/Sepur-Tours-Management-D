@@ -37,13 +37,21 @@ Applications disponibles apres `cds watch`:
 
 ## Comptes de demonstration
 
-| Nom d'utilisateur | E-mail | Mot de passe | Role |
+| Nom d'utilisateur | E-mail | Variable du mot de passe | Role |
 |---|---|---|---|
-| `planificateur` | `youssef.louzi.plan@sepur.com` | `plan123` | PLANIFICATEUR |
-| `superviseur` | `youssef.louzi.sup@sepur.com` | `sup123` | SUPERVISEUR |
+| `planificateur` | `youssef.louzi.plan@sepur.com` | `DEMO_PLANNER_PASSWORD` | PLANIFICATEUR |
+| `superviseur` | `youssef.louzi.sup@sepur.com` | `DEMO_SUPERVISOR_PASSWORD` | SUPERVISEUR |
 
-Les mots de passe sont stockes en base sous forme de hash scrypt. L'entite
-`Users` n'est pas exposee par l'API OData.
+Configurer les mots de passe en clair dans le terminal avant le demarrage:
+
+```bash
+export DEMO_PLANNER_PASSWORD='<mot-de-passe-planificateur>'
+export DEMO_SUPERVISOR_PASSWORD='<mot-de-passe-superviseur>'
+npm run watch-home
+```
+
+L'entite `Users` n'est pas exposee par l'API OData et aucun mot de passe n'est
+publie dans le depot.
 
 ## Architecture
 
