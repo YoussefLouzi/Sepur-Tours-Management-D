@@ -3,7 +3,7 @@
   "sap.app": {
     "id": "sepur.supervisor",
     "type": "application",
-    "title": "Dashboard Superviseur",
+    "title": "Tableau de bord superviseur",
     "applicationVersion": {
       "version": "1.0.0"
     }

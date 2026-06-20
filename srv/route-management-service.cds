@@ -8,6 +8,9 @@ service RouteManagementService {
 
     entity Clients as projection on db.Clients;
 
+    @readonly
+    entity Materials as projection on db.Materials;
+
     entity Vehicles as projection on db.Vehicles;
 
     entity Drivers as projection on db.Drivers;
@@ -209,6 +212,27 @@ service RouteManagementService {
 /* ===================================================== */
 
 annotate RouteManagementService.Tours with {
+    collectionType @Common.ValueList : {
+        Label          : 'Matériau / Type de déchet',
+        CollectionPath : 'Materials',
+        Parameters     : [
+            {
+                $Type             : 'Common.ValueListParameterInOut',
+                LocalDataProperty : collectionType,
+                ValueListProperty : 'description'
+            },
+            {
+                $Type             : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty : 'materialCode'
+            },
+            {
+                $Type             : 'Common.ValueListParameterOut',
+                LocalDataProperty : unitOfMeasure,
+                ValueListProperty : 'unitOfMeasure'
+            }
+        ]
+    };
+
     client @Common.ValueList : {
         CollectionPath : 'Clients',
         Parameters : [
@@ -569,7 +593,7 @@ annotate RouteManagementService.Roadmaps with {
 annotate RouteManagementService.Roadmaps with @(
     UI.HeaderInfo : {
         TypeName       : 'Feuille de route',
-        TypeNamePlural : 'Management des feuilles de route',
+        TypeNamePlural : 'Feuilles de route',
         Title          : {
             Value : roadmapCode
         },

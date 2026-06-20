@@ -18,6 +18,7 @@ sap.ui.define([
   return Controller.extend("home.controller.home", {
     onInit: function () {
       this._initHomeModel();
+      this._startHeroAutoSlide();
     },
 
     _initHomeModel: function () {
@@ -43,6 +44,7 @@ sap.ui.define([
 
         showPlanningServices: !bLoggedIn || bPlanner || bAdmin,
         showSupervisorServices: !bLoggedIn || bSupervisor || bAdmin,
+        showCommonServices: true,
 
         canOpenPlanning: bPlanner || bAdmin,
         canOpenSupervisor: bSupervisor || bAdmin
@@ -131,6 +133,40 @@ sap.ui.define([
       window.location.href = sTargetUrl;
     },
 
+    _startHeroAutoSlide: function () {
+      var oCarousel = this.byId("heroCarousel");
+
+      if (!oCarousel) {
+        return;
+      }
+
+      setInterval(function () {
+        var aPages = oCarousel.getPages();
+
+        if (!aPages || aPages.length <= 1) {
+          return;
+        }
+
+        var sActivePage = oCarousel.getActivePage();
+        var iCurrentIndex = 0;
+
+        for (var i = 0; i < aPages.length; i += 1) {
+          if (aPages[i].getId() === sActivePage) {
+            iCurrentIndex = i;
+            break;
+          }
+        }
+
+        var iNextIndex = iCurrentIndex + 1;
+
+        if (iNextIndex >= aPages.length) {
+          iNextIndex = 0;
+        }
+
+        oCarousel.setActivePage(aPages[iNextIndex].getId());
+      }, 5000);
+    },
+
     onLogin: function () {
       this._goToLogin("/home/webapp/index.html");
     },
@@ -191,7 +227,7 @@ sap.ui.define([
         }));
 
         aButtons.push(new Button({
-          text: "Management des tournées",
+          text: "Gestion des tournées",
           icon: "sap-icon://shipping-status",
           press: this.onTours.bind(this)
         }));

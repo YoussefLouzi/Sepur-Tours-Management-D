@@ -3,7 +3,11 @@
   "sap.app": {
     "id": "ns.tours",
     "type": "application",
-    "i18n": "i18n/i18n.properties",
+    "i18n": {
+      "bundleUrl": "i18n/i18n.properties",
+      "supportedLocales": ["fr", ""],
+      "fallbackLocale": "fr"
+    },
     "applicationVersion": {
       "version": "0.0.1"
     },
@@ -102,14 +106,14 @@
           "options": {
             "settings": {
               "contextPath": "/Tours",
-  "variantManagement": "None",
+  "variantManagement": "Page",
   "initialLoad": "Enabled",
   "hideDraftToggle": true,
               "content": {
                 "header": {
                   "actions": {
                     "RetourDashboardList": {
-                      "text": "Retour au dashboard",
+                      "text": "Retour au tableau de bord",
                       "press": "ns.tours.ext.controller.ListReportActions.onBackToDashboard",
                       "visible": true,
                       "enabled": true
@@ -127,7 +131,17 @@
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
-                    "type": "ResponsiveTable"
+                    "type": "ResponsiveTable",
+                    "enableExport": true,
+                    "creationMode": {
+                      "name": "NewPage"
+                    },
+                    "personalization": {
+                      "column": true,
+                      "sort": true,
+                      "filter": true,
+                      "group": true
+                    }
                   }
                 }
               }
@@ -142,6 +156,8 @@
             "settings": {
               "editableHeaderContent": false,
               "contextPath": "/Tours",
+              "showRelatedApps": false,
+              "sectionLayout": "Page",
               "content": {
                 "header": {
                   "actions": {

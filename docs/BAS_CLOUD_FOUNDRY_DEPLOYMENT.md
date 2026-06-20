@@ -65,13 +65,22 @@ L'accueil local est disponible a l'adresse affichee par BAS, avec le chemin
 ## 4. Compiler et verifier
 
 ```bash
+npx cds deploy --to sqlite::memory:
 npx cds compile srv --to csn
 npx cds build --production
+npm run build --workspace=home
+npm run build --workspace=tours
+npm run build --workspace=roadmaps
 npx mbt mtad-gen --platform cf --target gen/mtad-validation
 ```
 
-Le build ne doit produire aucune erreur CDS. Les fichiers `gen/` sont generes
-et ne doivent pas etre commits.
+Le deploiement SQLite en memoire valide le modele et toutes les donnees CSV
+sans creer de fichier local. Le build ne doit produire aucune erreur CDS ou
+UI5. Les fichiers `gen/` et `dist/` sont generes et ne doivent pas etre commits.
+
+Les donnees initiales utilisent uniquement des statuts declares dans les enums
+CDS et des cles etrangeres existantes. Le meme modele est ensuite transforme en
+artefacts HANA par `cds build --production`.
 
 ## 5. Connexion Cloud Foundry
 
@@ -122,6 +131,8 @@ L'ouverture de cette URL sans chemin charge automatiquement
 6. Creer un brouillon de tournee et verifier les champs obligatoires.
 7. Verifier que le code, le statut et le motif de rejet sont non modifiables.
 8. Valider et rejeter une tournee pour controler messages et historique.
+9. Creer une tournee et verifier l'aide a la selection du materiau.
+10. Creer une feuille de route et verifier le client, le mois et l'annee.
 
 ## 9. Mise a jour ulterieure
 

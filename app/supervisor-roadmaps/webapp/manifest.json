@@ -3,7 +3,11 @@
   "sap.app": {
     "id": "sepur.supervisor.supervisorroadmaps",
     "type": "application",
-    "i18n": "i18n/i18n.properties",
+    "i18n": {
+      "bundleUrl": "i18n/i18n.properties",
+      "supportedLocales": ["fr", ""],
+      "fallbackLocale": "fr"
+    },
     "applicationVersion": {
       "version": "0.0.1"
     },
@@ -112,7 +116,7 @@
                 "header": {
                   "actions": {
                     "RetourSupervisorDashboard": {
-                      "text": "Retour au dashboard",
+                      "text": "Retour au tableau de bord",
                       "press": "sepur.supervisor.supervisorroadmaps.ext.controller.SupervisorRoadmapActions.onBackToDashboard",
                       "visible": true,
                       "enabled": true

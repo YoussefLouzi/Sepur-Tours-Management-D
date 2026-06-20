@@ -41,12 +41,21 @@ sap.ui.define([
                 return;
             }
 
-            const oUser = JSON.parse(sUser);
+            let oUser;
+
+            try {
+                oUser = JSON.parse(sUser);
+            } catch (e) {
+                localStorage.removeItem("sepur.user");
+                sessionStorage.removeItem("sepur.user");
+                window.location.href = "/login/webapp/index.html";
+                return;
+            }
 
             const sRole = String(oUser.role || "").trim().toUpperCase();
 
             if (sRole !== "PLANIFICATEUR" && sRole !== "PLANNER" && sRole !== "ADMIN") {
-                MessageBox.error("Accès refusé. Ce dashboard est réservé au planificateur.", {
+                MessageBox.error("Accès refusé. Ce tableau de bord est réservé au planificateur.", {
                     onClose: function () {
                         window.location.href = "/login/webapp/index.html";
                     }
@@ -265,7 +274,7 @@ sap.ui.define([
             const response = await fetch(sUrl);
 
             if (!response.ok) {
-                throw new Error("Erreur HTTP " + response.status + " lors du chargement des roadmaps.");
+                throw new Error("Erreur HTTP " + response.status + " lors du chargement des feuilles de route.");
             }
 
             const data = await response.json();
@@ -360,11 +369,11 @@ sap.ui.define([
                         entity: "ROADMAP",
                         type: sStatus === "VALIDATED" ? "Success" : "Error",
                         icon: sStatus === "VALIDATED" ? "sap-icon://accept" : "sap-icon://decline",
-                        title: sStatus === "VALIDATED" ? "Roadmap validée" : "Roadmap rejetée",
+                        title: sStatus === "VALIDATED" ? "Feuille de route validée" : "Feuille de route rejetée",
                         description: (oRoadmap.roadmapCode || "-") + " | Tournée : " + (oRoadmap.tourCode || "-"),
                         detail: sStatus === "VALIDATED"
-                            ? "Le superviseur a validé cette roadmap."
-                            : "Le superviseur a rejeté cette roadmap. Une vérification est nécessaire.",
+                            ? "Le superviseur a validé cette feuille de route."
+                            : "Le superviseur a rejeté cette feuille de route. Une vérification est nécessaire.",
                         status: sStatus,
                         unread: aReadIds.indexOf(sId) === -1
                     });

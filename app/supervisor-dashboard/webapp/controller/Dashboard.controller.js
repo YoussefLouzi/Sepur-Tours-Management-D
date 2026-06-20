@@ -1,6 +1,7 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/m/MessageToast",
+    "sap/m/MessageBox",
     "sap/m/Popover",
     "sap/m/VBox",
     "sap/m/Text",
@@ -11,6 +12,7 @@ sap.ui.define([
 ], function (
     Controller,
     MessageToast,
+    MessageBox,
     Popover,
     VBox,
     Text,
@@ -24,6 +26,35 @@ sap.ui.define([
     return Controller.extend("sepur.supervisor.controller.Dashboard", {
 
         onInit: function () {
+            const sUser = localStorage.getItem("sepur.user") || sessionStorage.getItem("sepur.user");
+
+            if (!sUser) {
+                window.location.href = "/login/webapp/index.html";
+                return;
+            }
+
+            let oUser;
+
+            try {
+                oUser = JSON.parse(sUser);
+            } catch (e) {
+                localStorage.removeItem("sepur.user");
+                sessionStorage.removeItem("sepur.user");
+                window.location.href = "/login/webapp/index.html";
+                return;
+            }
+
+            const sRole = String(oUser.role || "").trim().toUpperCase();
+
+            if (sRole !== "SUPERVISEUR" && sRole !== "SUPERVISOR" && sRole !== "ADMIN") {
+                MessageBox.error("Accès refusé. Ce tableau de bord est réservé au superviseur.", {
+                    onClose: function () {
+                        window.location.href = "/login/webapp/index.html";
+                    }
+                });
+                return;
+            }
+
             Format.numericFormatter(ChartFormatter.getInstance());
 
             this._loadDashboard();
@@ -432,13 +463,13 @@ sap.ui.define([
                     roadmapsToValidate.slice(0, 3).forEach(function (roadmap) {
                         notifications.push({
                             type: "Information",
-                            title: "Roadmap à vérifier : " + (roadmap.roadmapCode || "-"),
+                            title: "Feuille de route à vérifier : " + (roadmap.roadmapCode || "-"),
                             description: "Statut actuel : " + (roadmap.status || "CREATED")
                         });
                     });
                 }
             } catch (e) {
-                console.error("Erreur notifications roadmaps", e);
+                console.error("Erreur lors du chargement des notifications des feuilles de route", e);
             }
 
             viewModel.setProperty("/notifications", {

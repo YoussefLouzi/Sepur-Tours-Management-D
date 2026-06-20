@@ -115,7 +115,7 @@ annotate service.Tours with @(
 
     UI.HeaderInfo : {
         TypeName       : 'Tournée',
-        TypeNamePlural : 'Management des tournées',
+        TypeNamePlural : 'Tournées',
         Title          : {
             Value : tourCode
         },

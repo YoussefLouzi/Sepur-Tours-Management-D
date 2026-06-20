@@ -3,7 +3,11 @@
   "sap.app": {
     "id": "sepur.supervisor.supervisordashboardfiori",
     "type": "application",
-    "i18n": "i18n/i18n.properties",
+    "i18n": {
+      "bundleUrl": "i18n/i18n.properties",
+      "supportedLocales": ["fr", ""],
+      "fallbackLocale": "fr"
+    },
     "applicationVersion": {
       "version": "0.0.1"
     },
@@ -121,7 +125,7 @@
   "model": "mainModel",
   "template": "sap.ovp.cards.v4.charts.analytical",
   "settings": {
-    "title": "Statistiques des roadmaps",
+    "title": "Statistiques des feuilles de route",
     "subTitle": "Répartition par statut",
     "entitySet": "RoadmapStatusAnalytics",
     "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#RoadmapStatusSV",
@@ -155,8 +159,8 @@
     "model": "mainModel",
     "template": "sap.ovp.cards.v4.table",
     "settings": {
-      "title": "Roadmaps",
-      "subTitle": "Roadmaps générées à partir des tournées validées",
+      "title": "Feuilles de route",
+      "subTitle": "Feuilles de route générées à partir des tournées validées",
       "entitySet": "Roadmaps",
       "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#DashboardRoadmaps",
       "showRefresh": true,

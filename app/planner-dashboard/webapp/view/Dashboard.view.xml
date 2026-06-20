@@ -17,22 +17,19 @@
                     <!-- SIDEBAR FIXE -->
                     <VBox id="sidebar" class="sideNav">
 
-                        <HBox class="brandArea" alignItems="Center">
-                            <Avatar
-                                initials="SP"
-                                displaySize="S"
-                                displayShape="Square"
-                                backgroundColor="Accent6"
-                                class="brandAvatar" />
-                            <VBox>
-                                <Title text="SEPUR" level="H4" class="brandTitle" />
-                                <Text text="Planification" class="brandSubtitle" />
-                            </VBox>
-                        </HBox>
+                        <VBox class="brandArea" alignItems="Center">
+                            <Image
+                                src="https://www.sepur.com/wp-content/uploads/2025/01/logo-sepur-insertion-e1736954850722.png"
+                                class="sepurLogo"
+                                decorative="false"
+                                alt="SEPUR" />
+
+                            <!-- <Text text="Planification" class="brandSubtitle" /> -->
+                        </VBox>
 
                         <VBox class="menuArea">
                             <Button
-                                text="Dashboard"
+                                text="Tableau de bord"
                                 icon="sap-icon://business-objects-experience"
                                 class="menuButton activeMenu"
                                 press=".onRefresh" />
@@ -87,7 +84,7 @@
                             <HBox alignItems="Center" class="headerBrand">
                                 <VBox>
                                     <Title text="Espace Planificateur" level="H2" class="topTitle" />
-                                    <Text text="Suivi des tournées, feuilles de route et décisions" class="topSubtitle" />
+                                    <Text text="Suivi des tournées, feuilles de route, validations et rejets" class="topSubtitle" />
                                 </VBox>
                             </HBox>
 
@@ -225,7 +222,7 @@
     </GenericTile>
 
     <GenericTile
-        header="Roadmaps créées"
+        header="Feuilles créées"
         subheader="En attente de traitement"
         frameType="TwoByOne"
         class="sapKpiTile"
@@ -243,7 +240,7 @@
     </GenericTile>
 
     <GenericTile
-        header="Roadmaps validées"
+        header="Feuilles validées"
         subheader="Acceptées par le superviseur"
         frameType="TwoByOne"
         class="sapKpiTile"
@@ -261,7 +258,7 @@
     </GenericTile>
 
     <GenericTile
-        header="Roadmaps rejetées"
+        header="Feuilles rejetées"
         subheader="Correction nécessaire"
         frameType="TwoByOne"
         class="sapKpiTile"

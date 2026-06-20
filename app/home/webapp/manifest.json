@@ -3,8 +3,12 @@
   "sap.app": {
     "id": "home",
     "type": "application",
-    "i18n": "i18n/i18n.properties",
-    "title": "SEPUR Tours Management",
+    "i18n": {
+      "bundleUrl": "i18n/i18n.properties",
+      "supportedLocales": ["fr", ""],
+      "fallbackLocale": "fr"
+    },
+    "title": "SEPUR - Gestion des tournées",
     "description": "Page d'accueil centrale SEPUR",
     "applicationVersion": {
       "version": "1.0.0"

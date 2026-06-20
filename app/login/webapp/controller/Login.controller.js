@@ -36,19 +36,47 @@ sap.ui.define([
             return "";
         },
 
+        _getAllowedPathsForRole: function (sRole) {
+            const sNormalizedRole = this._normalizeRole(sRole);
+            const aCommonPaths = [
+                "/home/webapp/index.html"
+            ];
+            const aPlannerPaths = [
+                "/planner-dashboard/webapp/index.html",
+                "/tours/webapp/index.html",
+                "/roadmaps/webapp/index.html"
+            ];
+            const aSupervisorPaths = [
+                "/supervisor-dashboard/webapp/index.html",
+                "/supervisor-tours/webapp/index.html",
+                "/supervisor-roadmaps/webapp/index.html"
+            ];
+
+            if (sNormalizedRole === "PLANIFICATEUR" || sNormalizedRole === "PLANNER") {
+                return aCommonPaths.concat(aPlannerPaths);
+            }
+
+            if (sNormalizedRole === "SUPERVISEUR" || sNormalizedRole === "SUPERVISOR") {
+                return aCommonPaths.concat(aSupervisorPaths);
+            }
+
+            if (sNormalizedRole === "ADMIN") {
+                return aCommonPaths.concat(aPlannerPaths, aSupervisorPaths);
+            }
+
+            return [];
+        },
+
         _getRedirectUrl: function (sRole) {
             const oParams = new URLSearchParams(window.location.search || "");
             const sRedirect = oParams.get("redirect");
 
-            if (sRedirect) {
-                try {
-                    const sDecoded = decodeURIComponent(sRedirect);
+            if (sRedirect && sRedirect.charAt(0) === "/" && sRedirect.charAt(1) !== "/") {
+                const sPath = sRedirect.split(/[?#]/, 1)[0];
+                const aAllowedPaths = this._getAllowedPathsForRole(sRole);
 
-                    if (sDecoded && sDecoded.charAt(0) === "/") {
-                        return sDecoded;
-                    }
-                } catch (e) {
-                    return this._getDefaultUrlForRole(sRole);
+                if (aAllowedPaths.indexOf(sPath) !== -1) {
+                    return sRedirect;
                 }
             }
 
@@ -128,8 +156,10 @@ sap.ui.define([
                 window.location.href = sTargetUrl;
 
             } catch (e) {
+                this.getView().getModel().setProperty("/password", "");
                 oStrip.setText(this._getErrorMessage(e));
                 oStrip.setVisible(true);
+                this.byId("inpPassword").focus();
             }
         },
 

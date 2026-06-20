@@ -332,11 +332,6 @@ entity RoadmapSteps : cuid, managed {
     collectionPoint : Association to CollectionPoints;
 }
 
-entity RoadMapTourAssignments : managed {
-    key roadMap : Association to Roadmaps;
-    key tour    : Association to Tours;
-}
-
 /* ===================================================== */
 /* DECISION HISTORY                                      */
 /* ===================================================== */

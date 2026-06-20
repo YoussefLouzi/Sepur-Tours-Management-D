@@ -3,7 +3,11 @@
   "sap.app": {
     "id": "ns.roadmaps",
     "type": "application",
-    "i18n": "i18n/i18n.properties",
+    "i18n": {
+      "bundleUrl": "i18n/i18n.properties",
+      "supportedLocales": ["fr", ""],
+      "fallbackLocale": "fr"
+    },
     "applicationVersion": {
       "version": "0.0.1"
     },
@@ -102,7 +106,7 @@
           "options": {
             "settings": {
               "contextPath": "/Roadmaps",
-              "variantManagement": "None",
+              "variantManagement": "Page",
               "initialLoad": "Enabled",
               "hideDraftToggle": true,
               "navigation": {
@@ -116,7 +120,7 @@
                 "header": {
                   "actions": {
                     "RetourDashboardList": {
-                      "text": "Retour au dashboard",
+                      "text": "Retour au tableau de bord",
                       "press": "ns.roadmaps.ext.controller.RoadmapActions.onBackToDashboard",
                       "visible": true,
                       "enabled": true
@@ -128,6 +132,9 @@
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
                     "type": "ResponsiveTable",
+                    "creationMode": {
+                      "name": "NewPage"
+                    },
                     "selectionMode": "Multi",
                     "selectAll": true,
                     "enableExport": true,

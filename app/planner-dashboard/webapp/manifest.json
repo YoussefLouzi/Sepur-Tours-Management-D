@@ -3,7 +3,7 @@
   "sap.app": {
     "id": "sepur.planner",
     "type": "application",
-    "title": "Dashboard Planificateur",
+    "title": "Tableau de bord planificateur",
     "description": "Tableau de bord du planificateur pour le suivi des tournées et des feuilles de route",
     "applicationVersion": {
       "version": "1.0.0"
