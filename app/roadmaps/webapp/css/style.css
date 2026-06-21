@@ -1,1 +1,87 @@
-/* Fiori Elements layout is controlled by SAPUI5. */
+/* SAP Fiori Elements - finition S/4HANA */
+.sapFDynamicPage,
+.sapUxAPObjectPageLayout,
+.sapUxAPObjectPageWrapper {
+  background: #f5f6f7;
+}
+
+.sapFDynamicPageTitle,
+.sapFDynamicPageHeader,
+.sapUxAPObjectPageHeaderTitle,
+.sapUxAPObjectPageHeaderContent {
+  background: #ffffff;
+  box-shadow: none;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.sapFDynamicPageContent,
+.sapUxAPObjectPageContainer {
+  max-width: 100rem;
+  margin: 0 auto;
+}
+
+.sapMListTbl {
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+}
+
+.sapMListTblHeaderCell {
+  background: #eef2f5;
+  border-bottom: 1px solid #89919a;
+}
+
+.sapMListTblHeaderCell .sapMLabel {
+  color: #1d2d3e;
+  font-weight: 700;
+}
+
+.sapMListTblRow {
+  min-height: 3rem;
+}
+
+.sapMListTblRow:hover > .sapMListTblCell {
+  background: #edf6ff;
+}
+
+.sapUiTableRowHdr,
+.sapUiTableColHdrCnt {
+  background: #eef2f5;
+}
+
+.sapUxAPObjectPageSectionHeader {
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.sapUxAPObjectPageSectionTitle {
+  color: #1d2d3e;
+  font-weight: 700;
+}
+
+.sapUiFormTitle,
+.sapMTitle {
+  letter-spacing: 0;
+}
+
+.sapMDialogSection,
+.sapMMessageBox {
+  background: #ffffff;
+}
+
+.sapMBtnInner,
+.sapMInputBaseContentWrapper,
+.sapMSlt,
+.sapMTextAreaInner {
+  border-radius: 0.25rem;
+}
+
+@media (max-width: 48rem) {
+  .sapFDynamicPageContent,
+  .sapUxAPObjectPageContainer {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sapMListTblCell {
+    min-height: 2.75rem;
+  }
+}

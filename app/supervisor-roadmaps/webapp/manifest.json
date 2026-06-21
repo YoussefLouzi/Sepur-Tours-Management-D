@@ -42,7 +42,7 @@
     }
   },
   "sap.ui5": {
-    "flexEnabled": false,
+    "flexEnabled": true,
     "dependencies": {
       "minUI5Version": "1.148.1",
       "libs": {
@@ -114,6 +114,10 @@
               "contextPath": "/Roadmaps",
               "variantManagement": "Page",
               "initialLoad": "Enabled",
+              "hideDraftToggle": true,
+              "creationMode": {
+                "name": "Disabled"
+              },
               "content": {
                 "header": {
                   "actions": {

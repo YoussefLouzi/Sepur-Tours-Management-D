@@ -47,7 +47,7 @@
     }
   },
   "sap.ui5": {
-    "flexEnabled": false,
+    "flexEnabled": true,
     "dependencies": {
       "minUI5Version": "1.148.1",
       "libs": {
@@ -118,6 +118,7 @@
               "contextPath": "/Tours",
   "variantManagement": "Page",
   "initialLoad": "Enabled",
+  "hideDraftToggle": true,
               "content": {
                 "header": {
                   "actions": {
@@ -143,6 +144,9 @@
                   "tableSettings": {
                     "type": "ResponsiveTable",
                     "enableExport": true,
+                    "creationMode": {
+                      "name": "NewPage"
+                    },
                     "personalization": {
                       "column": true,
                       "sort": true,

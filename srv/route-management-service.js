@@ -348,6 +348,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
         enrichTourAliases(tour);
         const normalizedStatus = normalizeTourStatus(tour.status);
         const isActive = tour.IsActiveEntity !== false;
+        tour.status = normalizedStatus;
         tour.statusCriticality = tourStatusCriticality(normalizedStatus);
         tour.canValidate = isActive && normalizedStatus === TOUR_STATUS.CREATED;
         tour.canReject = isActive && normalizedStatus === TOUR_STATUS.CREATED;
@@ -370,6 +371,7 @@ module.exports = class RouteManagementService extends cds.ApplicationService {
 
         const normalizedStatus = normalizeRoadmapStatus(roadmap.status);
         const isActive = roadmap.IsActiveEntity !== false;
+        roadmap.status = normalizedStatus;
         roadmap.statusCriticality = roadmapStatusCriticality(normalizedStatus);
         roadmap.canValidate = isActive && normalizedStatus === ROADMAP_STATUS.CREATED;
         roadmap.canReject = isActive && normalizedStatus === ROADMAP_STATUS.CREATED;
