@@ -112,7 +112,7 @@
           "options": {
             "settings": {
               "contextPath": "/Roadmaps",
-              "variantManagement": "None",
+              "variantManagement": "Page",
               "initialLoad": "Enabled",
               "navigation": {
                 "Roadmaps": {
@@ -140,7 +140,13 @@
                     "type": "ResponsiveTable",
                     "selectionMode": "Multi",
                     "selectAll": true,
-                    "enableExport": true
+                    "enableExport": true,
+                    "personalization": {
+                      "column": true,
+                      "sort": true,
+                      "filter": true,
+                      "group": true
+                    }
                   }
                 }
               }
