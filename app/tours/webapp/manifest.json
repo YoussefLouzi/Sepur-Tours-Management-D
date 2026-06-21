@@ -116,8 +116,8 @@
           "options": {
             "settings": {
               "contextPath": "/Tours",
-  "variantManagement": "Page",
-  "initialLoad": "Enabled",
+              "variantManagement": "None",
+              "initialLoad": "Enabled",
               "content": {
                 "header": {
                   "actions": {
@@ -142,13 +142,7 @@
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
                     "type": "ResponsiveTable",
-                    "enableExport": true,
-                    "personalization": {
-                      "column": true,
-                      "sort": true,
-                      "filter": true,
-                      "group": true
-                    }
+                    "enableExport": true
                   },
                   "actions": {
                     "CreateRoadmapFromTour": {
